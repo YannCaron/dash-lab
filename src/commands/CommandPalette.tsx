@@ -2,6 +2,7 @@ import { useEffect, useId, useMemo, useRef, useState } from 'react';
 import { useCommands } from './CommandContext.js';
 import { useNotifications } from '../notifications/NotificationContext.js';
 import { searchCommands } from './searchCommands.js';
+import { useBackdropDismiss } from '../overlays/useBackdropDismiss.js';
 
 /** Options for the controlled command palette. */
 export interface CommandPaletteProps {
@@ -13,6 +14,7 @@ export interface CommandPaletteProps {
 
 /** Searches and executes the nearest registry's commands; requires command and notification providers. */
 export function CommandPalette({ open, onClose }: CommandPaletteProps) {
+  const backdrop = useBackdropDismiss(onClose);
   const { commands, canExecute, execute } = useCommands();
   const { notify } = useNotifications();
   const [query, setQuery] = useState('');
@@ -68,6 +70,7 @@ export function CommandPalette({ open, onClose }: CommandPaletteProps) {
 
   return (
     <dialog
+      {...backdrop}
       ref={dialog}
       className="dl-command-palette dl-modal"
       aria-label="Command palette"

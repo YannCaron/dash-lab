@@ -81,7 +81,7 @@ import { ThemeProvider, Workbench } from 'dash-lab';
 
 Public CSS tokens are `--dl-canvas`, `--dl-surface`, `--dl-raised`, `--dl-text`, `--dl-muted`, `--dl-border`, `--dl-accent`, `--dl-accent-soft`, `--dl-on-accent`, `--dl-success`, `--dl-warning`, and `--dl-error`. Transitions take 180 ms and respect `prefers-reduced-motion`.
 
-Modal windows enter from outside the viewport while the backdrop fades in; notifications enter from the right. Reduced motion disables these animations as well as color transitions.
+Modal windows enter from outside the viewport while the backdrop fades in; notifications enter from the right. Reduced motion disables these animations as well as color transitions. Click the backdrop, press Escape, or use the enlarged close button to dismiss a modal. A drag starting inside the dialog does not dismiss it. Dismissing Preferences discards unapplied edits.
 
 ## Notifications
 

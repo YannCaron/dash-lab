@@ -6,6 +6,7 @@ import type { useLayoutManagement } from '../layout/useLayoutManagement.js';
 import type { createLayoutStore } from '../layout/layoutStore.js';
 import { useStore } from 'zustand';
 import { useCommands } from '../commands/CommandContext.js';
+import { useBackdropDismiss } from '../overlays/useBackdropDismiss.js';
 
 export type SettingsPage = 'settings' | 'preferences';
 
@@ -23,6 +24,7 @@ export function SettingsDialog({
   store: ReturnType<typeof createLayoutStore>;
 }) {
   const dialog = useRef<HTMLDialogElement>(null);
+  const backdrop = useBackdropDismiss(onClose);
   const close = useRef<HTMLButtonElement>(null);
   const [draft, setDraft] = useState<WorkbenchPreferences>(configuration.preferences);
   const [error, setError] = useState('');
@@ -53,6 +55,7 @@ export function SettingsDialog({
 
   return (
     <dialog
+      {...backdrop}
       ref={dialog}
       className="dl-settings-dialog dl-modal"
       aria-labelledby={titleId}

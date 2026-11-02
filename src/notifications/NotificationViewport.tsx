@@ -1,6 +1,7 @@
 import { useEffect, useId, useRef } from 'react';
 import { useNotifications } from './NotificationContext.js';
 import type { NotificationItem } from './notificationStore.js';
+import { useBackdropDismiss } from '../overlays/useBackdropDismiss.js';
 
 function Toast({ item }: { item: NotificationItem }) {
   const { dismiss } = useNotifications();
@@ -25,6 +26,7 @@ function Toast({ item }: { item: NotificationItem }) {
 export function NotificationViewport() {
   const { items, toasts, open, setOpen, markRead, markAllRead, remove, clearHistory } = useNotifications();
   const dialog = useRef<HTMLDialogElement>(null);
+  const backdrop = useBackdropDismiss(() => setOpen(false));
   const closeButton = useRef<HTMLButtonElement>(null);
   const titleId = useId();
   const unread = items.filter((item) => !item.read).length;
@@ -45,6 +47,7 @@ export function NotificationViewport() {
         })}
       </div>
       <dialog
+        {...backdrop}
         ref={dialog}
         className="dl-notification-center dl-modal"
         aria-labelledby={titleId}

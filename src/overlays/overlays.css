@@ -44,7 +44,7 @@
   animation: none;
 }
 @media (prefers-reduced-motion: reduce) {
-  .dl-modal,
+  .dl-modal[open],
   .dl-modal::backdrop,
   .dl-notification-toast {
     animation: none;
