@@ -124,7 +124,7 @@ async function clickText(selector, text) {
 }
 
 async function openMenuItem(text, parent = 'File') {
-  await click('Open application menu');
+  await evaluate('document.querySelector(".dl-menu-trigger").click()');
   await waitFor(() => evaluate('document.querySelector(".dl-menu-trigger").getAttribute("aria-expanded") === "true"'), 'application menu');
   const expanded = await evaluate(
     `[...document.querySelectorAll('[role=menuitem]')].find(node => node.textContent.trim() === ${JSON.stringify(parent)} && node.getBoundingClientRect().width)?.getAttribute('aria-expanded') === 'true'`,
@@ -808,6 +808,67 @@ try {
     'plugin menu command',
   );
   await check('document.querySelectorAll(".dv-tab").length === 3', 'The plugin menu and palette execute the same command once without replacing panels');
+  const unknownLanguage = globalThis.structuredClone(imported);
+  unknownLanguage.preferences.locale = 'zz';
+  unknownLanguage.workspace.headerVisible = false;
+  const unknownPath = `${downloads}/unknown-language.json`;
+  await writeFile(unknownPath, JSON.stringify(unknownLanguage));
+  const beforeLanguageImport = await evaluate(
+    'JSON.stringify([document.querySelector(".dl-theme").dataset.theme, !!document.querySelector(".dl-header"), !!document.querySelector(".dl-footer")])',
+  );
+  await importConfiguration(unknownPath);
+  await waitFor(
+    () => evaluate('document.querySelector(".dl-notification-toast strong")?.textContent === "Configuration could not be imported"'),
+    'reject unregistered language',
+  );
+  assert.equal(
+    await evaluate(
+      'JSON.stringify([document.querySelector(".dl-theme").dataset.theme, !!document.querySelector(".dl-header"), !!document.querySelector(".dl-footer")])',
+    ),
+    beforeLanguageImport,
+  );
+  console.log('PASS Unregistered languages are rejected before applying any workspace changes');
+  await evaluate(
+    'globalThis.languagePanel = document.querySelector(".hello-world"); document.querySelector("#hello-name").focus(); document.querySelector("#hello-name").select(); true',
+  );
+  await command('Input.insertText', { text: 'Ada' });
+  await openPreferences();
+  await evaluate('document.querySelector("select[aria-label=Language]").focus()');
+  await pressKey('End', 'End', 0, 35);
+  await pressKey('Tab', 'Tab', 0, 9);
+  await clickText('.dl-settings-dialog button', 'Apply preferences');
+  await waitFor(() => evaluate('document.querySelector(".dl-i18n").lang === "fr" && !document.querySelector(".dl-settings-dialog").open'), 'apply French');
+  await check(
+    'document.querySelector(".hello-world") === globalThis.languagePanel && document.querySelector("#hello-name").value === "Ada" && [...document.querySelectorAll(".dv-tab")].some(node => node.textContent === "Bonjour le monde")',
+    'Changing language translates panel titles without resetting panel state',
+  );
+  await evaluate('document.querySelector(".hello-form button").click()');
+  await waitFor(() => evaluate('document.querySelector(".hello-result").textContent === "Bonjour, Ada !"'), 'French plugin interaction');
+  await click('Ouvrir la palette de commandes');
+  await waitFor(() => evaluate('document.querySelector(".dl-command-palette").open'), 'French command palette');
+  await searchPalette('thème');
+  await waitFor(
+    () => evaluate('[...document.querySelectorAll(".dl-palette-option")].some(node => node.textContent.includes("Changer de thème"))'),
+    'translated command search',
+  );
+  await pressKey('Enter', 'Enter');
+  await waitFor(() => evaluate('!document.querySelector(".dl-command-palette").open'), 'translated command execution');
+  await click('Enregistrer la disposition');
+  await waitFor(
+    () => evaluate('document.querySelector(".dl-notification-toast strong")?.textContent === "Disposition enregistrée."'),
+    'French layout feedback',
+  );
+  await check('document.querySelector(".hello-world") === globalThis.languagePanel', 'French commands and feedback preserve the live application');
+  await reload();
+  await waitFor(() => evaluate('document.querySelector(".dl-i18n").lang === "fr"'), 'French persistence');
+  await openMenuItem('Préférences', 'Fichier');
+  await waitFor(() => evaluate('document.querySelector(".dl-settings-dialog").open'), 'French preferences menu');
+  await check(
+    'document.querySelector(".dl-settings-dialog h2").textContent === "Préférences" && document.querySelector("select[aria-label=Langue]").value === "fr"',
+    'French is restored on reload and used by menus, preferences, and accessible labels',
+  );
+  await screenshot('demo-french');
+  await pressKey('Escape', 'Escape', 0, 27);
   assert.deepEqual(errors, [], 'No browser runtime errors');
   console.log('Browser checks passed. Screenshots are in test-results/.');
 } catch (error) {

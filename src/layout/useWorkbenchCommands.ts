@@ -1,3 +1,4 @@
+import { useI18n } from '../i18n/I18nProvider.js';
 import { useCallback, useContext, useEffect, useRef } from 'react';
 import type { KeyboardEvent as ReactKeyboardEvent } from 'react';
 import { CommandContext } from '../commands/CommandContext.js';
@@ -6,7 +7,6 @@ import { useTheme } from '../theme/ThemeProvider.js';
 import { useNotifications } from '../notifications/NotificationContext.js';
 import type { createLayoutStore } from './layoutStore.js';
 import type { useLayoutManagement } from './useLayoutManagement.js';
-
 interface ConfigurationActions {
   openSettings: () => void;
   openPreferences: () => void;
@@ -15,13 +15,13 @@ interface ConfigurationActions {
   ready: boolean;
   busy: boolean;
 }
-
 export function useWorkbenchCommands(
   store: ReturnType<typeof createLayoutStore>,
   layout: ReturnType<typeof useLayoutManagement>,
   openPalette: () => void,
   configuration: ConfigurationActions,
 ) {
+  const { t } = useI18n();
   const context = useContext(CommandContext);
   if (!context) throw new Error('Workbench command provider is missing.');
   const { registry, execute } = context;
@@ -31,7 +31,6 @@ export function useWorkbenchCommands(
   currentLayout.current = layout;
   const currentConfiguration = useRef(configuration);
   currentConfiguration.current = configuration;
-
   useEffect(() => {
     const commands: CommandDefinition[] = [
       { id: 'workbench.commands.open', title: 'Open command palette', shortcut: 'Mod+Shift+P', execute: openPalette },
@@ -108,7 +107,6 @@ export function useWorkbenchCommands(
     }
     return () => cleanup.forEach((remove) => remove());
   }, [registry, store, toggleTheme, setOpen, openPalette]);
-
   return useCallback(
     (event: ReactKeyboardEvent<HTMLElement>) => {
       const target = event.target;
@@ -119,13 +117,13 @@ export function useWorkbenchCommands(
         if (command) {
           event.preventDefault();
           void execute(command.id).catch((error: unknown) =>
-            notify({ title: 'Command could not run', description: error instanceof Error ? error.message : 'The action failed.', level: 'error' }),
+            notify({ title: t('Command could not run'), description: t(error instanceof Error ? error.message : 'The action failed.'), level: 'error' }),
           );
         }
       } catch (error) {
-        notify({ title: 'Shortcut could not run', description: error instanceof Error ? error.message : 'The action is unavailable.', level: 'error' });
+        notify({ title: t('Shortcut could not run'), description: t(error instanceof Error ? error.message : 'The action is unavailable.'), level: 'error' });
       }
     },
-    [registry, execute, notify],
+    [registry, execute, notify, t],
   );
 }

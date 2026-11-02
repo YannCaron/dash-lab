@@ -1,18 +1,18 @@
+import { useI18n } from 'dash-lab';
 import { useEffect } from 'react';
 import { Button } from 'antd';
 import { useCommands, useNotifications } from 'dash-lab';
-
 export function CommandExamples() {
+  const { t } = useI18n();
   const { register, execute } = useCommands();
   const { notify } = useNotifications();
-
   useEffect(() => {
     const removeGreeting = register({
       id: 'demo.notify',
       title: 'Send a demo notification',
       shortcut: 'Mod+Enter',
       execute: () => {
-        notify({ title: 'Command executed', description: 'The same action works from a button or keyboard shortcut.', level: 'success' });
+        notify({ title: t('Command executed'), description: t('The same action works from a button or keyboard shortcut.'), level: 'success' });
       },
     });
     const removeFailure = register({
@@ -27,11 +27,12 @@ export function CommandExamples() {
       removeFailure();
     };
   }, [register, notify]);
-
   return (
     <div className="demo-command-examples">
       <p className="demo-hint">
-        Try an application command. <kbd>Ctrl/⌘ + Enter</kbd> runs it outside text fields.
+        {t('Try an application command.')}
+        <kbd>{t('Ctrl/\u2318 + Enter')}</kbd>
+        {t('runs it outside text fields.')}
       </p>
       <div className="demo-notification-controls">
         <Button
@@ -40,7 +41,7 @@ export function CommandExamples() {
             void execute('demo.notify');
           }}
         >
-          Send via command
+          {t('Send via command')}
         </Button>
         <Button
           size="small"
@@ -48,7 +49,7 @@ export function CommandExamples() {
             void execute('demo.fail');
           }}
         >
-          Try failed command
+          {t('Try failed command')}
         </Button>
       </div>
     </div>

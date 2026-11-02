@@ -1,9 +1,9 @@
+import { useI18n } from '../i18n/I18nProvider.js';
 import { useEffect, useId, useMemo, useRef, useState } from 'react';
 import { useCommands } from './CommandContext.js';
 import { useNotifications } from '../notifications/NotificationContext.js';
 import { searchCommands } from './searchCommands.js';
 import { useBackdropDismiss } from '../overlays/useBackdropDismiss.js';
-
 /** Options for the controlled command palette. */
 export interface CommandPaletteProps {
   /** Whether the palette should be open. */
@@ -11,9 +11,9 @@ export interface CommandPaletteProps {
   /** Requests closure after dismissal or selection. */
   onClose: () => void;
 }
-
 /** Searches and executes the nearest registry's commands; requires command and notification providers. */
 export function CommandPalette({ open, onClose }: CommandPaletteProps) {
+  const { t } = useI18n();
   const backdrop = useBackdropDismiss(onClose);
   const { commands, canExecute, execute } = useCommands();
   const { notify } = useNotifications();
@@ -27,11 +27,11 @@ export function CommandPalette({ open, onClose }: CommandPaletteProps) {
   const results = useMemo(
     () =>
       searchCommands(
-        commands.filter((command) => command.id !== 'workbench.commands.open'),
+        commands.filter((command) => command.id !== 'workbench.commands.open').map((command) => ({ ...command, title: t(command.title) })),
         query,
         recent,
       ),
-    [commands, query, recent],
+    [commands, query, recent, t],
   );
   const entries = results.map((command, index) => {
     try {
@@ -43,7 +43,6 @@ export function CommandPalette({ open, onClose }: CommandPaletteProps) {
   const enabled = entries.filter((entry) => entry.enabled);
   const active = enabled.find((entry) => entry.command.id === selected) ?? enabled[0];
   const activeId = active ? `${prefix}-command-${active.index}` : undefined;
-
   useEffect(() => {
     if (open) {
       setQuery('');
@@ -52,11 +51,9 @@ export function CommandPalette({ open, onClose }: CommandPaletteProps) {
       input.current?.focus();
     } else if (dialog.current?.open) dialog.current.close();
   }, [open]);
-
   useEffect(() => {
     if (open && activeId) document.getElementById(activeId)?.scrollIntoView({ block: 'nearest' });
   }, [open, activeId]);
-
   const run = async (id: string) => {
     try {
       if (!canExecute(id)) return;
@@ -64,16 +61,15 @@ export function CommandPalette({ open, onClose }: CommandPaletteProps) {
       onClose();
       if (await execute(id)) setRecent((previous) => [id, ...previous.filter((entry) => entry !== id)].slice(0, 6));
     } catch (error) {
-      notify({ title: 'Command could not run', description: error instanceof Error ? error.message : 'The action failed.', level: 'error' });
+      notify({ title: t('Command could not run'), description: t(error instanceof Error ? error.message : 'The action failed.'), level: 'error' });
     }
   };
-
   return (
     <dialog
       {...backdrop}
       ref={dialog}
       className="dl-command-palette dl-modal"
-      aria-label="Command palette"
+      aria-label={t('Command palette')}
       onCancel={(event) => {
         event.preventDefault();
         onClose();
@@ -84,13 +80,13 @@ export function CommandPalette({ open, onClose }: CommandPaletteProps) {
         <input
           ref={input}
           role="combobox"
-          aria-label="Search commands"
+          aria-label={t('Search commands')}
           aria-expanded={open}
           aria-autocomplete="list"
           aria-controls={listId}
           aria-activedescendant={activeId}
           autoComplete="off"
-          placeholder="Type a command…"
+          placeholder={t('Type a command\u2026')}
           value={query}
           onChange={(event) => {
             setQuery(event.target.value);
@@ -110,11 +106,11 @@ export function CommandPalette({ open, onClose }: CommandPaletteProps) {
             }
           }}
         />
-        <button type="button" className="dl-icon-button dl-dialog-close" aria-label="Close command palette" onClick={onClose}>
+        <button type="button" className="dl-icon-button dl-dialog-close" aria-label={t('Close command palette')} onClick={onClose}>
           ×
         </button>
       </div>
-      <div id={listId} className="dl-palette-results" role="listbox" aria-label="Commands">
+      <div id={listId} className="dl-palette-results" role="listbox" aria-label={t('Commands')}>
         {entries.map(({ command, index, enabled: available, error }) => (
           <div
             key={command.id}
@@ -123,7 +119,7 @@ export function CommandPalette({ open, onClose }: CommandPaletteProps) {
             aria-selected={active?.command.id === command.id}
             aria-disabled={!available}
             className="dl-palette-option"
-            title={error || undefined}
+            title={t((error || undefined) ?? '')}
             onMouseDown={(event) => event.preventDefault()}
             onMouseMove={() => {
               if (available) setSelected(command.id);
@@ -134,20 +130,30 @@ export function CommandPalette({ open, onClose }: CommandPaletteProps) {
           >
             <span>
               {command.title}
-              {error && <small>Unavailable: {error}</small>}
+              {error && (
+                <small>
+                  {t('Unavailable:')}
+                  {error}
+                </small>
+              )}
             </span>
             {command.shortcut && <kbd>{command.shortcut}</kbd>}
-            {!available && <span className="dl-palette-unavailable">Unavailable</span>}
+            {!available && <span className="dl-palette-unavailable">{t('Unavailable')}</span>}
           </div>
         ))}
-        {!entries.length && <p className="dl-palette-empty">{commands.length ? 'No commands match your search.' : 'No commands are registered yet.'}</p>}
+        {!entries.length && <p className="dl-palette-empty">{t(commands.length ? 'No commands match your search.' : 'No commands are registered yet.')}</p>}
       </div>
       <footer className="dl-palette-footer">
         <span role="status">
-          {entries.length} {entries.length === 1 ? 'command' : 'commands'}
+          {entries.length} {t(entries.length === 1 ? 'command' : 'commands')}
         </span>
         <span>
-          <kbd>↑ ↓</kbd> navigate <kbd>Enter</kbd> run <kbd>Esc</kbd> close
+          <kbd>↑ ↓</kbd>
+          {t('navigate')}
+          <kbd>{t('Enter')}</kbd>
+          {t('run')}
+          <kbd>{t('Esc')}</kbd>
+          {t('close')}
         </span>
       </footer>
     </dialog>

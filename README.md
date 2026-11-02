@@ -162,6 +162,26 @@ export const plugins = registerLocalPlugins(modules);
 
 Pass that registry as `<Workbench plugins={plugins} ... />`. Workbench seals it on mount; changing plugin membership requires a new registry and a remount. Plugin panels precede application panels. Plugin commands receive `{ notify, executeCommand }` when executed. Menus appear under Plugins and follow command availability. Footer and monitoring components can use the normal workbench hooks. Plugins are bundled with the application and run as trusted code; adding or removing one in production requires rebuilding. The Hello World demo uses this discovery path.
 
+## Languages
+
+English is the default; Preferences → Language also offers French. Language changes update chrome, command search, panel titles, and Ant Design in place and persist with preferences. Existing version-1 configuration files without a language still import as English. Unknown languages are rejected before any workspace change.
+
+Use `useI18n()` inside Workbench or an explicit `I18nProvider`: `t('Hello, {name}!', { name: 'Ada' })`, `locale`, and `setLocale('fr')`. Components outside a provider can read English; changing their language requires a provider. For additional languages or application/plugin strings:
+
+```tsx
+<I18nProvider
+  languages={[
+    { id: 'en', label: 'English', messages: { 'app.title': 'My application' } },
+    { id: 'fr', label: 'Français', messages: { 'app.title': 'Mon application' } },
+    { id: 'de', label: 'Deutsch', messages: { 'app.title': 'Meine Anwendung' } },
+  ]}
+>
+  <Workbench title="My Lab" plugins={plugins} />
+</I18nProvider>
+```
+
+Missing translations fall back to the English catalog, then the literal key. Values are plain text. Optional `antdLocales` supplies Ant Design catalogs for additional languages; English/French are integrated automatically. Application/plugin notifications retain the language used when they were sent. Standalone provider state remains in memory unless a Workbench persists its preferences.
+
 ## License
 
 [MIT](LICENSE).

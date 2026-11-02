@@ -46,3 +46,7 @@ The same sixty-six checks pass on the development server with React StrictMode. 
 ## Feature 9
 
 Forty-nine unit tests cover plugin startup, all contribution kinds, copied/frozen definitions, transactional rollback, cleanup, stale APIs, duplicate IDs/shortcuts, reserved commands, deterministic module order, and sealing. The compiled demo discovers Hello World through Vite's eager directory glob. Browser checks exercise its panel, footer and monitoring items, and execute the contributed command from both its menu and the palette.
+
+## Feature 10
+
+Fifty-four unit tests and seventy-two compiled-demo browser checks pass. Language checks cover English defaults, French, catalog extension, fallback, plain-text interpolation, isolated providers, real Ant Design locale context, legacy preferences, and rejection of an unregistered language before applying a layout. The browser changes language without replacing the Hello World panel or its input, searches and executes a translated command, receives French feedback, and restores French menus/preferences after reload.

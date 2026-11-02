@@ -1,5 +1,5 @@
+import { useI18n } from '../i18n/I18nProvider.js';
 import type { useLayoutManagement } from './useLayoutManagement.js';
-
 function LayoutIcon({ kind }: { kind: 'default' | 'columns' | 'rows' | 'save' | 'restore' | 'reset' }) {
   return (
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true">
@@ -25,11 +25,11 @@ function LayoutIcon({ kind }: { kind: 'default' | 'columns' | 'rows' | 'save' | 
     </svg>
   );
 }
-
 export function LayoutControls({ layout }: { layout: ReturnType<typeof useLayoutManagement> }) {
+  const { t } = useI18n();
   return (
-    <div className="dl-layout-controls" role="group" aria-label="Layout management">
-      <span className="dl-toolbar-label">LAYOUT</span>
+    <div className="dl-layout-controls" role="group" aria-label={t('Layout management')}>
+      <span className="dl-toolbar-label">{t('LAYOUT')}</span>
       {(['default', 'columns', 'rows'] as const).map((preset) => {
         const title = preset === 'default' ? 'Application layout' : preset === 'columns' ? 'Columns layout' : 'Rows layout';
         return (
@@ -37,8 +37,8 @@ export function LayoutControls({ layout }: { layout: ReturnType<typeof useLayout
             key={preset}
             type="button"
             className="dl-icon-button"
-            aria-label={title}
-            title={title}
+            aria-label={t(title ?? '')}
+            title={t(title ?? '')}
             disabled={!layout.ready}
             onClick={() => layout.selectPreset(preset)}
           >
@@ -47,20 +47,27 @@ export function LayoutControls({ layout }: { layout: ReturnType<typeof useLayout
         );
       })}
       <span className="dl-divider" />
-      <button type="button" className="dl-icon-button" aria-label="Save layout" title="Save layout" disabled={!layout.ready} onClick={() => layout.save()}>
+      <button
+        type="button"
+        className="dl-icon-button"
+        aria-label={t('Save layout')}
+        title={t('Save layout')}
+        disabled={!layout.ready}
+        onClick={() => layout.save()}
+      >
         <LayoutIcon kind="save" />
       </button>
       <button
         type="button"
         className="dl-icon-button"
-        aria-label="Restore saved layout"
-        title="Restore saved layout"
+        aria-label={t('Restore saved layout')}
+        title={t('Restore saved layout')}
         disabled={!layout.ready || !layout.hasSaved}
         onClick={layout.restore}
       >
         <LayoutIcon kind="restore" />
       </button>
-      <button type="button" className="dl-icon-button" aria-label="Reset layout" title="Reset layout" disabled={!layout.ready} onClick={layout.reset}>
+      <button type="button" className="dl-icon-button" aria-label={t('Reset layout')} title={t('Reset layout')} disabled={!layout.ready} onClick={layout.reset}>
         <LayoutIcon kind="reset" />
       </button>
     </div>

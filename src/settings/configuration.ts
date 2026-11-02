@@ -7,6 +7,8 @@ import type { WorkbenchPanel } from '../layout/panels.js';
 
 /** Preferences persisted independently from explicit layout checkpoints. */
 export interface WorkbenchPreferences {
+  /** Registered language ID; absent in older version-1 files, which default to English. */
+  locale?: string;
   /** Active color scheme. */
   theme: ThemeMode;
   /** Animation preference. */
@@ -35,7 +37,10 @@ export function validatePreferences(value: unknown): WorkbenchPreferences {
     throw new Error('Preferences have an invalid theme or animation choice.');
   }
   validateNotificationPreferences(preferences.notifications);
+  if (preferences.locale !== undefined && (typeof preferences.locale !== 'string' || !/^[a-z]{2,8}(-[a-z0-9]{1,8})*$/i.test(preferences.locale)))
+    throw new Error('Preferences have an invalid language identifier.');
   return {
+    ...(preferences.locale === undefined ? {} : { locale: preferences.locale }),
     theme: preferences.theme!,
     motion: preferences.motion!,
     notifications: { toastsEnabled: preferences.notifications.toastsEnabled, toastDurationMs: preferences.notifications.toastDurationMs },

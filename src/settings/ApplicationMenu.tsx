@@ -1,9 +1,10 @@
+import { useI18n } from '../i18n/I18nProvider.js';
 import { useContext, useRef, useState } from 'react';
 import { Dropdown } from 'antd';
 import { useCommands } from '../commands/CommandContext.js';
 import { PluginContext } from '../plugins/PluginContext.js';
-
 export function ApplicationMenu() {
+  const { t } = useI18n();
   const [open, setOpen] = useState(false);
   const trigger = useRef<HTMLButtonElement>(null);
   const { execute, canExecute } = useCommands();
@@ -23,26 +24,26 @@ export function ApplicationMenu() {
       autoFocus
       destroyOnHidden
       menu={{
-        'aria-label': 'Application menu',
+        'aria-label': t('Application menu'),
         triggerSubMenuAction: 'click',
         items: [
           {
             key: 'file',
-            label: 'File',
+            label: t('File'),
             children: [
-              { key: 'workbench.settings.open', label: 'Settings' },
-              { key: 'workbench.preferences.open', label: 'Preferences' },
+              { key: 'workbench.settings.open', label: t('Settings') },
+              { key: 'workbench.preferences.open', label: t('Preferences') },
               { type: 'divider' },
-              { key: 'workbench.configuration.import', label: 'Import configuration…', disabled: !canExecute('workbench.configuration.import') },
-              { key: 'workbench.configuration.export', label: 'Export configuration…', disabled: !canExecute('workbench.configuration.export') },
+              { key: 'workbench.configuration.import', label: t('Import configuration…'), disabled: !canExecute('workbench.configuration.import') },
+              { key: 'workbench.configuration.export', label: t('Export configuration…'), disabled: !canExecute('workbench.configuration.export') },
             ],
           },
           ...(menus.length
             ? [
                 {
                   key: 'plugins',
-                  label: 'Plugins',
-                  children: menus.map((menu) => ({ key: `plugin-menu:${menu.id}`, label: menu.title, disabled: !available(menu.commandId) })),
+                  label: t('Plugins'),
+                  children: menus.map((menu) => ({ key: `plugin-menu:${menu.id}`, label: t(menu.title), disabled: !available(menu.commandId) })),
                 },
               ]
             : []),
@@ -66,7 +67,7 @@ export function ApplicationMenu() {
         ref={trigger}
         type="button"
         className="dl-icon-button dl-menu-trigger"
-        aria-label="Open application menu"
+        aria-label={t('Open application menu')}
         aria-haspopup="menu"
         aria-expanded={open}
         onKeyDown={(event) => {

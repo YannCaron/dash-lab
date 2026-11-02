@@ -1,3 +1,4 @@
+import { useI18n } from '../i18n/I18nProvider.js';
 import { useEffect, useId, useRef, useState } from 'react';
 import type { FormEvent } from 'react';
 import type { WorkbenchPreferences } from './configuration.js';
@@ -7,9 +8,7 @@ import type { createLayoutStore } from '../layout/layoutStore.js';
 import { useStore } from 'zustand';
 import { useCommands } from '../commands/CommandContext.js';
 import { useBackdropDismiss } from '../overlays/useBackdropDismiss.js';
-
 export type SettingsPage = 'settings' | 'preferences';
-
 export function SettingsDialog({
   page,
   onClose,
@@ -23,6 +22,7 @@ export function SettingsDialog({
   layout: ReturnType<typeof useLayoutManagement>;
   store: ReturnType<typeof createLayoutStore>;
 }) {
+  const { t, locales } = useI18n();
   const dialog = useRef<HTMLDialogElement>(null);
   const backdrop = useBackdropDismiss(onClose);
   const close = useRef<HTMLButtonElement>(null);
@@ -33,7 +33,6 @@ export function SettingsDialog({
   const { execute } = useCommands();
   const preferences = useRef(configuration.preferences);
   preferences.current = configuration.preferences;
-
   useEffect(() => {
     if (page) {
       setDraft(structuredClone(preferences.current));
@@ -42,7 +41,6 @@ export function SettingsDialog({
       close.current?.focus();
     } else dialog.current?.close();
   }, [page]);
-
   const submit = (event: FormEvent) => {
     event.preventDefault();
     try {
@@ -52,7 +50,6 @@ export function SettingsDialog({
       setError(error instanceof Error ? error.message : 'Preferences could not be applied.');
     }
   };
-
   return (
     <dialog
       {...backdrop}
@@ -65,26 +62,36 @@ export function SettingsDialog({
       }}
     >
       <header>
-        <h2 id={titleId}>{page === 'preferences' ? 'Preferences' : 'Settings'}</h2>
-        <button ref={close} type="button" className="dl-icon-button dl-dialog-close" aria-label="Close settings" onClick={onClose}>
+        <h2 id={titleId}>{t(page === 'preferences' ? 'Preferences' : 'Settings')}</h2>
+        <button ref={close} type="button" className="dl-icon-button dl-dialog-close" aria-label={t('Close settings')} onClick={onClose}>
           ×
         </button>
       </header>
       {page === 'preferences' ? (
         <form onSubmit={submit}>
-          <p>Choose how this application looks and notifies you.</p>
+          <p>{t('Choose how this application looks and notifies you.')}</p>
           <label className="dl-settings-field">
-            Color theme
+            {t('Color theme')}
             <select value={draft.theme} onChange={(event) => setDraft({ ...draft, theme: event.target.value as WorkbenchPreferences['theme'] })}>
-              <option value="light">Light</option>
-              <option value="dark">Dark</option>
+              <option value="light">{t('Light')}</option>
+              <option value="dark">{t('Dark')}</option>
             </select>
           </label>
           <label className="dl-settings-field">
-            Animations
+            {t('Animations')}
             <select value={draft.motion} onChange={(event) => setDraft({ ...draft, motion: event.target.value as WorkbenchPreferences['motion'] })}>
-              <option value="system">Follow system</option>
-              <option value="reduced">Reduce motion</option>
+              <option value="system">{t('Follow system')}</option>
+              <option value="reduced">{t('Reduce motion')}</option>
+            </select>
+          </label>
+          <label className="dl-settings-field">
+            {t('Language')}
+            <select aria-label={t('Language')} value={draft.locale ?? 'en'} onChange={(event) => setDraft({ ...draft, locale: event.target.value })}>
+              {locales.map((language) => (
+                <option key={language.id} value={language.id}>
+                  {language.label}
+                </option>
+              ))}
             </select>
           </label>
           <label className="dl-settings-check">
@@ -93,10 +100,10 @@ export function SettingsDialog({
               checked={draft.notifications.toastsEnabled}
               onChange={(event) => setDraft({ ...draft, notifications: { ...draft.notifications, toastsEnabled: event.target.checked } })}
             />
-            Show notification popups
+            {t('Show notification popups')}
           </label>
           <label className="dl-settings-field">
-            Popup duration (seconds)
+            {t('Popup duration (seconds)')}
             <input
               type="number"
               min={1}
@@ -108,7 +115,7 @@ export function SettingsDialog({
             />
           </label>
           <p className="dl-settings-hint">
-            History is always available. Errors remain visible until dismissed. System reduced-motion preferences always apply.
+            {t('History is always available. Errors remain visible until dismissed. System reduced-motion preferences always apply.')}
           </p>
           {error && (
             <p role="alert" className="dl-settings-error">
@@ -117,38 +124,38 @@ export function SettingsDialog({
           )}
           <footer>
             <button type="button" onClick={onClose}>
-              Cancel
+              {t('Cancel')}
             </button>
             <button type="submit" className="dl-settings-primary">
-              Apply preferences
+              {t('Apply preferences')}
             </button>
           </footer>
         </form>
       ) : (
         <div>
-          <p>Changes apply immediately. Save the layout to restore it on your next visit.</p>
+          <p>{t('Changes apply immediately. Save the layout to restore it on your next visit.')}</p>
           <fieldset>
-            <legend>Workspace</legend>
+            <legend>{t('Workspace')}</legend>
             <label className="dl-settings-check">
               <input type="checkbox" checked={state.headerVisible} onChange={state.toggleHeader} />
-              Show header
+              {t('Show header')}
             </label>
             <label className="dl-settings-check">
               <input type="checkbox" checked={state.footerVisible} onChange={state.toggleFooter} />
-              Show footer
+              {t('Show footer')}
             </label>
             <div className="dl-settings-actions">
               <button type="button" disabled={!layout.ready} onClick={() => layout.save()}>
-                Save workspace layout
+                {t('Save workspace layout')}
               </button>
               <button type="button" disabled={!layout.ready} onClick={() => layout.reset()}>
-                Reset workspace layout
+                {t('Reset workspace layout')}
               </button>
             </div>
           </fieldset>
           <fieldset>
-            <legend>Configuration</legend>
-            <p>Transfer the layout and preferences as a JSON file. Panel contents and notification history stay in this session.</p>
+            <legend>{t('Configuration')}</legend>
+            <p>{t('Transfer the layout and preferences as a JSON file. Panel contents and notification history stay in this session.')}</p>
             <div className="dl-settings-actions">
               <button
                 type="button"
@@ -157,7 +164,7 @@ export function SettingsDialog({
                   void execute('workbench.configuration.import');
                 }}
               >
-                Import configuration
+                {t('Import configuration')}
               </button>
               <button
                 type="button"
@@ -166,14 +173,14 @@ export function SettingsDialog({
                   void execute('workbench.configuration.export');
                 }}
               >
-                Export configuration
+                {t('Export configuration')}
               </button>
             </div>
-            {configuration.busy && <p role="status">Reading configuration…</p>}
+            {configuration.busy && <p role="status">{t('Reading configuration\u2026')}</p>}
           </fieldset>
           <footer>
             <button type="button" onClick={onClose}>
-              Close
+              {t('Close')}
             </button>
           </footer>
         </div>

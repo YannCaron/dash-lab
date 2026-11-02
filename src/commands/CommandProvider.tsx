@@ -1,3 +1,4 @@
+import { useI18n } from '../i18n/I18nProvider.js';
 import { useCallback, useContext, useMemo, useState } from 'react';
 import type { ReactNode } from 'react';
 import { CommandRegistry } from './CommandRegistry.js';
@@ -17,6 +18,7 @@ export function CommandProvider({ children, registry: supplied }: CommandProvide
   const [registry] = useState(
     () => supplied ?? new CommandRegistry(typeof navigator !== 'undefined' && /Mac|iPhone|iPad/.test(navigator.platform) ? 'mac' : 'other'),
   );
+  const { t } = useI18n();
   const notifications = useContext(NotificationContext);
   const execute = useCallback(
     async (id: string) => {
@@ -26,14 +28,14 @@ export function CommandProvider({ children, registry: supplied }: CommandProvide
         if (!notifications) throw error;
         const command = registry.getCommands().find((entry) => entry.id === id);
         notifications.getState().notify({
-          title: `Command failed: ${command?.title ?? id}`,
-          description: error instanceof Error ? error.message : 'The action could not be completed.',
+          title: t('Command failed: {title}', { title: t(command?.title ?? id) }),
+          description: t(error instanceof Error ? error.message : 'The action could not be completed.'),
           level: 'error',
         });
         return false;
       }
     },
-    [registry, notifications],
+    [registry, notifications, t],
   );
   const context = useMemo(() => ({ registry, execute }), [registry, execute]);
   return <CommandContext.Provider value={context}>{children}</CommandContext.Provider>;

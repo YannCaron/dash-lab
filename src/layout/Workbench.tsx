@@ -1,3 +1,4 @@
+import { I18nContext, I18nProvider, useI18n } from '../i18n/I18nProvider.js';
 import { useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
 import type { DockviewApi } from 'dockview-react';
@@ -22,7 +23,6 @@ import type { SettingsPage } from '../settings/SettingsDialog.js';
 import { useWorkbenchConfiguration } from '../settings/useWorkbenchConfiguration.js';
 import { emptyContributions, PluginContext, usePluginCommands } from '../plugins/PluginContext.js';
 import type { PluginRegistry } from '../plugins/PluginRegistry.js';
-
 /** Properties of the reusable application workbench. */
 export interface WorkbenchProps {
   /** Accessible name of this application. */
@@ -56,9 +56,7 @@ export interface WorkbenchProps {
   /** Fallback content displayed when no panels are supplied. */
   children?: ReactNode;
 }
-
 const emptyPanels: readonly WorkbenchPanel[] = [];
-
 function ChromeIcon({ name }: { name: 'view' | 'focus' }) {
   return (
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true">
@@ -73,9 +71,19 @@ function ChromeIcon({ name }: { name: 'view' | 'focus' }) {
     </svg>
   );
 }
-
 /** Composes application chrome and a dockable workspace without owning application content. */
 export function Workbench(props: WorkbenchProps) {
+  const language = useContext(I18nContext);
+  return language ? (
+    <WorkbenchTheme {...props} />
+  ) : (
+    <I18nProvider>
+      <WorkbenchTheme {...props} />
+    </I18nProvider>
+  );
+}
+
+function WorkbenchTheme(props: WorkbenchProps) {
   const theme = useContext(ThemeContext);
   return theme ? (
     <WorkbenchNotifications {...props} />
@@ -85,7 +93,6 @@ export function Workbench(props: WorkbenchProps) {
     </ThemeProvider>
   );
 }
-
 function WorkbenchNotifications(props: WorkbenchProps) {
   const notifications = useContext(NotificationContext);
   return notifications ? (
@@ -96,7 +103,6 @@ function WorkbenchNotifications(props: WorkbenchProps) {
     </NotificationProvider>
   );
 }
-
 function WorkbenchCommands(props: WorkbenchProps) {
   const commands = useContext(CommandContext);
   return commands ? (
@@ -107,7 +113,6 @@ function WorkbenchCommands(props: WorkbenchProps) {
     </CommandProvider>
   );
 }
-
 function WorkbenchShell({
   title,
   subtitle,
@@ -125,6 +130,7 @@ function WorkbenchShell({
   preferencesStorageKey,
   children,
 }: WorkbenchProps) {
+  const { t } = useI18n();
   const [contributions] = useState(() => plugins?.seal() ?? emptyContributions);
   const panels = useMemo(() => [...contributions.panels, ...applicationPanels], [contributions, applicationPanels]);
   const [store] = useState(() => createLayoutStore(initialHeaderVisible, initialFooterVisible));
@@ -154,27 +160,23 @@ function WorkbenchShell({
   const exitFocus = useRef<HTMLButtonElement>(null);
   const enterFocus = useRef<HTMLButtonElement>(null);
   const wasFocused = useRef(false);
-
   useEffect(() => {
     if (document.activeElement === document.body) root.current?.focus({ preventScroll: true });
   }, []);
-
   useEffect(() => {
     if (layout.feedback && reportedFeedback.current !== layout.feedback) {
       reportedFeedback.current = layout.feedback;
-      notify({ title: layout.feedback.message, level: layout.feedback.error ? 'error' : 'info' });
+      notify({ title: t(layout.feedback.message), level: layout.feedback.error ? 'error' : 'info' });
     }
-  }, [layout.feedback, notify]);
-
+  }, [layout.feedback, notify, t]);
   useEffect(() => {
     if (state.focusMode) exitFocus.current?.focus();
     else if (wasFocused.current) enterFocus.current?.focus();
     wasFocused.current = state.focusMode;
   }, [state.focusMode]);
-
   return (
     <PluginContext.Provider value={contributions}>
-      <section className="dl-workbench" ref={root} tabIndex={-1} aria-label={title} data-focus-mode={state.focusMode} onKeyDown={handleKeyDown}>
+      <section className="dl-workbench" ref={root} tabIndex={-1} aria-label={t(title ?? '')} data-focus-mode={state.focusMode} onKeyDown={handleKeyDown}>
         {!state.focusMode && state.headerVisible && (
           <header className="dl-header">
             <div className="dl-identity">
@@ -187,7 +189,7 @@ function WorkbenchShell({
         )}
 
         {!state.focusMode && (
-          <div className="dl-control-bar" role="toolbar" aria-label="Workbench controls">
+          <div className="dl-control-bar" role="toolbar" aria-label={t('Workbench controls')}>
             <div className="dl-application-controls">
               <ApplicationMenu />
               {controlBar}
@@ -196,17 +198,17 @@ function WorkbenchShell({
               <button
                 type="button"
                 className="dl-icon-button dl-palette-trigger"
-                aria-label="Open command palette"
+                aria-label={t('Open command palette')}
                 aria-haspopup="dialog"
                 aria-expanded={paletteOpen}
-                title="Commands (Ctrl/⌘+Shift+P)"
+                title={t('Commands (Ctrl/\u2318+Shift+P)')}
                 onClick={openPalette}
               >
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true">
                   <circle cx="10" cy="10" r="6" />
                   <path d="m15 15 6 6" />
                 </svg>
-                <span>Commands</span>
+                <span>{t('Commands')}</span>
               </button>
               <span className="dl-divider" />
               <NotificationButton />
@@ -218,32 +220,32 @@ function WorkbenchShell({
               <button
                 type="button"
                 className="dl-icon-button"
-                aria-label={state.headerVisible || state.footerVisible ? 'Hide header and footer' : 'Show header and footer'}
-                title="Toggle header and footer (Ctrl/⌘+Alt+V)"
+                aria-label={t(state.headerVisible || state.footerVisible ? 'Hide header and footer' : 'Show header and footer')}
+                title={t('Toggle header and footer (Ctrl/\u2318+Alt+V)')}
                 aria-pressed={state.headerVisible !== state.footerVisible ? 'mixed' : state.headerVisible}
                 onClick={state.toggleView}
               >
                 <ChromeIcon name="view" />
-                <span>View</span>
+                <span>{t('View')}</span>
               </button>
               <span className="dl-divider" />
               <button
                 type="button"
                 ref={enterFocus}
                 className="dl-icon-button dl-focus-button"
-                aria-label="Enter focus mode"
-                title="Focus workspace"
+                aria-label={t('Enter focus mode')}
+                title={t('Focus workspace')}
                 onClick={state.toggleFocus}
               >
                 <ChromeIcon name="focus" />
-                <span>Focus</span>
+                <span>{t('Focus')}</span>
               </button>
             </div>
           </div>
         )}
 
         {!state.focusMode && (monitoringBar || contributions.monitoringItems.length > 0) && (
-          <aside className="dl-monitoring-bar" aria-label="Monitoring">
+          <aside className="dl-monitoring-bar" aria-label={t('Monitoring')}>
             {monitoringBar}
             {contributions.monitoringItems.map(({ id, component: Component }) => (
               <span key={id} data-plugin-monitoring-item={id}>
@@ -252,11 +254,11 @@ function WorkbenchShell({
             ))}
           </aside>
         )}
-        <main className="dl-workspace" aria-label="Workspace">
+        <main className="dl-workspace" aria-label={t('Workspace')}>
           {panels.length ? (
             <DockWorkspace panels={panels} onReady={setApi} />
           ) : (
-            <div className="dl-empty-workspace">{children ?? 'No panels have been added to this workspace.'}</div>
+            <div className="dl-empty-workspace">{children ?? t('No panels have been added to this workspace.')}</div>
           )}
         </main>
         {!state.focusMode && state.footerVisible && (footer || contributions.statusItems.length > 0) && (
@@ -276,7 +278,7 @@ function WorkbenchShell({
           ref={configuration.input}
           hidden
           accept="application/json,.json"
-          aria-label="Import configuration file"
+          aria-label={t('Import configuration file')}
           onChange={(event) => {
             const file = event.target.files?.[0];
             event.target.value = '';
@@ -285,7 +287,8 @@ function WorkbenchShell({
         />
         {state.focusMode && (
           <button ref={exitFocus} type="button" className="dl-exit-focus" onClick={state.toggleFocus}>
-            Exit focus mode <kbd>Esc</kbd>
+            {t('Exit focus mode')}
+            <kbd>{t('Esc')}</kbd>
           </button>
         )}
       </section>
