@@ -22,7 +22,9 @@ Storybook and Vitest run independently of the demo. Distribution includes only l
 
 Each workbench owns a separate Zustand visibility store. Focus mode suppresses chrome without changing header/footer preferences or unmounting Dockview. Focus returns to the trigger when leaving focus mode. Escape handling is scoped to the workbench; there is no global command registry in this increment.
 
-Panel definitions are validated before Dockview receives them. Application components are passed through stable renderers, and Dockview's `always` renderer retains inactive panel state. There is no saved-layout persistence yet. The demo uses only the MIT edition's docking features.
+Panel definitions are validated before Dockview receives them. Application components are passed through stable renderers, and Dockview's `always` renderer retains inactive panel state. The demo uses only the MIT edition's docking features.
+
+Layout management captures the initial native Dockview layout before loading a saved checkpoint. Versioned checkpoints contain the native layout and header/footer preferences. Loading validates panel identities, components, group membership, and grid structure before calling `fromJSON` with `reuseExistingPanels`. Explicit saves persist per application; a failed browser write keeps an in-memory checkpoint. Reset and presets reuse existing panels, and do not replace the saved checkpoint. Popout browser windows are not restored.
 
 ThemeProvider owns another instance-local Zustand store. A single palette supplies CSS tokens and Ant Design tokens; Dockview keeps its native light/dark theme with CSS-variable overrides. A workbench inherits the nearest provider or creates a light provider automatically. Native controls and popup containers follow the local color scheme. Theme changes never recreate the workspace or its panels. Theme persistence is outside this increment.
 

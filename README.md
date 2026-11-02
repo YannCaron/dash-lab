@@ -2,7 +2,7 @@
 
 Build once. Create many.
 
-A reusable React workbench and a separate Hello World demo. Features 1–3 provide the foundation, dockable workbench shell, and light/dark themes; the remaining features are tracked in [prompt.md](prompt.md).
+A reusable React workbench and a separate Hello World demo. Features 1–4 provide the foundation, dockable workbench, themes, and saved layouts; the remaining features are tracked in [prompt.md](prompt.md).
 
 ## Run the demo
 
@@ -55,7 +55,15 @@ Give the workbench a parent with an explicit height. React and React DOM are pee
 
 Supply `panels` with unique IDs, titles and React components. Optional positions reference panels listed earlier. Keep the initial panel collection stable for the lifetime of a workbench. The library exposes `WorkbenchPanel` for TypeScript consumers and `onWorkspaceReady` for access to the Dockview API.
 
-Use the `headerActions`, `controlBar`, `monitoringBar`, and `footer` slots for application content. The control bar toggles header/footer visibility and enters Focus mode. Escape or the visible exit button leaves Focus mode and restores the previous visibility preferences. The docked workspace stays mounted throughout, preserving component state. Default tabs stay open; layout restoration and panel management are deferred to Feature 4.
+Use the `headerActions`, `controlBar`, `monitoringBar`, and `footer` slots for application content. The control bar toggles header/footer visibility and enters Focus mode. Escape or the visible exit button leaves Focus mode and restores the previous visibility preferences. The docked workspace stays mounted throughout, preserving component state. Default tabs stay open.
+
+## Saved layouts
+
+The layout toolbar offers application, columns, and rows presets, plus Save, Restore, and Reset. Presets and restoration reuse the existing React panels. Reset restores the application's initial positions and header/footer preferences; it keeps the saved checkpoint available.
+
+Save explicitly stores the panel layout and header/footer visibility in browser local storage. That checkpoint is restored automatically on reload. Unsaved rearrangements, panel content, Focus mode, and theme choice are not persisted. Set `layoutStorageKey="my-lab:layout:v1"` on Workbench to choose an application-specific key, or `layoutStorageKey={false}` for in-memory checkpoints only. The default key uses the workbench title. Keep the key stable while mounted.
+
+Saved data is versioned and checked against the current panel definitions. Corrupt or incompatible saves leave the default workspace usable and show an error. If browser storage is blocked or full, Save retains a checkpoint for the current session. Layouts in separate browser windows are outside this increment.
 
 ## Themes
 

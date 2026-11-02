@@ -12,3 +12,7 @@ Verified locally on Windows with Node.js 24.20.0 on 2026-11-02:
 - Light/dark screenshots are visually reviewed at 1440 × 1000. They are generated under the ignored `test-results/` directory by `npm run test:browser`.
 
 Browser verification currently covers Edge only. Firefox and Safari have not been tested. Dependency audit and bundling warnings are described in [dependency notes](dependencies.md).
+
+## Feature 4
+
+Seventeen unit tests and sixteen browser checks pass. Layout checks cover columns/rows presets, restoration and reset with the same panel instances, preservation of the explicit checkpoint, persistence across reload, corrupt saved data, and blocked storage with an in-memory fallback. The integration test waits for Dockview's asynchronous geometry update before comparing panel positions.

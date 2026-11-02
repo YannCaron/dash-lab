@@ -46,6 +46,34 @@
   align-items: center;
   gap: 12px;
 }
+.dl-layout-controls {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+}
+.dl-icon-button:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+.dl-layout-feedback {
+  position: absolute;
+  z-index: 15;
+  left: 26px;
+  bottom: 42px;
+  max-width: 480px;
+  padding: 9px 13px;
+  border: 1px solid var(--dl-border);
+  border-radius: 6px;
+  background: var(--dl-surface);
+  color: var(--dl-muted);
+  font-size: 11px;
+  box-shadow: 0 3px 12px #0001;
+  pointer-events: none;
+}
+.dl-layout-feedback[role='alert'] {
+  color: var(--dl-text);
+  border-color: var(--dl-accent);
+}
 
 .dl-identity strong {
   font-size: 18px;

@@ -62,6 +62,15 @@ async function screenshot(name) {
   await writeFile(`${output}/${name}.png`, Buffer.from(result.data, 'base64'));
 }
 
+async function reload() {
+  const origin = await evaluate('performance.timeOrigin');
+  await command('Page.reload', { ignoreCache: true });
+  await waitFor(
+    () => evaluate(`performance.timeOrigin !== ${origin} && document.querySelectorAll('.dv-tab').length === 3 && !!document.querySelector('#hello-name')`),
+    'reload demo',
+  );
+}
+
 try {
   let port;
   await waitFor(async () => {
@@ -164,13 +173,83 @@ try {
     '!!document.querySelector(".dl-workspace .dockview-theme-light") && getComputedStyle(document.querySelector("#hello-name")).backgroundColor === globalThis.lightInputBackground',
     'Light theme is restored consistently',
   );
+  await click('Columns layout');
+  await waitFor(
+    () =>
+      evaluate(
+        'Math.abs(document.querySelector(".hello-world").getBoundingClientRect().top - document.querySelector(".demo-guide").getBoundingClientRect().top) < 3 && document.querySelector(".demo-playground").getBoundingClientRect().left > document.querySelector(".demo-guide").getBoundingClientRect().left',
+      ),
+    'columns preset',
+  );
+  await click('Hide header');
+  await click('Save layout');
+  await waitFor(() => evaluate('document.querySelector(".dl-layout-feedback")?.textContent === "Layout saved."'), 'save layout');
+  await click('Rows layout');
+  await waitFor(
+    () => evaluate('document.querySelector(".demo-guide").getBoundingClientRect().top > document.querySelector(".hello-world").getBoundingClientRect().top'),
+    'rows preset',
+  );
+  await click('Show header');
+  await click('Restore saved layout');
+  await waitFor(() => evaluate('!document.querySelector(".dl-header")'), 'restore saved chrome');
+  await waitFor(
+    () =>
+      evaluate(
+        'Math.abs(document.querySelector(".hello-world").getBoundingClientRect().top - document.querySelector(".demo-guide").getBoundingClientRect().top) < 3',
+      ),
+    'restored columns geometry',
+  );
+  await check(
+    'document.querySelector(".hello-world") === globalThis.testPanel && document.querySelector(".hello-result").textContent === "Hello, Ada!" && Math.abs(document.querySelector(".hello-world").getBoundingClientRect().top - document.querySelector(".demo-guide").getBoundingClientRect().top) < 3',
+    'Presets and saved layout restoration preserve the live panel state',
+  );
+  await click('Reset layout');
+  await waitFor(
+    () =>
+      evaluate(
+        '!!document.querySelector(".dl-header") && document.querySelector(".demo-playground").getBoundingClientRect().top > document.querySelector(".demo-guide").getBoundingClientRect().top',
+      ),
+    'reset layout',
+  );
+  await check(
+    'document.querySelector(".hello-world") === globalThis.testPanel && !Array.from(document.querySelectorAll("button")).find(button => button.getAttribute("aria-label") === "Restore saved layout").disabled',
+    'Reset restores the application layout without deleting the saved checkpoint',
+  );
+  await reload();
+  await waitFor(() => evaluate('!document.querySelector(".dl-header")'), 'restore persisted header preference');
+  await check(
+    'Math.abs(document.querySelector(".hello-world").getBoundingClientRect().top - document.querySelector(".demo-guide").getBoundingClientRect().top) < 3',
+    'Saved layout and chrome survive a full page reload',
+  );
+  await evaluate('localStorage.setItem("dash-lab:dash.lab:layout:v1", "not-json")');
+  await reload();
+  await waitFor(() => evaluate('!!document.querySelector(".dl-layout-feedback[role=alert]")'), 'invalid storage feedback');
+  await check(
+    '!!document.querySelector(".dl-header") && document.querySelectorAll(".dv-tab").length === 3',
+    'Corrupt persisted state falls back to the usable application layout',
+  );
+  await evaluate(
+    'globalThis.originalStorageWrite = Storage.prototype.setItem; Storage.prototype.setItem = () => { throw new Error("Storage blocked"); }; true',
+  );
+  await click('Save layout');
+  await waitFor(
+    () => evaluate('document.querySelector(".dl-layout-feedback")?.textContent.includes("Browser storage is unavailable")'),
+    'blocked storage feedback',
+  );
+  await check(
+    '!Array.from(document.querySelectorAll("button")).find(button => button.getAttribute("aria-label") === "Restore saved layout").disabled && document.querySelectorAll(".dv-tab").length === 3',
+    'Unavailable storage leaves a usable in-memory checkpoint',
+  );
+  await evaluate('Storage.prototype.setItem = globalThis.originalStorageWrite; true');
+  await click('Save layout');
+  await screenshot('demo-layout-management');
   assert.deepEqual(errors, [], 'No browser runtime errors');
   console.log('Browser checks passed. Screenshots are in test-results/.');
 } catch (error) {
   if (socket?.readyState === 1) {
     console.error(
       await evaluate(
-        'JSON.stringify({ theme: document.querySelector(".dl-theme")?.dataset.theme, dockClass: document.querySelector(".dl-dock")?.className, inputBackground: getComputedStyle(document.querySelector("#hello-name")).backgroundColor, lightInputBackground: globalThis.lightInputBackground })',
+        'JSON.stringify({ theme: document.querySelector(".dl-theme")?.dataset.theme, samePanel: document.querySelector(".hello-world") === globalThis.testPanel, greeting: document.querySelector(".hello-result")?.textContent, groups: [...document.querySelectorAll(".hello-world,.demo-guide,.demo-playground")].map(node => ({className:node.className, top:node.getBoundingClientRect().top, left:node.getBoundingClientRect().left})), layoutFeedback: document.querySelector(".dl-layout-feedback")?.textContent })',
       ),
     );
     await screenshot('demo-failure');

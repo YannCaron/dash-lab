@@ -7,6 +7,8 @@ import { createLayoutStore } from './layoutStore.js';
 import type { WorkbenchPanel } from './panels.js';
 import { ThemeContext, ThemeProvider } from '../theme/ThemeProvider.js';
 import { ThemeToggle } from '../theme/ThemeToggle.js';
+import { LayoutControls } from './LayoutControls.js';
+import { useLayoutManagement } from './useLayoutManagement.js';
 
 /** Properties of the reusable application workbench. */
 export interface WorkbenchProps {
@@ -32,6 +34,8 @@ export interface WorkbenchProps {
   initialHeaderVisible?: boolean;
   /** Whether the footer is shown on first mount. Defaults to true. */
   initialFooterVisible?: boolean;
+  /** Browser storage key for explicitly saved layouts. Defaults to a title-based key; false keeps saves in memory. Keep stable while mounted. */
+  layoutStorageKey?: string | false;
   /** Fallback content displayed when no panels are supplied. */
   children?: ReactNode;
 }
@@ -77,9 +81,13 @@ function WorkbenchShell({
   onWorkspaceReady,
   initialHeaderVisible = true,
   initialFooterVisible = true,
+  layoutStorageKey,
   children,
 }: WorkbenchProps) {
   const [store] = useState(() => createLayoutStore(initialHeaderVisible, initialFooterVisible));
+  const [api, setApi] = useState<DockviewApi | null>(null);
+  const [storageKey] = useState(() => layoutStorageKey ?? `dash-lab:${encodeURIComponent(title)}:layout:v1`);
+  const layout = useLayoutManagement(api, panels, store, storageKey, onWorkspaceReady);
   const state = useStore(store);
   const exitFocus = useRef<HTMLButtonElement>(null);
   const enterFocus = useRef<HTMLButtonElement>(null);
@@ -118,6 +126,8 @@ function WorkbenchShell({
         <div className="dl-control-bar" role="toolbar" aria-label="Workbench controls">
           <div className="dl-application-controls">{controlBar}</div>
           <div className="dl-view-controls">
+            <LayoutControls layout={layout} />
+            <span className="dl-divider" />
             <ThemeToggle />
             <span className="dl-divider" />
             <span className="dl-toolbar-label">VIEW</span>
@@ -164,12 +174,17 @@ function WorkbenchShell({
       )}
       <main className="dl-workspace" aria-label="Workspace">
         {panels.length ? (
-          <DockWorkspace panels={panels} onReady={onWorkspaceReady} />
+          <DockWorkspace panels={panels} onReady={setApi} />
         ) : (
           <div className="dl-empty-workspace">{children ?? 'No panels have been added to this workspace.'}</div>
         )}
       </main>
       {!state.focusMode && state.footerVisible && footer && <footer className="dl-footer">{footer}</footer>}
+      {layout.feedback && (
+        <div className="dl-layout-feedback" role={layout.feedback.error ? 'alert' : 'status'}>
+          {layout.feedback.message}
+        </div>
+      )}
       {state.focusMode && (
         <button ref={exitFocus} type="button" className="dl-exit-focus" onClick={state.toggleFocus}>
           Exit focus mode <kbd>Esc</kbd>
