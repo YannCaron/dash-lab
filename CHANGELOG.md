@@ -1,0 +1,26 @@
+# Changelog
+
+## Unreleased
+
+The package currently declares version `0.1.0`. No publication or release tag is created by the implementation workflow.
+
+### Added
+
+- Reusable React/TypeScript library and a separate Vite Hello World demo, with watch and one-shot startup commands.
+- Dockview panels, chrome slots, Focus mode, and a combined View control.
+- Light/dark CSS tokens, Ant Design integration, reduced-motion support, and blue/gray themes.
+- Versioned explicit layout saves, restore/reset, and application/columns/rows presets.
+- Bounded notification history, unread state, configurable popups, and larger readable controls.
+- Command registry, scoped keyboard shortcuts, and a searchable command palette with recent selections.
+- File menu, Settings, Preferences, and validated JSON configuration import/export.
+- Modal entrance/backdrop animations, backdrop dismissal, and independent panel scrolling.
+- Local-directory plugin SDK covering panels, commands, menus, status, and monitoring; the demo uses Vite discovery.
+- English/French interfaces, language persistence, extensible catalogs, and translated command search.
+- Vitest service/store/provider contracts, real-browser interactions, Storybook, and a packed-consumer compatibility check.
+- API, architecture, contribution, dependency/license, and validation documentation under MIT.
+
+### Compatibility
+
+- Version-1 configuration files without a language continue to import as English.
+- Plugins are synchronous trusted startup code bundled with the consuming application; membership changes require a remount/rebuild.
+- Desktop workstations are the supported interface target. Cross-browser coverage and tooling audit limits are recorded in [validation](docs/validation.md) and [dependencies](docs/dependencies.md).

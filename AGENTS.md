@@ -118,6 +118,12 @@ When developpment is finished, commit it in the local repository.
 - Commit with idiomatic and concise message
 - Every commit must be atomic and must be able to compile and perform tests without any error
 
+## 11. Project handover map
+
+Public library exports live in `src/index.ts`; implementation is organized by capability under `src/`. The consuming application is under `demo/src/`, with plugins discovered only from its local `plugins/*/index.ts` entry points. Keep plugin activation synchronous, registrations transactional, and mounted panel identities stable. Read `docs/api.md` and `docs/architecture.md` before changing public contracts.
+
+Use Node.js 24 LTS. Run the relevant strict type, Vitest, lint/format, build, browser, and packed-consumer checks described in `CONTRIBUTING.md`. Update public JSDoc, English/French labels, affected Markdown, Storybook examples, and `CHANGELOG.md` with each feature. Generated `dist/`, demo builds, profiles, and test artifacts are ignored and must not be edited as sources.
+
 ---
 
 **North star:** an agent's best contribution is not code that merely works today, but a system its human owner can confidently understand, maintain, and evolve tomorrow.

@@ -2,7 +2,7 @@
 
 Build once. Create many.
 
-A reusable React workbench and a separate Hello World demo. Features 1–8 provide the foundation, dockable workbench, themes, saved layouts, notifications, commands, command palette, menus, and settings; the remaining features are tracked in [prompt.md](prompt.md).
+A reusable React workbench and a separate Hello World demo, with dockable panels, themes, saved layouts, notifications, commands, menus, local plugins, and English/French interfaces. The implementation requirements are tracked in [prompt.md](prompt.md).
 
 ## Run the demo
 
@@ -50,7 +50,7 @@ export function Application() {
 }
 ```
 
-Give the workbench a parent with an explicit height. React and React DOM are peer dependencies. See [architecture](docs/architecture.md) for component boundaries, [dependency notes](docs/dependencies.md) for versions and licensing, and [validation](docs/validation.md) for verified behavior and current limits.
+Give the workbench a parent with an explicit height. React and React DOM are peer dependencies. See the [API reference](docs/api.md), [architecture](docs/architecture.md), [contribution guide](CONTRIBUTING.md), [changelog](CHANGELOG.md), [dependency notes](docs/dependencies.md), and [validation evidence](docs/validation.md).
 
 Panel content scrolls vertically when it exceeds the tab's available height. Each panel owns its scroll container, preserving the position when switching tabs. Application components can continue to manage their own internal scrolling for editors and canvases.
 

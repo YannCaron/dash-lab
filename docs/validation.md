@@ -56,3 +56,7 @@ Fifty-four unit tests and seventy-two compiled-demo browser checks pass. Languag
 Sixty Vitest tests pass, including public hook/provider contracts, nearest-provider isolation, missing-provider messages, independent stores, legacy language configuration, and a regression ensuring standalone English stays read-only during server rendering. Server snapshots use Zustand's initial state; browser interaction tests cover live updates and effect lifecycles.
 
 `npm run test:package` builds and packs the library, rejects source/demo/test leakage, installs the tarball offline into a fresh application using npm's populated cache, type-checks its public API under strict NodeNext resolution, then executes real ESM/React server rendering, plugin status, French, legacy configuration, and CSS-export checks. Artifacts stay under ignored `test-results/`. The runtime install uses normal npm lifecycle handling, so package hook mistakes are observable.
+
+## Feature 12
+
+The API reference documents every public export group and its contracts. Contribution instructions, a changelog, project-specific agent guidance, and the plugin/language architecture decision accompany it. Storybook builds with plugin and language examples as well as the existing layout/theme/notification/command examples. The MIT license and third-party notices remain included in the package.
