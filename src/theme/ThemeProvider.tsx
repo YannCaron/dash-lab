@@ -50,6 +50,8 @@ export function ThemeProvider({ children, initialMode = 'light' }: ThemeProvider
         colorBorder: tokens['--dl-border'],
         colorBorderSecondary: tokens['--dl-border'],
         colorSuccess: tokens['--dl-success'],
+        colorWarning: tokens['--dl-warning'],
+        colorError: tokens['--dl-error'],
         fontFamily: 'Inter, ui-sans-serif, system-ui, sans-serif',
         fontSize: 13,
         borderRadius: 5,

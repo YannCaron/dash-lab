@@ -12,6 +12,8 @@ export const palettes = {
     '--dl-accent-soft': '#e1f2ef',
     '--dl-on-accent': '#ffffff',
     '--dl-success': '#247659',
+    '--dl-warning': '#8a5b06',
+    '--dl-error': '#bd3342',
   },
   dark: {
     '--dl-canvas': '#10151d',
@@ -24,5 +26,7 @@ export const palettes = {
     '--dl-accent-soft': '#183b3c',
     '--dl-on-accent': '#102824',
     '--dl-success': '#76c6a1',
+    '--dl-warning': '#f2bf68',
+    '--dl-error': '#ff9da7',
   },
 } satisfies Record<ThemeMode, Record<string, string>>;

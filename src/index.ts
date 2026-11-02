@@ -6,3 +6,8 @@ export { ThemeProvider, useTheme } from './theme/ThemeProvider.js';
 export type { ThemeProviderProps } from './theme/ThemeProvider.js';
 export { ThemeToggle } from './theme/ThemeToggle.js';
 export type { ThemeControls, ThemeMode } from './theme/themeStore.js';
+export { NotificationProvider } from './notifications/NotificationProvider.js';
+export type { NotificationProviderProps } from './notifications/NotificationProvider.js';
+export { useNotifications } from './notifications/NotificationContext.js';
+export { NotificationButton } from './notifications/NotificationButton.js';
+export type { NotificationInput, NotificationItem, NotificationLevel, NotificationCenterState } from './notifications/notificationStore.js';

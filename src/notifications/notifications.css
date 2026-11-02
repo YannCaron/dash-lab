@@ -1,0 +1,201 @@
+.dl-notification-button {
+  position: relative;
+}
+.dl-notification-count {
+  display: inline-grid;
+  place-items: center;
+  min-width: 17px;
+  height: 17px;
+  padding: 0 4px;
+  border-radius: 10px;
+  background: var(--dl-accent);
+  color: var(--dl-on-accent);
+  font-size: 9px;
+}
+.dl-notification-toasts {
+  position: fixed;
+  z-index: 100;
+  right: 24px;
+  bottom: 45px;
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  width: 350px;
+  pointer-events: none;
+  font-family: ui-sans-serif, system-ui, sans-serif;
+}
+.dl-notification-toast {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 12px 14px 16px;
+  border: 1px solid var(--dl-border, #dce3eb);
+  border-left: 3px solid var(--dl-accent, #087f82);
+  border-radius: 7px;
+  background: var(--dl-surface, #fff);
+  color: var(--dl-text, #202b3b);
+  box-shadow: 0 5px 24px #0002;
+  pointer-events: auto;
+}
+.dl-notification-toast strong {
+  display: block;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+}
+.dl-notification-toast p {
+  margin: 6px 0 0;
+  color: var(--dl-muted, #647287);
+  font-size: 11px;
+  line-height: 1.7;
+  overflow-wrap: anywhere;
+}
+.dl-notification-toast .dl-icon-button {
+  min-width: 22px;
+  height: 22px;
+}
+.dl-notification-toast[data-level='success'] {
+  border-left-color: var(--dl-success);
+}
+.dl-notification-toast[data-level='warning'] {
+  border-left-color: var(--dl-warning);
+}
+.dl-notification-toast[data-level='error'] {
+  border-left-color: var(--dl-error);
+}
+.dl-notification-center {
+  position: fixed;
+  inset: 12px 12px 12px auto;
+  width: 410px;
+  height: calc(100% - 24px);
+  max-height: none;
+  margin: 0;
+  padding: 0;
+  border: 1px solid var(--dl-border, #dce3eb);
+  border-radius: 10px;
+  background: var(--dl-surface, #fff);
+  color: var(--dl-text, #202b3b);
+  box-shadow: 0 10px 50px #0004;
+  font-family: ui-sans-serif, system-ui, sans-serif;
+}
+.dl-notification-center[open] {
+  display: flex;
+  flex-direction: column;
+}
+.dl-notification-center::backdrop {
+  background: #0005;
+}
+.dl-notification-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 24px;
+  border-bottom: 1px solid var(--dl-border);
+}
+.dl-notification-heading h2 {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 600;
+  letter-spacing: -0.5px;
+}
+.dl-notification-heading p {
+  margin: 7px 0 0;
+  color: var(--dl-muted);
+  font-size: 11px;
+}
+.dl-notification-actions {
+  display: flex;
+  justify-content: space-between;
+  padding: 13px 24px;
+  border-bottom: 1px solid var(--dl-border);
+}
+.dl-notification-center button:not(.dl-icon-button) {
+  border: 0;
+  padding: 0;
+  background: transparent;
+  color: var(--dl-accent);
+  font: inherit;
+  font-size: 11px;
+  cursor: pointer;
+}
+.dl-notification-center button:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+.dl-notification-center :focus-visible {
+  outline: 2px solid var(--dl-accent);
+  outline-offset: 3px;
+}
+.dl-notification-history {
+  flex: 1;
+  overflow: auto;
+  min-height: 0;
+}
+.dl-notification-entry {
+  margin: 0 24px;
+  padding: 21px 0;
+  border-bottom: 1px solid var(--dl-border);
+}
+.dl-notification-entry[data-read='false'] h3::before {
+  content: '';
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  margin-right: 7px;
+  border-radius: 50%;
+  background: var(--dl-accent);
+}
+.dl-notification-meta {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 9px;
+  color: var(--dl-muted);
+  font-size: 9px;
+}
+.dl-notification-meta > span {
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--dl-accent);
+}
+.dl-notification-entry[data-level='success'] .dl-notification-meta > span {
+  color: var(--dl-success);
+}
+.dl-notification-entry[data-level='warning'] .dl-notification-meta > span {
+  color: var(--dl-warning);
+}
+.dl-notification-entry[data-level='error'] .dl-notification-meta > span {
+  color: var(--dl-error);
+}
+.dl-notification-entry h3 {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.6;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+.dl-notification-entry p {
+  margin: 6px 0 0;
+  color: var(--dl-muted);
+  font-size: 11px;
+  line-height: 1.7;
+  overflow-wrap: anywhere;
+}
+.dl-notification-entry-actions {
+  display: flex;
+  gap: 17px;
+  margin-top: 12px;
+}
+.dl-notification-empty {
+  padding: 72px 32px;
+  text-align: center;
+}
+.dl-notification-empty h3 {
+  font-size: 15px;
+  font-weight: 500;
+}
+.dl-notification-empty p {
+  font-size: 12px;
+  color: var(--dl-muted);
+}

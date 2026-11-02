@@ -2,7 +2,7 @@
 
 Build once. Create many.
 
-A reusable React workbench and a separate Hello World demo. Features 1–4 provide the foundation, dockable workbench, themes, and saved layouts; the remaining features are tracked in [prompt.md](prompt.md).
+A reusable React workbench and a separate Hello World demo. Features 1–5 provide the foundation, dockable workbench, themes, saved layouts, and notifications; the remaining features are tracked in [prompt.md](prompt.md).
 
 ## Run the demo
 
@@ -79,7 +79,15 @@ import { ThemeProvider, Workbench } from 'dash-lab';
 
 `useTheme()` exposes `mode`, `setMode('light' | 'dark')`, and `toggleTheme()` to components inside the provider or workbench. `ThemeToggle` is also exported for custom application controls. Theme changes update CSS tokens, Ant Design's ConfigProvider, and Dockview in place. They do not reset panel layout or component state. Theme selection is in memory for this increment.
 
-Public CSS tokens are `--dl-canvas`, `--dl-surface`, `--dl-raised`, `--dl-text`, `--dl-muted`, `--dl-border`, `--dl-accent`, `--dl-accent-soft`, `--dl-on-accent`, and `--dl-success`. Transitions take 180 ms and respect `prefers-reduced-motion`.
+Public CSS tokens are `--dl-canvas`, `--dl-surface`, `--dl-raised`, `--dl-text`, `--dl-muted`, `--dl-border`, `--dl-accent`, `--dl-accent-soft`, `--dl-on-accent`, `--dl-success`, `--dl-warning`, and `--dl-error`. Transitions take 180 ms and respect `prefers-reduced-motion`.
+
+## Notifications
+
+Call `useNotifications().notify({ title: 'Saved', description: 'Your work is ready.', level: 'success' })` from a component inside Workbench. Supported levels are info, success, warning, and error. The toolbar bell opens the history dialog and displays the unread count. Users can mark entries read, remove them, or clear history.
+
+Toasts disappear after five seconds; errors remain until dismissed. Override this per notification with `durationMs` (zero means sticky). Dismissing or timing out a toast keeps its unread history entry. History contains up to 100 entries and the visible stack up to three. History lives in memory for the current session.
+
+Workbench supplies an isolated center automatically. For custom composition, wrap a workbench in `NotificationProvider` inside `ThemeProvider`, and set `historyLimit` when needed. `NotificationButton` is exported for custom controls. Layout feedback and application notifications use the same center. The Hello World greeting and Playground buttons demonstrate all severities.
 
 ## License
 

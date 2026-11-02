@@ -16,3 +16,7 @@ Browser verification currently covers Edge only. Firefox and Safari have not bee
 ## Feature 4
 
 Seventeen unit tests and sixteen browser checks pass. Layout checks cover columns/rows presets, restoration and reset with the same panel instances, preservation of the explicit checkpoint, persistence across reload, corrupt saved data, and blocked storage with an in-memory fallback. The integration test waits for Dockview's asynchronous geometry update before comparing panel positions.
+
+## Feature 5
+
+Twenty-three unit tests and twenty-three browser checks pass. Notification checks cover bounded history, toast dismissal without losing unread entries, automatic toast expiry, sticky errors, per-item acknowledgment/removal, marking all read, clearing history, modal keyboard focus, and Escape. Layout actions publish into the same center. Warning/error text colors satisfy the same contrast tests as the other theme text.

@@ -33,6 +33,8 @@ describe('theme readability', () => {
       expect(contrast(palette['--dl-text'], palette['--dl-surface'])).toBeGreaterThanOrEqual(4.5);
       expect(contrast(palette['--dl-muted'], palette['--dl-surface'])).toBeGreaterThanOrEqual(4.5);
       expect(contrast(palette['--dl-on-accent'], palette['--dl-accent'])).toBeGreaterThanOrEqual(4.5);
+      expect(contrast(palette['--dl-warning'], palette['--dl-surface'])).toBeGreaterThanOrEqual(4.5);
+      expect(contrast(palette['--dl-error'], palette['--dl-surface'])).toBeGreaterThanOrEqual(4.5);
     });
   }
 });

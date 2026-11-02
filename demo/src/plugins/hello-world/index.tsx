@@ -1,9 +1,11 @@
 import { useState } from 'react';
 import { Button, Input } from 'antd';
+import { useNotifications } from 'dash-lab';
 
 export function HelloWorld() {
   const [name, setName] = useState('World');
   const [greeting, setGreeting] = useState<string | null>(null);
+  const { notify } = useNotifications();
 
   return (
     <div className="hello-world">
@@ -19,7 +21,9 @@ export function HelloWorld() {
         className="hello-form"
         onSubmit={(event) => {
           event.preventDefault();
-          setGreeting(`Hello, ${name.trim() || 'World'}!`);
+          const message = `Hello, ${name.trim() || 'World'}!`;
+          setGreeting(message);
+          notify({ title: message, description: 'Your Hello World plugin sent this notification.', level: 'success' });
         }}
       >
         <label htmlFor="hello-name">LET'S MAKE IT PERSONAL</label>

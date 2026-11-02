@@ -1,5 +1,5 @@
-import { Input, Tag } from 'antd';
-import { Workbench } from 'dash-lab';
+import { Button, Input, Tag } from 'antd';
+import { Workbench, useNotifications } from 'dash-lab';
 import type { WorkbenchPanel } from 'dash-lab';
 import { HelloWorld } from './plugins/hello-world';
 
@@ -41,6 +41,7 @@ function WorkspaceGuide() {
 }
 
 function Playground() {
+  const { notify } = useNotifications();
   return (
     <div className="demo-playground">
       <p className="eyebrow">A LITTLE ROOM TO EXPERIMENT</p>
@@ -48,6 +49,24 @@ function Playground() {
       <label htmlFor="demo-note">Your workspace note</label>
       <Input.TextArea id="demo-note" placeholder="What will you build next?" autoSize={{ minRows: 3, maxRows: 6 }} />
       <p className="demo-hint">Your note stays while you move panels or use Focus mode.</p>
+      <div className="demo-notification-controls">
+        <Button size="small" onClick={() => notify({ title: 'A workspace update', description: 'A regular informational notification.', level: 'info' })}>
+          Send info
+        </Button>
+        <Button
+          size="small"
+          onClick={() => notify({ title: 'Check your workspace', description: 'An example warning from the Playground.', level: 'warning' })}
+        >
+          Send warning
+        </Button>
+        <Button
+          size="small"
+          danger
+          onClick={() => notify({ title: 'Example error', description: 'A sticky error. Dismiss it when you are ready.', level: 'error' })}
+        >
+          Send error
+        </Button>
+      </div>
     </div>
   );
 }

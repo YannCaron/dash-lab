@@ -9,6 +9,9 @@ import { ThemeContext, ThemeProvider } from '../theme/ThemeProvider.js';
 import { ThemeToggle } from '../theme/ThemeToggle.js';
 import { LayoutControls } from './LayoutControls.js';
 import { useLayoutManagement } from './useLayoutManagement.js';
+import { NotificationContext, useNotifications } from '../notifications/NotificationContext.js';
+import { NotificationProvider } from '../notifications/NotificationProvider.js';
+import { NotificationButton } from '../notifications/NotificationButton.js';
 
 /** Properties of the reusable application workbench. */
 export interface WorkbenchProps {
@@ -61,11 +64,22 @@ function ChromeIcon({ name }: { name: 'header' | 'footer' | 'focus' }) {
 export function Workbench(props: WorkbenchProps) {
   const theme = useContext(ThemeContext);
   return theme ? (
-    <WorkbenchShell {...props} />
+    <WorkbenchNotifications {...props} />
   ) : (
     <ThemeProvider>
-      <WorkbenchShell {...props} />
+      <WorkbenchNotifications {...props} />
     </ThemeProvider>
+  );
+}
+
+function WorkbenchNotifications(props: WorkbenchProps) {
+  const notifications = useContext(NotificationContext);
+  return notifications ? (
+    <WorkbenchShell {...props} />
+  ) : (
+    <NotificationProvider>
+      <WorkbenchShell {...props} />
+    </NotificationProvider>
   );
 }
 
@@ -88,10 +102,19 @@ function WorkbenchShell({
   const [api, setApi] = useState<DockviewApi | null>(null);
   const [storageKey] = useState(() => layoutStorageKey ?? `dash-lab:${encodeURIComponent(title)}:layout:v1`);
   const layout = useLayoutManagement(api, panels, store, storageKey, onWorkspaceReady);
+  const { notify } = useNotifications();
+  const reportedFeedback = useRef(layout.feedback);
   const state = useStore(store);
   const exitFocus = useRef<HTMLButtonElement>(null);
   const enterFocus = useRef<HTMLButtonElement>(null);
   const wasFocused = useRef(false);
+
+  useEffect(() => {
+    if (layout.feedback && reportedFeedback.current !== layout.feedback) {
+      reportedFeedback.current = layout.feedback;
+      notify({ title: layout.feedback.message, level: layout.feedback.error ? 'error' : 'info' });
+    }
+  }, [layout.feedback, notify]);
 
   useEffect(() => {
     if (state.focusMode) exitFocus.current?.focus();
@@ -126,6 +149,8 @@ function WorkbenchShell({
         <div className="dl-control-bar" role="toolbar" aria-label="Workbench controls">
           <div className="dl-application-controls">{controlBar}</div>
           <div className="dl-view-controls">
+            <NotificationButton />
+            <span className="dl-divider" />
             <LayoutControls layout={layout} />
             <span className="dl-divider" />
             <ThemeToggle />
@@ -180,11 +205,6 @@ function WorkbenchShell({
         )}
       </main>
       {!state.focusMode && state.footerVisible && footer && <footer className="dl-footer">{footer}</footer>}
-      {layout.feedback && (
-        <div className="dl-layout-feedback" role={layout.feedback.error ? 'alert' : 'status'}>
-          {layout.feedback.message}
-        </div>
-      )}
       {state.focusMode && (
         <button ref={exitFocus} type="button" className="dl-exit-focus" onClick={state.toggleFocus}>
           Exit focus mode <kbd>Esc</kbd>

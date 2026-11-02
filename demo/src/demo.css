@@ -1,6 +1,12 @@
 body {
   margin: 0;
 }
+.demo-notification-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 16px;
+}
 
 html,
 body,

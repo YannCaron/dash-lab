@@ -183,7 +183,7 @@ try {
   );
   await click('Hide header');
   await click('Save layout');
-  await waitFor(() => evaluate('document.querySelector(".dl-layout-feedback")?.textContent === "Layout saved."'), 'save layout');
+  await waitFor(() => evaluate('document.querySelector(".dl-notification-toast strong")?.textContent === "Layout saved."'), 'save layout');
   await click('Rows layout');
   await waitFor(
     () => evaluate('document.querySelector(".demo-guide").getBoundingClientRect().top > document.querySelector(".hello-world").getBoundingClientRect().top'),
@@ -223,7 +223,7 @@ try {
   );
   await evaluate('localStorage.setItem("dash-lab:dash.lab:layout:v1", "not-json")');
   await reload();
-  await waitFor(() => evaluate('!!document.querySelector(".dl-layout-feedback[role=alert]")'), 'invalid storage feedback');
+  await waitFor(() => evaluate('!!document.querySelector(".dl-notification-toast[role=alert]")'), 'invalid storage feedback');
   await check(
     '!!document.querySelector(".dl-header") && document.querySelectorAll(".dv-tab").length === 3',
     'Corrupt persisted state falls back to the usable application layout',
@@ -233,7 +233,7 @@ try {
   );
   await click('Save layout');
   await waitFor(
-    () => evaluate('document.querySelector(".dl-layout-feedback")?.textContent.includes("Browser storage is unavailable")'),
+    () => evaluate('document.querySelector(".dl-notification-toast strong")?.textContent.includes("Browser storage is unavailable")'),
     'blocked storage feedback',
   );
   await check(
@@ -243,13 +243,68 @@ try {
   await evaluate('Storage.prototype.setItem = globalThis.originalStorageWrite; true');
   await click('Save layout');
   await screenshot('demo-layout-management');
+  await click('Open notifications');
+  await waitFor(() => evaluate('document.querySelector(".dl-notification-center").open'), 'open notification history');
+  await check(
+    'document.activeElement?.getAttribute("aria-label") === "Close notifications" && document.querySelectorAll(".dl-notification-entry").length >= 3',
+    'Notification history includes layout actions and takes keyboard focus',
+  );
+  await evaluate('[...document.querySelectorAll(".dl-notification-actions button")].find(button => button.textContent === "Clear history").click()');
+  await click('Close notifications');
+  await waitFor(() => evaluate('!document.querySelector(".dl-notification-center").open'), 'close history');
+  await evaluate('document.querySelector("#hello-name").focus(); document.querySelector("#hello-name").select()');
+  await command('Input.insertText', { text: 'Ada' });
+  await evaluate('document.querySelector(".hello-form button").click()');
+  await waitFor(() => evaluate('document.querySelector(".dl-notification-toast strong")?.textContent === "Hello, Ada!"'), 'greeting notification');
+  await click('Dismiss notification: Hello, Ada!');
+  await check(
+    '!document.querySelector(".dl-notification-toast") && document.querySelector(".dl-notification-count")?.textContent === "1"',
+    'Dismissing a toast keeps its unread history entry',
+  );
+  await click('Open notifications');
+  await waitFor(() => evaluate('document.querySelector(".dl-notification-center").open'), 'inspect greeting history');
+  await click('Mark as read: Hello, Ada!');
+  await check(
+    '!document.querySelector(".dl-notification-count") && document.querySelector(".dl-notification-entry")?.dataset.read === "true"',
+    'Acknowledgment updates the unread badge and history',
+  );
+  await evaluate('[...document.querySelectorAll(".dl-notification-actions button")].find(button => button.textContent === "Clear history").click()');
+  await click('Close notifications');
+  await waitFor(() => evaluate('!document.querySelector(".dl-notification-center").open'), 'close cleared history');
+  await evaluate(
+    '[...document.querySelectorAll(".demo-notification-controls button")].find(button => button.textContent === "Send info").click(); [...document.querySelectorAll(".demo-notification-controls button")].find(button => button.textContent === "Send error").click()',
+  );
+  await waitFor(() => evaluate('!!document.querySelector(".dl-notification-toast[role=alert]")'), 'error notification');
+  await waitFor(() => evaluate('!document.querySelector(".dl-notification-toast[data-level=info]")'), 'informational toast timeout');
+  await check(
+    '!!document.querySelector(".dl-notification-toast[data-level=error]") && document.querySelector(".dl-notification-count")?.textContent === "2"',
+    'Toast expiry preserves history while errors remain visible',
+  );
+  await click('Open notifications');
+  await waitFor(() => evaluate('document.querySelector(".dl-notification-center").open'), 'inspect timed notification history');
+  await check('document.querySelectorAll(".dl-notification-entry").length === 2', 'Timed-out notifications remain available in history');
+  await evaluate('[...document.querySelectorAll(".dl-notification-actions button")].find(button => button.textContent === "Mark all read").click()');
+  await click('Remove notification: A workspace update');
+  await screenshot('demo-notifications');
+  await check(
+    'document.querySelectorAll(".dl-notification-entry").length === 1 && !document.querySelector(".dl-notification-count")',
+    'History supports marking all read and individual removal',
+  );
+  await evaluate('[...document.querySelectorAll(".dl-notification-actions button")].find(button => button.textContent === "Clear history").click()');
+  await check(
+    '!!document.querySelector(".dl-notification-empty") && !document.querySelector(".dl-notification-toast")',
+    'Clearing history also clears active toasts',
+  );
+  await command('Input.dispatchKeyEvent', { type: 'keyDown', key: 'Escape', code: 'Escape', windowsVirtualKeyCode: 27 });
+  await command('Input.dispatchKeyEvent', { type: 'keyUp', key: 'Escape', code: 'Escape', windowsVirtualKeyCode: 27 });
+  await waitFor(() => evaluate('!document.querySelector(".dl-notification-center").open'), 'close notification history with Escape');
   assert.deepEqual(errors, [], 'No browser runtime errors');
   console.log('Browser checks passed. Screenshots are in test-results/.');
 } catch (error) {
   if (socket?.readyState === 1) {
     console.error(
       await evaluate(
-        'JSON.stringify({ theme: document.querySelector(".dl-theme")?.dataset.theme, samePanel: document.querySelector(".hello-world") === globalThis.testPanel, greeting: document.querySelector(".hello-result")?.textContent, groups: [...document.querySelectorAll(".hello-world,.demo-guide,.demo-playground")].map(node => ({className:node.className, top:node.getBoundingClientRect().top, left:node.getBoundingClientRect().left})), layoutFeedback: document.querySelector(".dl-layout-feedback")?.textContent })',
+        'JSON.stringify({ theme: document.querySelector(".dl-theme")?.dataset.theme, samePanel: document.querySelector(".hello-world") === globalThis.testPanel, greeting: document.querySelector(".hello-result")?.textContent, groups: [...document.querySelectorAll(".hello-world,.demo-guide,.demo-playground")].map(node => ({className:node.className, top:node.getBoundingClientRect().top, left:node.getBoundingClientRect().left})), layoutFeedback: document.querySelector(".dl-notification-toast strong")?.textContent })',
       ),
     );
     await screenshot('demo-failure');
