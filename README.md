@@ -2,11 +2,11 @@
 
 Build once. Create many.
 
-A reusable React workbench and a separate Hello World demo. Features 1–2 provide the foundation and dockable workbench shell; the remaining features are tracked in [prompt.md](prompt.md).
+A reusable React workbench and a separate Hello World demo. Features 1–3 provide the foundation, dockable workbench shell, and light/dark themes; the remaining features are tracked in [prompt.md](prompt.md).
 
 ## Run the demo
 
-Use Node.js 22.13+ (24 LTS recommended). From this directory:
+Use Node.js 24 LTS (or Node.js 22.13+ in the 22.x series). From this directory:
 
 ```sh
 npm install
@@ -49,13 +49,29 @@ export function Application() {
 }
 ```
 
-Give the workbench a parent with an explicit height. React and React DOM are peer dependencies. See [architecture](docs/architecture.md) for component boundaries and [dependency notes](docs/dependencies.md) for versions and licensing.
+Give the workbench a parent with an explicit height. React and React DOM are peer dependencies. See [architecture](docs/architecture.md) for component boundaries, [dependency notes](docs/dependencies.md) for versions and licensing, and [validation](docs/validation.md) for verified behavior and current limits.
 
 ## Workbench shell
 
 Supply `panels` with unique IDs, titles and React components. Optional positions reference panels listed earlier. Keep the initial panel collection stable for the lifetime of a workbench. The library exposes `WorkbenchPanel` for TypeScript consumers and `onWorkspaceReady` for access to the Dockview API.
 
 Use the `headerActions`, `controlBar`, `monitoringBar`, and `footer` slots for application content. The control bar toggles header/footer visibility and enters Focus mode. Escape or the visible exit button leaves Focus mode and restores the previous visibility preferences. The docked workspace stays mounted throughout, preserving component state. Default tabs stay open; layout restoration and panel management are deferred to Feature 4.
+
+## Themes
+
+The toolbar switches between light and dark. Workbench supplies a light theme automatically, or inherits an explicit provider:
+
+```tsx
+import { ThemeProvider, Workbench } from 'dash-lab';
+
+<ThemeProvider initialMode="dark">
+  <Workbench title="My Lab" panels={panels} />
+</ThemeProvider>;
+```
+
+`useTheme()` exposes `mode`, `setMode('light' | 'dark')`, and `toggleTheme()` to components inside the provider or workbench. `ThemeToggle` is also exported for custom application controls. Theme changes update CSS tokens, Ant Design's ConfigProvider, and Dockview in place. They do not reset panel layout or component state. Theme selection is in memory for this increment.
+
+Public CSS tokens are `--dl-canvas`, `--dl-surface`, `--dl-raised`, `--dl-text`, `--dl-muted`, `--dl-border`, `--dl-accent`, `--dl-accent-soft`, `--dl-on-accent`, and `--dl-success`. Transitions take 180 ms and respect `prefers-reduced-motion`.
 
 ## License
 

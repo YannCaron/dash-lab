@@ -5,13 +5,14 @@
   "type": "module",
   "license": "MIT",
   "engines": {
-    "node": ">=22.13.0"
+    "node": "^22.13.0 || ^24.0.0 || >=26.0.0"
   },
   "files": [
     "dist",
     "README.md",
     "LICENSE",
-    "THIRD_PARTY_NOTICES.md"
+    "THIRD_PARTY_NOTICES.md",
+    "docs"
   ],
   "sideEffects": [
     "**/*.css"

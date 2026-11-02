@@ -7,6 +7,9 @@ flowchart LR
   Demo[Hello World application] --> API[Public library exports]
   Stories[Storybook] --> API
   API --> Layout[Workbench]
+  API --> Theme[Scoped theme provider]
+  Theme --> AntD[Ant Design ConfigProvider]
+  Theme --> Tokens[CSS tokens and Dockview theme]
   Layout --> Visibility[Instance-local visibility store]
   Layout --> Docking[Dockview workspace]
 ```
@@ -20,3 +23,7 @@ Storybook and Vitest run independently of the demo. Distribution includes only l
 Each workbench owns a separate Zustand visibility store. Focus mode suppresses chrome without changing header/footer preferences or unmounting Dockview. Focus returns to the trigger when leaving focus mode. Escape handling is scoped to the workbench; there is no global command registry in this increment.
 
 Panel definitions are validated before Dockview receives them. Application components are passed through stable renderers, and Dockview's `always` renderer retains inactive panel state. There is no saved-layout persistence yet. The demo uses only the MIT edition's docking features.
+
+ThemeProvider owns another instance-local Zustand store. A single palette supplies CSS tokens and Ant Design tokens; Dockview keeps its native light/dark theme with CSS-variable overrides. A workbench inherits the nearest provider or creates a light provider automatically. Native controls and popup containers follow the local color scheme. Theme changes never recreate the workspace or its panels. Theme persistence is outside this increment.
+
+Reduced-motion preferences are observed with a media query, including changes during a session. CSS transitions and Ant Design motion durations become zero. Ant Design's boolean motion flag stays stable because changing it can insert provider wrappers and remount the application subtree. Contrast tests independently compute luminance for primary, secondary, and primary-button text in both palettes.

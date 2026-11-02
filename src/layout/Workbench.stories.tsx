@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { Workbench } from './Workbench';
-import type { WorkbenchPanel } from './panels';
+import { Workbench } from './Workbench.js';
+import type { WorkbenchPanel } from './panels.js';
+import { ThemeProvider } from '../theme/ThemeProvider.js';
 
 const panels: readonly WorkbenchPanel[] = [
   {
@@ -40,3 +41,13 @@ type Story = StoryObj<typeof meta>;
 export const Default: Story = {};
 export const DockedWorkspace: Story = { args: { panels, controlBar: 'Default workspace', monitoringBar: 'Ready', footer: 'Example application' } };
 export const HiddenChrome: Story = { args: { ...DockedWorkspace.args, initialHeaderVisible: false, initialFooterVisible: false } };
+export const DarkWorkspace: Story = {
+  args: { ...DockedWorkspace.args },
+  decorators: [
+    (Story) => (
+      <ThemeProvider initialMode="dark">
+        <Story />
+      </ThemeProvider>
+    ),
+  ],
+};

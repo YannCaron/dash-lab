@@ -18,4 +18,8 @@ Runtime dependencies stay external in the library's JavaScript bundle; the demo 
 
 The installed transitive inventory also includes ISC, BSD-2-Clause, BSD-3-Clause, 0BSD, BlueOak-1.0.0, CC-BY-4.0, and MPL-2.0 packages. Their own license texts and notices continue to apply when redistributing their code or data.
 
+The non-MIT development dependencies include caniuse-lite data (CC-BY-4.0), glob/minimatch and their cache helpers (BlueOak-1.0.0), and Lightning CSS binaries (MPL-2.0). Their authoritative license files are included with the installed packages; these tools are not bundled into the library runtime. Dockview's installed `LICENCE.md` is reproduced in `THIRD_PARTY_NOTICES.md` because its CSS is bundled. Enterprise-only Dockview packages are not used.
+
 On 2026-11-02, `npm audit --omit=dev` reports no runtime vulnerabilities. The full audit reports 14 moderate findings in development tooling, originating from glob and minimatch and propagated to ESLint/Storybook. npm proposes incompatible downgrades; no forced major override is applied. These findings remain a tooling limitation to revisit when upstream dependencies update.
+
+The demo's bundled JavaScript is about 263 kB gzip with the current UI libraries. Vite reports its uncompressed chunk-size warning. Storybook also reports Ant Design's `use client` directive warnings while producing its browser-only preview; the build succeeds. Neither build is an assertion of React Server Component support.

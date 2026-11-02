@@ -1,16 +1,14 @@
 @import 'dockview-react/dist/styles/dockview.css';
 
+.dl-theme {
+  --dl-theme-duration: 180ms;
+  height: 100%;
+  min-height: 0;
+  color: var(--dl-text);
+  background: var(--dl-canvas);
+}
+
 .dl-workbench {
-  --dl-canvas: #f4f6f9;
-  --dl-surface: #ffffff;
-  --dl-raised: #eaf0f4;
-  --dl-text: #202b3b;
-  --dl-muted: #647287;
-  --dl-border: #dce3eb;
-  --dl-accent: #087f82;
-  --dl-accent-soft: #e1f2ef;
-  --dl-on-accent: #ffffff;
-  --dl-success: #247659;
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
@@ -129,6 +127,64 @@
 }
 .dl-dock {
   height: 100%;
+}
+
+.dl-theme :is(.dockview-theme-light, .dockview-theme-dark) {
+  --dv-background-color: var(--dl-canvas);
+  --dv-group-view-background-color: var(--dl-surface);
+  --dv-tabs-and-actions-container-background-color: var(--dl-canvas);
+  --dv-activegroup-visiblepanel-tab-background-color: var(--dl-surface);
+  --dv-activegroup-hiddenpanel-tab-background-color: var(--dl-canvas);
+  --dv-inactivegroup-visiblepanel-tab-background-color: var(--dl-surface);
+  --dv-inactivegroup-hiddenpanel-tab-background-color: var(--dl-canvas);
+  --dv-activegroup-visiblepanel-tab-color: var(--dl-accent);
+  --dv-activegroup-hiddenpanel-tab-color: var(--dl-muted);
+  --dv-inactivegroup-visiblepanel-tab-color: var(--dl-text);
+  --dv-inactivegroup-hiddenpanel-tab-color: var(--dl-muted);
+  --dv-separator-border: var(--dl-border);
+  --dv-paneview-header-border-color: var(--dl-border);
+  --dv-tab-divider-color: var(--dl-border);
+  --dv-icon-hover-background-color: var(--dl-raised);
+  --dv-active-sash-color: var(--dl-accent);
+  --dv-drag-over-background-color: var(--dl-accent-soft);
+  --dv-tabs-and-actions-container-height: 36px;
+  --dv-tabs-and-actions-container-font-size: 11px;
+}
+
+.dl-dock .dv-groupview {
+  border: 1px solid var(--dl-border);
+  border-radius: 7px;
+  overflow: hidden;
+}
+.dl-theme-toggle {
+  min-width: 75px;
+}
+
+.dl-theme,
+.dl-workbench,
+.dl-header,
+.dl-control-bar,
+.dl-monitoring-bar,
+.dl-footer,
+.dl-icon-button,
+.dl-exit-focus,
+.dl-dock .dv-groupview,
+.dl-dock .dv-content-container,
+.dl-dock .dv-tabs-and-actions-container,
+.dl-dock .dv-tab,
+.dl-theme .ant-btn,
+.dl-theme .ant-input,
+.dl-theme .ant-tag {
+  transition:
+    background-color var(--dl-theme-duration) ease,
+    color var(--dl-theme-duration) ease,
+    border-color var(--dl-theme-duration) ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dl-theme {
+    --dl-theme-duration: 0ms;
+  }
 }
 .dl-empty-workspace {
   height: 100%;

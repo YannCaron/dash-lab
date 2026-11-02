@@ -128,9 +128,54 @@ try {
   await click('Show header');
   await click('Show footer');
   await waitFor(() => evaluate('!!document.querySelector(".dl-header") && !!document.querySelector(".dl-footer")'), 'restore chrome');
-  await screenshot('demo-layout');
+  await check('getComputedStyle(document.querySelector(".dl-header")).transitionDuration.split(",")[0].trim() === "0.18s"', 'Theme transitions are enabled');
+  await screenshot('demo-light');
+  await evaluate('globalThis.lightInputBackground = getComputedStyle(document.querySelector("#hello-name")).backgroundColor');
+  await command('Emulation.setEmulatedMedia', { features: [{ name: 'prefers-reduced-motion', value: 'reduce' }] });
+  await check(
+    'getComputedStyle(document.querySelector(".dl-header")).transitionDuration.split(",")[0].trim() === "0s"',
+    'Reduced motion disables theme transitions',
+  );
+  await check(
+    'document.querySelector(".hello-world") === globalThis.testPanel && document.querySelector(".hello-result").textContent === "Hello, Ada!"',
+    'Changing reduced-motion preferences preserves panel state',
+  );
+  await click('Switch to dark theme');
+  await waitFor(() => evaluate('document.querySelector(".dl-theme").dataset.theme === "dark"'), 'dark theme');
+  await waitFor(
+    () =>
+      evaluate(
+        '!!document.querySelector(".dl-workspace .dockview-theme-dark") && getComputedStyle(document.querySelector("#hello-name")).backgroundColor !== globalThis.lightInputBackground',
+      ),
+    'Ant Design and Dockview dark theme application',
+  );
+  await check(
+    '!!document.querySelector(".dl-workspace .dockview-theme-dark") && getComputedStyle(document.querySelector("#hello-name")).backgroundColor !== globalThis.lightInputBackground',
+    'Dockview and real Ant Design inputs follow the dark theme',
+  );
+  await check(
+    'document.querySelector(".hello-world") === globalThis.testPanel && document.querySelector(".hello-result").textContent === "Hello, Ada!" && document.querySelectorAll(".dv-tab").length === 3',
+    'Theme switching preserves panels, layout, and component state',
+  );
+  await screenshot('demo-dark');
+  await click('Switch to light theme');
+  await waitFor(() => evaluate('document.querySelector(".dl-theme").dataset.theme === "light"'), 'light theme');
+  await check(
+    '!!document.querySelector(".dl-workspace .dockview-theme-light") && getComputedStyle(document.querySelector("#hello-name")).backgroundColor === globalThis.lightInputBackground',
+    'Light theme is restored consistently',
+  );
   assert.deepEqual(errors, [], 'No browser runtime errors');
   console.log('Browser checks passed. Screenshots are in test-results/.');
+} catch (error) {
+  if (socket?.readyState === 1) {
+    console.error(
+      await evaluate(
+        'JSON.stringify({ theme: document.querySelector(".dl-theme")?.dataset.theme, dockClass: document.querySelector(".dl-dock")?.className, inputBackground: getComputedStyle(document.querySelector("#hello-name")).backgroundColor, lightInputBackground: globalThis.lightInputBackground })',
+      ),
+    );
+    await screenshot('demo-failure');
+  }
+  throw error;
 } finally {
   if (socket?.readyState === 1) await command('Browser.close').catch(() => {});
   socket?.close();

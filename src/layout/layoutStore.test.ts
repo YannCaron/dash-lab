@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { createLayoutStore } from './layoutStore';
+import { createLayoutStore } from './layoutStore.js';
 
 describe('workbench visibility', () => {
   it('restores the exact header and footer preferences after focus mode', () => {

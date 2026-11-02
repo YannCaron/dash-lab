@@ -1,10 +1,12 @@
-import { useEffect, useRef, useState } from 'react';
+import { useContext, useEffect, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
 import type { DockviewApi } from 'dockview-react';
 import { useStore } from 'zustand';
-import { DockWorkspace } from './DockWorkspace';
-import { createLayoutStore } from './layoutStore';
-import type { WorkbenchPanel } from './panels';
+import { DockWorkspace } from './DockWorkspace.js';
+import { createLayoutStore } from './layoutStore.js';
+import type { WorkbenchPanel } from './panels.js';
+import { ThemeContext, ThemeProvider } from '../theme/ThemeProvider.js';
+import { ThemeToggle } from '../theme/ThemeToggle.js';
 
 /** Properties of the reusable application workbench. */
 export interface WorkbenchProps {
@@ -52,7 +54,18 @@ function ChromeIcon({ name }: { name: 'header' | 'footer' | 'focus' }) {
 }
 
 /** Composes application chrome and a dockable workspace without owning application content. */
-export function Workbench({
+export function Workbench(props: WorkbenchProps) {
+  const theme = useContext(ThemeContext);
+  return theme ? (
+    <WorkbenchShell {...props} />
+  ) : (
+    <ThemeProvider>
+      <WorkbenchShell {...props} />
+    </ThemeProvider>
+  );
+}
+
+function WorkbenchShell({
   title,
   subtitle,
   logo,
@@ -105,6 +118,8 @@ export function Workbench({
         <div className="dl-control-bar" role="toolbar" aria-label="Workbench controls">
           <div className="dl-application-controls">{controlBar}</div>
           <div className="dl-view-controls">
+            <ThemeToggle />
+            <span className="dl-divider" />
             <span className="dl-toolbar-label">VIEW</span>
             <button
               type="button"

@@ -1,14 +1,17 @@
 import { useCallback, useMemo } from 'react';
-import { DockviewDefaultTab, DockviewReact, themeLight } from 'dockview-react';
+import { DockviewDefaultTab, DockviewReact, themeDark, themeLight } from 'dockview-react';
 import type { DockviewApi, DockviewReadyEvent, IDockviewPanelHeaderProps } from 'dockview-react';
-import type { WorkbenchPanel } from './panels';
-import { validatePanels } from './panels';
+import type { WorkbenchPanel } from './panels.js';
+import { validatePanels } from './panels.js';
+import { useTheme } from '../theme/ThemeProvider.js';
 
 function PanelTab(props: IDockviewPanelHeaderProps) {
   return <DockviewDefaultTab {...props} hideClose />;
 }
 
 export function DockWorkspace({ panels, onReady }: { panels: readonly WorkbenchPanel[]; onReady?: ((api: DockviewApi) => void) | undefined }) {
+  const { mode } = useTheme();
+  const dockTheme = useMemo(() => ({ ...(mode === 'dark' ? themeDark : themeLight), name: `dash-lab-${mode}`, gap: 8 }), [mode]);
   const components = useMemo(() => {
     validatePanels(panels);
     return Object.fromEntries(panels.map(({ id, component: Component }) => [id, () => <Component />]));
@@ -34,6 +37,6 @@ export function DockWorkspace({ panels, onReady }: { panels: readonly WorkbenchP
   );
 
   return (
-    <DockviewReact className="dl-dock" components={components} defaultTabComponent={PanelTab} onReady={ready} theme={themeLight} defaultRenderer="always" />
+    <DockviewReact className="dl-dock" components={components} defaultTabComponent={PanelTab} onReady={ready} theme={dockTheme} defaultRenderer="always" />
   );
 }

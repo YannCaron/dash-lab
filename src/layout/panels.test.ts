@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { validatePanels } from './panels';
-import type { WorkbenchPanel } from './panels';
+import { validatePanels } from './panels.js';
+import type { WorkbenchPanel } from './panels.js';
 
 const first: WorkbenchPanel = { id: 'first', title: 'First panel', component: () => null };
 
