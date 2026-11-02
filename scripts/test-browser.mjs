@@ -64,6 +64,13 @@ async function toggleChromePart(part) {
 }
 
 async function screenshot(name) {
+  await waitFor(
+    () =>
+      evaluate(
+        '[...document.querySelectorAll(".dl-modal[open],.dl-notification-toast")].every(node => node.getAnimations().every(animation => animation.playState !== "running"))',
+      ),
+    'settled overlay screenshot',
+  );
   const result = await command('Page.captureScreenshot', { format: 'png' });
   await writeFile(`${output}/${name}.png`, Buffer.from(result.data, 'base64'));
 }
@@ -85,6 +92,12 @@ async function pressKey(key, code, modifiers = 0, windowsVirtualKeyCode = key.le
 async function searchPalette(text) {
   await evaluate('document.querySelector(".dl-palette-search input").focus(); document.querySelector(".dl-palette-search input").select()');
   await command('Input.insertText', { text });
+}
+
+async function clickBackdrop() {
+  await command('Input.dispatchMouseEvent', { type: 'mouseMoved', x: 2, y: 2 });
+  await command('Input.dispatchMouseEvent', { type: 'mousePressed', button: 'left', clickCount: 1, x: 2, y: 2 });
+  await command('Input.dispatchMouseEvent', { type: 'mouseReleased', button: 'left', clickCount: 1, x: 2, y: 2 });
 }
 
 async function clickText(selector, text) {
@@ -696,6 +709,79 @@ try {
     'Blocked preference storage keeps the chosen preferences usable for the current session',
   );
   await evaluate('Storage.prototype.setItem = globalThis.preferenceWrite');
+  await command('Emulation.setEmulatedMedia', { features: [{ name: 'prefers-reduced-motion', value: 'no-preference' }] });
+  await evaluate('[...document.querySelectorAll("button")].find(button => button.getAttribute("aria-label") === "Open command palette").focus()');
+  await click('Open command palette');
+  await waitFor(() => evaluate('document.querySelector(".dl-command-palette").open'), 'animated palette');
+  await check(
+    'getComputedStyle(document.querySelector(".dl-command-palette")).animationName === "dl-modal-enter" && getComputedStyle(document.querySelector(".dl-command-palette"), "::backdrop").animationName === "dl-backdrop-enter"',
+    'Modal windows slide into view and their backdrops fade in',
+  );
+  await waitFor(
+    () => evaluate('document.querySelector(".dl-command-palette").getAnimations().every(animation => animation.playState !== "running")'),
+    'palette entry animation',
+  );
+  await check(
+    'document.querySelector(".dl-command-palette .dl-dialog-close").getBoundingClientRect().width >= 38 && getComputedStyle(document.querySelector(".dl-dialog-close")).fontSize === "28px"',
+    'Modal close controls have a larger icon and target',
+  );
+  const dragOrigin = await evaluate(
+    '(() => { const bounds = document.querySelector(".dl-palette-search input").getBoundingClientRect(); return {x:bounds.x+20,y:bounds.y+10}; })()',
+  );
+  await command('Input.dispatchMouseEvent', { type: 'mouseMoved', ...dragOrigin });
+  await command('Input.dispatchMouseEvent', { type: 'mousePressed', button: 'left', clickCount: 1, ...dragOrigin });
+  await command('Input.dispatchMouseEvent', { type: 'mouseMoved', buttons: 1, x: 2, y: 2 });
+  await command('Input.dispatchMouseEvent', { type: 'mouseReleased', button: 'left', clickCount: 1, x: 2, y: 2 });
+  await check('document.querySelector(".dl-command-palette").open', 'Dragging from inside a modal to its backdrop does not dismiss it');
+  await clickBackdrop();
+  await waitFor(() => evaluate('!document.querySelector(".dl-command-palette").open'), 'palette backdrop dismissal');
+  await check(
+    'document.activeElement?.getAttribute("aria-label") === "Open command palette"',
+    'Clicking the palette backdrop dismisses it and restores keyboard focus',
+  );
+  await openPreferences();
+  await chooseSelect(0, 'light');
+  await clickBackdrop();
+  await waitFor(() => evaluate('!document.querySelector(".dl-settings-dialog").open'), 'preferences backdrop dismissal');
+  await check('document.querySelector(".dl-theme").dataset.theme === "dark"', 'Clicking outside Preferences discards the unapplied draft');
+  await click('Open notifications');
+  await waitFor(() => evaluate('document.querySelector(".dl-notification-center").open'), 'animated notification history');
+  await check(
+    'getComputedStyle(document.querySelector(".dl-notification-center")).animationName === "dl-modal-enter" && document.querySelector(".dl-notification-center").getBoundingClientRect().width >= 480 && getComputedStyle(document.querySelector(".dl-notification-entry h3")).fontSize === "16px"',
+    'Notification history uses an animated, larger panel with readable text',
+  );
+  await waitFor(
+    () => evaluate('document.querySelector(".dl-notification-center").getAnimations().every(animation => animation.playState !== "running")'),
+    'notification entry animation',
+  );
+  await screenshot('demo-notifications-updated');
+  await clickBackdrop();
+  await waitFor(() => evaluate('!document.querySelector(".dl-notification-center").open'), 'notification backdrop dismissal');
+  await evaluate('[...document.querySelectorAll(".demo-playground button")].find(button => button.textContent.trim() === "Send warning").click()');
+  await waitFor(() => evaluate('!!document.querySelector(".dl-notification-toast[data-level=warning]")'), 'animated warning toast');
+  await check(
+    'getComputedStyle(document.querySelector(".dl-notification-toast[data-level=warning]")).animationName === "dl-toast-enter" && getComputedStyle(document.querySelector(".dl-notification-toast strong")).fontSize === "16px"',
+    'Notification popups animate in with enlarged text',
+  );
+  const scrollPoint = await evaluate(
+    '(() => { const bounds = document.querySelector(".demo-playground").closest(".dl-panel-content").getBoundingClientRect(); return {x:bounds.x+bounds.width/2,y:bounds.y+bounds.height/2}; })()',
+  );
+  await command('Input.dispatchMouseEvent', { type: 'mouseMoved', ...scrollPoint });
+  await command('Input.dispatchMouseEvent', { type: 'mouseWheel', deltaX: 0, deltaY: 1200, ...scrollPoint });
+  await waitFor(() => evaluate('document.querySelector(".demo-playground").closest(".dl-panel-content").scrollTop > 0'), 'overflowing panel wheel scroll');
+  await check(
+    'document.querySelector(".demo-playground").closest(".dl-panel-content").scrollHeight > document.querySelector(".demo-playground").closest(".dl-panel-content").clientHeight && window.scrollY === 0',
+    'Overflowing tab content scrolls vertically without moving the workbench',
+  );
+  await command('Emulation.setEmulatedMedia', { features: [{ name: 'prefers-reduced-motion', value: 'reduce' }] });
+  await click('Open command palette');
+  await waitFor(() => evaluate('document.querySelector(".dl-command-palette").open'), 'reduced-motion palette');
+  await check(
+    'getComputedStyle(document.querySelector(".dl-command-palette")).animationName === "none" && getComputedStyle(document.querySelector(".dl-command-palette"), "::backdrop").animationName === "none"',
+    'Reduced motion disables both dialog and backdrop animations',
+  );
+  await clickBackdrop();
+  await waitFor(() => evaluate('!document.querySelector(".dl-command-palette").open'), 'close reduced-motion palette');
   assert.deepEqual(errors, [], 'No browser runtime errors');
   console.log('Browser checks passed. Screenshots are in test-results/.');
 } catch (error) {

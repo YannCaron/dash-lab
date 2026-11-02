@@ -51,6 +51,8 @@ export function Application() {
 
 Give the workbench a parent with an explicit height. React and React DOM are peer dependencies. See [architecture](docs/architecture.md) for component boundaries, [dependency notes](docs/dependencies.md) for versions and licensing, and [validation](docs/validation.md) for verified behavior and current limits.
 
+Panel content scrolls vertically when it exceeds the tab's available height. Each panel owns its scroll container, preserving the position when switching tabs. Application components can continue to manage their own internal scrolling for editors and canvases.
+
 ## Workbench shell
 
 Supply `panels` with unique IDs, titles and React components. Optional positions reference panels listed earlier. Keep the initial panel collection stable for the lifetime of a workbench. The library exposes `WorkbenchPanel` for TypeScript consumers and `onWorkspaceReady` for access to the Dockview API.

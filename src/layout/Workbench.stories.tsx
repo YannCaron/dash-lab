@@ -54,3 +54,20 @@ export const DarkWorkspace: Story = {
 export const SettingsAndPreferences: Story = {
   args: { ...DockedWorkspace.args, controlBar: 'Open File in the hamburger menu to try Settings, Preferences, and JSON configuration.' },
 };
+export const OverflowingPanel: Story = {
+  args: {
+    panels: [
+      {
+        id: 'long-content',
+        title: 'Scrollable content',
+        component: () => (
+          <div style={{ padding: 24 }}>
+            {Array.from({ length: 60 }, (_, index) => (
+              <p key={index}>Line {index + 1} — the panel scrolls independently from the workbench.</p>
+            ))}
+          </div>
+        ),
+      },
+    ],
+  },
+};

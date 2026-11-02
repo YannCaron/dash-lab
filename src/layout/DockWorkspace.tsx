@@ -14,7 +14,16 @@ export function DockWorkspace({ panels, onReady }: { panels: readonly WorkbenchP
   const dockTheme = useMemo(() => ({ ...(mode === 'dark' ? themeDark : themeLight), name: `dash-lab-${mode}`, gap: 8 }), [mode]);
   const components = useMemo(() => {
     validatePanels(panels);
-    return Object.fromEntries(panels.map(({ id, component: Component }) => [id, () => <Component />]));
+    return Object.fromEntries(
+      panels.map(({ id, component: Component }) => [
+        id,
+        () => (
+          <div className="dl-panel-content">
+            <Component />
+          </div>
+        ),
+      ]),
+    );
   }, [panels]);
 
   const ready = useCallback(
