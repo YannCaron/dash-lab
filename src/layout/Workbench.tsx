@@ -1,4 +1,4 @@
-import { useCallback, useContext, useEffect, useRef, useState } from 'react';
+import { useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
 import type { DockviewApi } from 'dockview-react';
 import { useStore } from 'zustand';
@@ -20,6 +20,8 @@ import { ApplicationMenu } from '../settings/ApplicationMenu.js';
 import { SettingsDialog } from '../settings/SettingsDialog.js';
 import type { SettingsPage } from '../settings/SettingsDialog.js';
 import { useWorkbenchConfiguration } from '../settings/useWorkbenchConfiguration.js';
+import { emptyContributions, PluginContext, usePluginCommands } from '../plugins/PluginContext.js';
+import type { PluginRegistry } from '../plugins/PluginRegistry.js';
 
 /** Properties of the reusable application workbench. */
 export interface WorkbenchProps {
@@ -39,6 +41,8 @@ export interface WorkbenchProps {
   footer?: ReactNode;
   /** Initial panel definitions; keep this collection stable for the lifetime of the workbench. */
   panels?: readonly WorkbenchPanel[];
+  /** Startup plugin registry; contributions are sealed on mount. Keep stable until the workbench is unmounted. */
+  plugins?: PluginRegistry;
   /** Called once after the initial panels and any compatible saved layout are ready. */
   onWorkspaceReady?: (api: DockviewApi) => void;
   /** Whether the header is shown on first mount. Defaults to true. */
@@ -112,7 +116,8 @@ function WorkbenchShell({
   controlBar,
   monitoringBar,
   footer,
-  panels = emptyPanels,
+  panels: applicationPanels = emptyPanels,
+  plugins,
   onWorkspaceReady,
   initialHeaderVisible = true,
   initialFooterVisible = true,
@@ -120,6 +125,8 @@ function WorkbenchShell({
   preferencesStorageKey,
   children,
 }: WorkbenchProps) {
+  const [contributions] = useState(() => plugins?.seal() ?? emptyContributions);
+  const panels = useMemo(() => [...contributions.panels, ...applicationPanels], [contributions, applicationPanels]);
   const [store] = useState(() => createLayoutStore(initialHeaderVisible, initialFooterVisible));
   const [api, setApi] = useState<DockviewApi | null>(null);
   const [storageKey] = useState(() => layoutStorageKey ?? `dash-lab:${encodeURIComponent(title)}:layout:v1`);
@@ -139,6 +146,7 @@ function WorkbenchShell({
     ready: configuration.ready,
     busy: configuration.busy,
   });
+  usePluginCommands(contributions);
   const root = useRef<HTMLElement>(null);
   const { notify } = useNotifications();
   const reportedFeedback = useRef(layout.feedback);
@@ -165,106 +173,122 @@ function WorkbenchShell({
   }, [state.focusMode]);
 
   return (
-    <section className="dl-workbench" ref={root} tabIndex={-1} aria-label={title} data-focus-mode={state.focusMode} onKeyDown={handleKeyDown}>
-      {!state.focusMode && state.headerVisible && (
-        <header className="dl-header">
-          <div className="dl-identity">
-            {logo}
-            <strong>{title}</strong>
-            {subtitle && <span className="dl-subtitle">{subtitle}</span>}
-          </div>
-          <div className="dl-header-actions">{headerActions}</div>
-        </header>
-      )}
-
-      {!state.focusMode && (
-        <div className="dl-control-bar" role="toolbar" aria-label="Workbench controls">
-          <div className="dl-application-controls">
-            <ApplicationMenu />
-            {controlBar}
-          </div>
-          <div className="dl-view-controls">
-            <button
-              type="button"
-              className="dl-icon-button dl-palette-trigger"
-              aria-label="Open command palette"
-              aria-haspopup="dialog"
-              aria-expanded={paletteOpen}
-              title="Commands (Ctrl/⌘+Shift+P)"
-              onClick={openPalette}
-            >
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true">
-                <circle cx="10" cy="10" r="6" />
-                <path d="m15 15 6 6" />
-              </svg>
-              <span>Commands</span>
-            </button>
-            <span className="dl-divider" />
-            <NotificationButton />
-            <span className="dl-divider" />
-            <LayoutControls layout={layout} />
-            <span className="dl-divider" />
-            <ThemeToggle />
-            <span className="dl-divider" />
-            <button
-              type="button"
-              className="dl-icon-button"
-              aria-label={state.headerVisible || state.footerVisible ? 'Hide header and footer' : 'Show header and footer'}
-              title="Toggle header and footer (Ctrl/⌘+Alt+V)"
-              aria-pressed={state.headerVisible !== state.footerVisible ? 'mixed' : state.headerVisible}
-              onClick={state.toggleView}
-            >
-              <ChromeIcon name="view" />
-              <span>View</span>
-            </button>
-            <span className="dl-divider" />
-            <button
-              type="button"
-              ref={enterFocus}
-              className="dl-icon-button dl-focus-button"
-              aria-label="Enter focus mode"
-              title="Focus workspace"
-              onClick={state.toggleFocus}
-            >
-              <ChromeIcon name="focus" />
-              <span>Focus</span>
-            </button>
-          </div>
-        </div>
-      )}
-
-      {!state.focusMode && monitoringBar && (
-        <aside className="dl-monitoring-bar" aria-label="Monitoring">
-          {monitoringBar}
-        </aside>
-      )}
-      <main className="dl-workspace" aria-label="Workspace">
-        {panels.length ? (
-          <DockWorkspace panels={panels} onReady={setApi} />
-        ) : (
-          <div className="dl-empty-workspace">{children ?? 'No panels have been added to this workspace.'}</div>
+    <PluginContext.Provider value={contributions}>
+      <section className="dl-workbench" ref={root} tabIndex={-1} aria-label={title} data-focus-mode={state.focusMode} onKeyDown={handleKeyDown}>
+        {!state.focusMode && state.headerVisible && (
+          <header className="dl-header">
+            <div className="dl-identity">
+              {logo}
+              <strong>{title}</strong>
+              {subtitle && <span className="dl-subtitle">{subtitle}</span>}
+            </div>
+            <div className="dl-header-actions">{headerActions}</div>
+          </header>
         )}
-      </main>
-      {!state.focusMode && state.footerVisible && footer && <footer className="dl-footer">{footer}</footer>}
-      <CommandPalette open={paletteOpen} onClose={closePalette} />
-      <SettingsDialog page={settingsPage} onClose={closeSettings} configuration={configuration} layout={layout} store={store} />
-      <input
-        type="file"
-        ref={configuration.input}
-        hidden
-        accept="application/json,.json"
-        aria-label="Import configuration file"
-        onChange={(event) => {
-          const file = event.target.files?.[0];
-          event.target.value = '';
-          if (file) void configuration.importFile(file);
-        }}
-      />
-      {state.focusMode && (
-        <button ref={exitFocus} type="button" className="dl-exit-focus" onClick={state.toggleFocus}>
-          Exit focus mode <kbd>Esc</kbd>
-        </button>
-      )}
-    </section>
+
+        {!state.focusMode && (
+          <div className="dl-control-bar" role="toolbar" aria-label="Workbench controls">
+            <div className="dl-application-controls">
+              <ApplicationMenu />
+              {controlBar}
+            </div>
+            <div className="dl-view-controls">
+              <button
+                type="button"
+                className="dl-icon-button dl-palette-trigger"
+                aria-label="Open command palette"
+                aria-haspopup="dialog"
+                aria-expanded={paletteOpen}
+                title="Commands (Ctrl/⌘+Shift+P)"
+                onClick={openPalette}
+              >
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true">
+                  <circle cx="10" cy="10" r="6" />
+                  <path d="m15 15 6 6" />
+                </svg>
+                <span>Commands</span>
+              </button>
+              <span className="dl-divider" />
+              <NotificationButton />
+              <span className="dl-divider" />
+              <LayoutControls layout={layout} />
+              <span className="dl-divider" />
+              <ThemeToggle />
+              <span className="dl-divider" />
+              <button
+                type="button"
+                className="dl-icon-button"
+                aria-label={state.headerVisible || state.footerVisible ? 'Hide header and footer' : 'Show header and footer'}
+                title="Toggle header and footer (Ctrl/⌘+Alt+V)"
+                aria-pressed={state.headerVisible !== state.footerVisible ? 'mixed' : state.headerVisible}
+                onClick={state.toggleView}
+              >
+                <ChromeIcon name="view" />
+                <span>View</span>
+              </button>
+              <span className="dl-divider" />
+              <button
+                type="button"
+                ref={enterFocus}
+                className="dl-icon-button dl-focus-button"
+                aria-label="Enter focus mode"
+                title="Focus workspace"
+                onClick={state.toggleFocus}
+              >
+                <ChromeIcon name="focus" />
+                <span>Focus</span>
+              </button>
+            </div>
+          </div>
+        )}
+
+        {!state.focusMode && (monitoringBar || contributions.monitoringItems.length > 0) && (
+          <aside className="dl-monitoring-bar" aria-label="Monitoring">
+            {monitoringBar}
+            {contributions.monitoringItems.map(({ id, component: Component }) => (
+              <span key={id} data-plugin-monitoring-item={id}>
+                <Component />
+              </span>
+            ))}
+          </aside>
+        )}
+        <main className="dl-workspace" aria-label="Workspace">
+          {panels.length ? (
+            <DockWorkspace panels={panels} onReady={setApi} />
+          ) : (
+            <div className="dl-empty-workspace">{children ?? 'No panels have been added to this workspace.'}</div>
+          )}
+        </main>
+        {!state.focusMode && state.footerVisible && (footer || contributions.statusItems.length > 0) && (
+          <footer className="dl-footer">
+            {footer}
+            {contributions.statusItems.map(({ id, component: Component }) => (
+              <span key={id} data-plugin-status-item={id}>
+                <Component />
+              </span>
+            ))}
+          </footer>
+        )}
+        <CommandPalette open={paletteOpen} onClose={closePalette} />
+        <SettingsDialog page={settingsPage} onClose={closeSettings} configuration={configuration} layout={layout} store={store} />
+        <input
+          type="file"
+          ref={configuration.input}
+          hidden
+          accept="application/json,.json"
+          aria-label="Import configuration file"
+          onChange={(event) => {
+            const file = event.target.files?.[0];
+            event.target.value = '';
+            if (file) void configuration.importFile(file);
+          }}
+        />
+        {state.focusMode && (
+          <button ref={exitFocus} type="button" className="dl-exit-focus" onClick={state.toggleFocus}>
+            Exit focus mode <kbd>Esc</kbd>
+          </button>
+        )}
+      </section>
+    </PluginContext.Provider>
   );
 }

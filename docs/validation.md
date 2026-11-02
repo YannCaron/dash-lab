@@ -42,3 +42,7 @@ The full browser suite also passes against the development server with React Str
 On 2026-11-03, forty-three unit tests and sixty-six compiled-demo browser checks pass. The seven changes cover the combined View control, larger modal close controls, blue/gray light and dark palettes aligned with the supplied references, larger notification text and panels, animated modal/toast entrances and fading backdrops, backdrop dismissal, and independent panel scrolling. Palette text contrasts remain covered by independent luminance calculations.
 
 The same sixty-six checks pass on the development server with React StrictMode. Browser checks exercise all three modal backdrops, cancellation of a preference draft, focus restoration, preservation of a drag starting inside a modal, animation disabling for reduced motion, and real wheel scrolling inside overflowing content. Storybook includes an overflowing-content example. Screenshots capture settled overlays for visual review.
+
+## Feature 9
+
+Forty-nine unit tests cover plugin startup, all contribution kinds, copied/frozen definitions, transactional rollback, cleanup, stale APIs, duplicate IDs/shortcuts, reserved commands, deterministic module order, and sealing. The compiled demo discovers Hello World through Vite's eager directory glob. Browser checks exercise its panel, footer and monitoring items, and execute the contributed command from both its menu and the palette.

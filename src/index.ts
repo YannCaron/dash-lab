@@ -23,3 +23,14 @@ export type { CommandPaletteProps } from './commands/CommandPalette.js';
 export type { NotificationPreferences } from './notifications/preferences.js';
 export type { WorkbenchConfiguration, WorkbenchPreferences } from './settings/configuration.js';
 export { decodeConfiguration } from './settings/configuration.js';
+export { PluginRegistry, registerLocalPlugins } from './plugins/PluginRegistry.js';
+export type {
+  WorkbenchPlugin,
+  PluginAPI,
+  PluginCommand,
+  PluginCommandContext,
+  PluginMenu,
+  PluginItem,
+  PluginContributions,
+  PluginDisposer,
+} from './plugins/PluginRegistry.js';

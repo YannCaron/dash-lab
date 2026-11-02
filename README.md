@@ -148,6 +148,20 @@ Preferences persist independently from saved layouts, including changes made by 
 
 Export downloads `dash-lab-configuration.json`, containing `format: 'dash-lab'`, `version: 1`, the current workspace checkpoint structure, and preferences. It includes the current arrangement even when unsaved. Import validates the whole file, its version, preferences, and compatibility with the current panel IDs before applying it; accepted imports update the saved checkpoint. React panel state, notification history, and recent commands are excluded. Files are limited to 1 MB. Workbenches without panels export `workspace: null`. `WorkbenchConfiguration`, `WorkbenchPreferences`, and the pure `decodeConfiguration(text, panels)` validator are exported for application integrations.
 
+## Local plugins
+
+Place a default `WorkbenchPlugin` export in each application directory `src/plugins/<name>/index.ts`. Its synchronous `activate(api)` method can call `registerPanel`, `registerCommand`, `registerMenu`, `registerStatusItem`, and `registerMonitoringItem`. Registrations return disposers; an activation failure rolls its registrations back. IDs must be unique within each contribution kind, and `workbench.*` command IDs are reserved.
+
+```ts
+import { registerLocalPlugins } from 'dash-lab';
+import type { WorkbenchPlugin } from 'dash-lab';
+
+const modules = import.meta.glob<{ default: WorkbenchPlugin }>('./plugins/*/index.ts', { eager: true });
+export const plugins = registerLocalPlugins(modules);
+```
+
+Pass that registry as `<Workbench plugins={plugins} ... />`. Workbench seals it on mount; changing plugin membership requires a new registry and a remount. Plugin panels precede application panels. Plugin commands receive `{ notify, executeCommand }` when executed. Menus appear under Plugins and follow command availability. Footer and monitoring components can use the normal workbench hooks. Plugins are bundled with the application and run as trusted code; adding or removing one in production requires rebuilding. The Hello World demo uses this discovery path.
+
 ## License
 
 [MIT](LICENSE).

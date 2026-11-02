@@ -1,11 +1,20 @@
-import { useRef, useState } from 'react';
+import { useContext, useRef, useState } from 'react';
 import { Dropdown } from 'antd';
 import { useCommands } from '../commands/CommandContext.js';
+import { PluginContext } from '../plugins/PluginContext.js';
 
 export function ApplicationMenu() {
   const [open, setOpen] = useState(false);
   const trigger = useRef<HTMLButtonElement>(null);
   const { execute, canExecute } = useCommands();
+  const { menus } = useContext(PluginContext);
+  const available = (id: string) => {
+    try {
+      return canExecute(id);
+    } catch {
+      return false;
+    }
+  };
   return (
     <Dropdown
       open={open}
@@ -28,11 +37,21 @@ export function ApplicationMenu() {
               { key: 'workbench.configuration.export', label: 'Export configuration…', disabled: !canExecute('workbench.configuration.export') },
             ],
           },
+          ...(menus.length
+            ? [
+                {
+                  key: 'plugins',
+                  label: 'Plugins',
+                  children: menus.map((menu) => ({ key: `plugin-menu:${menu.id}`, label: menu.title, disabled: !available(menu.commandId) })),
+                },
+              ]
+            : []),
         ],
         onClick: ({ key }) => {
           setOpen(false);
           trigger.current?.focus();
-          void execute(key);
+          const menu = menus.find((menu) => `plugin-menu:${menu.id}` === key);
+          void execute(menu?.commandId ?? key);
         },
         onKeyDown: (event) => {
           if (event.key === 'Escape') {

@@ -16,7 +16,9 @@ flowchart LR
 
 Vite builds the ESM package into `dist/`. TypeScript emits declarations there independently. The demo build consumes the built package and writes to `demo-dist/`. In development, Vite resolves the demo's library imports to source for hot reload while a separate Vite build watcher and TypeScript watcher keep package outputs current. Both watchers and the demo server run in one Node process and close on Ctrl+C.
 
-The Hello World module lives in the demo's `src/plugins/hello-world/` directory and is imported explicitly for this increment. Plugin discovery and the SDK belong to Feature 9.
+The demo discovers `src/plugins/*/index.ts` with Vite's eager `import.meta.glob`. `registerLocalPlugins` activates default exports in path order. The registry rolls back failed activations and freezes its six contribution collections when Workbench mounts. Plugins are trusted application code bundled at build time; no remote loading or runtime filesystem scanning occurs. Adding/removing a plugin requires restarting the mounted workbench; the demo's HMR boundary reloads on plugin module changes.
+
+Plugin panels precede application panels, which may position themselves relative to a plugin panel. Commands are connected to the existing command/notification providers; menus invoke command IDs, and status/monitoring components render inside those same providers. The SDK model does not import the workbench UI. Runtime command conflicts report one notification and remove the attempted plugin-command batch, leaving panels usable. Plugin activation itself must be synchronous.
 
 Storybook and Vitest run independently of the demo. Distribution includes only library artifacts, documentation, and license notices.
 

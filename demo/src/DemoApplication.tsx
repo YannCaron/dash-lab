@@ -1,7 +1,7 @@
 import { Button, Input, Tag } from 'antd';
 import { Workbench, useNotifications } from 'dash-lab';
 import type { WorkbenchPanel } from 'dash-lab';
-import { HelloWorld } from './plugins/hello-world';
+import { plugins } from './plugins';
 import { CommandExamples } from './CommandExamples';
 
 function WorkspaceGuide() {
@@ -92,7 +92,6 @@ function Playground() {
 }
 
 const panels: readonly WorkbenchPanel[] = [
-  { id: 'hello', title: 'Hello World', component: HelloWorld },
   { id: 'guide', title: 'Getting started', component: WorkspaceGuide, position: { referencePanel: 'hello', direction: 'right' }, initialWidth: 360 },
   { id: 'playground', title: 'Playground', component: Playground, position: { referencePanel: 'guide', direction: 'below' }, initialHeight: 280 },
 ];
@@ -141,6 +140,7 @@ export function DemoApplication() {
         </>
       }
       panels={panels}
+      plugins={plugins}
     />
   );
 }

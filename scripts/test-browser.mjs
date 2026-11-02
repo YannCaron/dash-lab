@@ -123,13 +123,13 @@ async function clickText(selector, text) {
   await command('Input.dispatchMouseEvent', { type: 'mouseReleased', button: 'left', clickCount: 1, ...point });
 }
 
-async function openMenuItem(text) {
+async function openMenuItem(text, parent = 'File') {
   await click('Open application menu');
   await waitFor(() => evaluate('document.querySelector(".dl-menu-trigger").getAttribute("aria-expanded") === "true"'), 'application menu');
   const expanded = await evaluate(
-    '[...document.querySelectorAll("[role=menuitem]")].find(node => node.textContent.trim() === "File" && node.getBoundingClientRect().width)?.getAttribute("aria-expanded") === "true"',
+    `[...document.querySelectorAll('[role=menuitem]')].find(node => node.textContent.trim() === ${JSON.stringify(parent)} && node.getBoundingClientRect().width)?.getAttribute('aria-expanded') === 'true'`,
   );
-  if (!expanded) await clickText('[role=menuitem]', 'File');
+  if (!expanded) await clickText('[role=menuitem]', parent);
   await waitFor(
     () =>
       evaluate(
@@ -782,6 +782,32 @@ try {
   );
   await clickBackdrop();
   await waitFor(() => evaluate('!document.querySelector(".dl-command-palette").open'), 'close reduced-motion palette');
+  await toggleChromePart('footer');
+  await waitFor(() => evaluate('!!document.querySelector("[data-plugin-status-item]")'), 'plugin footer visibility');
+  await check(
+    'document.querySelector("[data-plugin-status-item]").textContent === "Hello World ready" && document.querySelector("[data-plugin-monitoring-item]").textContent === "Local plugin active"',
+    'The discovered local plugin contributes panels, status, and monitoring',
+  );
+  await click('Open command palette');
+  await waitFor(() => evaluate('document.querySelector(".dl-command-palette").open'), 'plugin palette action');
+  await searchPalette('hello-world.greet');
+  await pressKey('Enter', 'Enter');
+  await waitFor(
+    () => evaluate('document.querySelector(".dl-notification-toast strong")?.textContent === "Hello from the local plugin!"'),
+    'local plugin command execution',
+  );
+  const pluginMessages = await evaluate(
+    '[...document.querySelectorAll(".dl-notification-entry h3")].filter(node => node.textContent === "Hello from the local plugin!").length',
+  );
+  await openMenuItem('Say hello', 'Plugins');
+  await waitFor(
+    () =>
+      evaluate(
+        `[...document.querySelectorAll('.dl-notification-entry h3')].filter(node => node.textContent === 'Hello from the local plugin!').length === ${pluginMessages + 1}`,
+      ),
+    'plugin menu command',
+  );
+  await check('document.querySelectorAll(".dv-tab").length === 3', 'The plugin menu and palette execute the same command once without replacing panels');
   assert.deepEqual(errors, [], 'No browser runtime errors');
   console.log('Browser checks passed. Screenshots are in test-results/.');
 } catch (error) {
