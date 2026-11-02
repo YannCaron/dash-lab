@@ -1,9 +1,8 @@
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { BrowserRouter, Route, Routes } from 'react-router-dom';
-import { Workbench } from 'dash-lab';
 import 'dash-lab/style.css';
-import { HelloWorld } from './plugins/hello-world';
+import { DemoApplication } from './DemoApplication';
 import './demo.css';
 
 const root = document.getElementById('root');
@@ -13,14 +12,7 @@ createRoot(root).render(
   <StrictMode>
     <BrowserRouter>
       <Routes>
-        <Route
-          path="/"
-          element={
-            <Workbench title="dash-lab">
-              <HelloWorld />
-            </Workbench>
-          }
-        />
+        <Route path="/" element={<DemoApplication />} />
         <Route
           path="*"
           element={

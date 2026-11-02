@@ -34,6 +34,7 @@
     "build:demo": "vite build",
     "test": "vitest run",
     "test:watch": "vitest",
+    "test:browser": "node scripts/test-browser.mjs",
     "lint": "eslint .",
     "format": "prettier --write .",
     "format:check": "prettier --check .",

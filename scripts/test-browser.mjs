@@ -1,0 +1,138 @@
+import assert from 'node:assert/strict';
+import { Buffer } from 'node:buffer';
+import { spawn } from 'node:child_process';
+import { mkdir, mkdtemp, readFile, writeFile } from 'node:fs/promises';
+import { resolve } from 'node:path';
+import { setTimeout as delay } from 'node:timers/promises';
+
+const browserPath = process.env.BROWSER_PATH ?? 'C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe';
+const url = process.argv[2] ?? 'http://127.0.0.1:4173';
+const output = resolve('test-results');
+await mkdir(output, { recursive: true });
+const profile = await mkdtemp(`${output}/browser-`);
+const browser = spawn(
+  browserPath,
+  ['--headless', '--disable-gpu', '--no-first-run', '--no-default-browser-check', '--remote-debugging-port=0', `--user-data-dir=${profile}`, 'about:blank'],
+  { windowsHide: true, stdio: 'ignore' },
+);
+let launchError;
+browser.on('error', (error) => {
+  launchError = error;
+});
+let socket;
+let sequence = 0;
+const pending = new Map();
+const errors = [];
+
+async function waitFor(probe, description) {
+  const deadline = Date.now() + 30000;
+  while (Date.now() < deadline) {
+    if (launchError) throw launchError;
+    if (await probe()) return;
+    await delay(100);
+  }
+  throw new Error(`Timed out: ${description}`);
+}
+
+function command(method, params = {}) {
+  const id = ++sequence;
+  return new Promise((resolveResult, reject) => {
+    pending.set(id, { resolve: resolveResult, reject });
+    socket.send(JSON.stringify({ id, method, params }));
+  });
+}
+
+async function evaluate(expression) {
+  const result = await command('Runtime.evaluate', { expression, returnByValue: true, awaitPromise: true });
+  if (result.exceptionDetails) throw new Error(result.exceptionDetails.text);
+  return result.result.value;
+}
+
+async function check(expression, description) {
+  assert.equal(await evaluate(expression), true, description);
+  console.log(`PASS ${description}`);
+}
+
+async function click(label) {
+  await evaluate(`[...document.querySelectorAll('button')].find(button => button.getAttribute('aria-label') === ${JSON.stringify(label)}).click()`);
+}
+
+async function screenshot(name) {
+  const result = await command('Page.captureScreenshot', { format: 'png' });
+  await writeFile(`${output}/${name}.png`, Buffer.from(result.data, 'base64'));
+}
+
+try {
+  let port;
+  await waitFor(async () => {
+    try {
+      port = Number((await readFile(`${profile}/DevToolsActivePort`, 'utf8')).split('\n')[0]);
+      return port > 0;
+    } catch {
+      return false;
+    }
+  }, 'headless browser startup');
+  const response = await globalThis.fetch(`http://127.0.0.1:${port}/json/new?${encodeURIComponent(url)}`, { method: 'PUT' });
+  const target = await response.json();
+  socket = new globalThis.WebSocket(target.webSocketDebuggerUrl);
+  await new Promise((resolveOpen, reject) => {
+    socket.onopen = resolveOpen;
+    socket.onerror = reject;
+  });
+  socket.onmessage = ({ data }) => {
+    const message = JSON.parse(data);
+    if (message.method === 'Runtime.exceptionThrown') errors.push(message.params.exceptionDetails);
+    const request = pending.get(message.id);
+    if (request) {
+      pending.delete(message.id);
+      if (message.error) request.reject(new Error(message.error.message));
+      else request.resolve(message.result);
+    }
+  };
+  socket.onclose = () => {
+    for (const request of pending.values()) request.reject(new Error('Browser connection closed.'));
+    pending.clear();
+  };
+  await command('Runtime.enable');
+  await command('Page.enable');
+  await command('Emulation.setDeviceMetricsOverride', { width: 1440, height: 1000, deviceScaleFactor: 1, mobile: false });
+  await waitFor(() => evaluate('document.querySelectorAll(".dv-tab").length === 3 && !!document.querySelector("#hello-name")'), 'Hello World panels');
+  await check('document.querySelector(".dl-dock").getBoundingClientRect().height > 400', 'Dockview has usable workspace dimensions');
+  await evaluate('document.querySelector("#hello-name").focus(); document.querySelector("#hello-name").select()');
+  await command('Input.insertText', { text: 'Ada' });
+  await evaluate('document.querySelector(".hello-form button").click()');
+  await waitFor(() => evaluate('document.querySelector(".hello-result").textContent === "Hello, Ada!"'), 'greeting interaction');
+  await check('document.querySelector(".hello-result").textContent === "Hello, Ada!"', 'Hello World handles real input');
+  await evaluate('globalThis.testPanel = document.querySelector(".hello-world"); true');
+  await click('Hide header');
+  await waitFor(() => evaluate('!document.querySelector(".dl-header")'), 'hide header');
+  await click('Hide footer');
+  await waitFor(() => evaluate('!document.querySelector(".dl-footer")'), 'hide footer');
+  await click('Enter focus mode');
+  await waitFor(() => evaluate('!!document.querySelector(".dl-exit-focus")'), 'enter focus mode');
+  await check(
+    '!document.querySelector(".dl-control-bar") && !document.querySelector(".dl-monitoring-bar") && document.activeElement === document.querySelector(".dl-exit-focus")',
+    'Focus hides chrome and moves keyboard focus to the exit control',
+  );
+  await command('Input.dispatchKeyEvent', { type: 'keyDown', key: 'Escape', code: 'Escape', windowsVirtualKeyCode: 27 });
+  await command('Input.dispatchKeyEvent', { type: 'keyUp', key: 'Escape', code: 'Escape', windowsVirtualKeyCode: 27 });
+  await waitFor(() => evaluate('!document.querySelector(".dl-exit-focus")'), 'exit focus mode');
+  await check(
+    '!document.querySelector(".dl-header") && !document.querySelector(".dl-footer") && !!document.querySelector(".dl-control-bar") && document.activeElement?.getAttribute("aria-label") === "Enter focus mode"',
+    'Escape restores visibility preferences and keyboard focus',
+  );
+  await check(
+    'document.querySelector(".hello-world") === globalThis.testPanel && document.querySelector("#hello-name").value === "Ada"',
+    'Visibility changes preserve panel instances and input state',
+  );
+  await click('Show header');
+  await click('Show footer');
+  await waitFor(() => evaluate('!!document.querySelector(".dl-header") && !!document.querySelector(".dl-footer")'), 'restore chrome');
+  await screenshot('demo-layout');
+  assert.deepEqual(errors, [], 'No browser runtime errors');
+  console.log('Browser checks passed. Screenshots are in test-results/.');
+} finally {
+  if (socket?.readyState === 1) await command('Browser.close').catch(() => {});
+  socket?.close();
+  browser.kill();
+}
