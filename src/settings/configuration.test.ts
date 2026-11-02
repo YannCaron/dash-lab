@@ -27,6 +27,14 @@ const fixture = (): WorkbenchConfiguration => ({
 });
 
 describe('configuration files', () => {
+  it('accepts version-1 preferences without a language and validates new language values', () => {
+    const legacy = fixture();
+    expect(decodeConfiguration(JSON.stringify(legacy), panels).preferences.locale).toBeUndefined();
+    legacy.preferences.locale = 'fr';
+    expect(decodeConfiguration(JSON.stringify(legacy), panels).preferences.locale).toBe('fr');
+    for (const locale of ['', '../fr', 42, null])
+      expect(() => decodeConfiguration(JSON.stringify({ ...legacy, preferences: { ...legacy.preferences, locale } }), panels)).toThrow('language');
+  });
   it('round-trips workspace and preferences and returns an independent configuration', () => {
     const input = fixture();
     const decoded = decodeConfiguration(JSON.stringify(input), panels);

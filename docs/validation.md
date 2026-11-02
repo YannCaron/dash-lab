@@ -50,3 +50,9 @@ Forty-nine unit tests cover plugin startup, all contribution kinds, copied/froze
 ## Feature 10
 
 Fifty-four unit tests and seventy-two compiled-demo browser checks pass. Language checks cover English defaults, French, catalog extension, fallback, plain-text interpolation, isolated providers, real Ant Design locale context, legacy preferences, and rejection of an unregistered language before applying a layout. The browser changes language without replacing the Hello World panel or its input, searches and executes a translated command, receives French feedback, and restores French menus/preferences after reload.
+
+## Feature 11
+
+Sixty Vitest tests pass, including public hook/provider contracts, nearest-provider isolation, missing-provider messages, independent stores, legacy language configuration, and a regression ensuring standalone English stays read-only during server rendering. Server snapshots use Zustand's initial state; browser interaction tests cover live updates and effect lifecycles.
+
+`npm run test:package` builds and packs the library, rejects source/demo/test leakage, installs the tarball offline into a fresh application using npm's populated cache, type-checks its public API under strict NodeNext resolution, then executes real ESM/React server rendering, plugin status, French, legacy configuration, and CSS-export checks. Artifacts stay under ignored `test-results/`. The runtime install uses normal npm lifecycle handling, so package hook mistakes are observable.

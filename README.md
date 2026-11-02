@@ -30,6 +30,7 @@ npm run check
 npm run lint
 npm run format:check
 npm test
+npm run test:package
 npm run build
 npm run storybook
 npm run build:storybook

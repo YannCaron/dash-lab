@@ -10,7 +10,8 @@ import type { I18nControls, LanguageDefinition } from './i18nStore.js';
 
 export const I18nContext = createContext<ReturnType<typeof createI18nStore> | null>(null);
 const english = createI18nStore();
-english.setState({
+const readOnlyEnglish: I18nControls = Object.freeze({
+  ...english.getInitialState(),
   setLocale: () => {
     throw new Error('Changing languages requires I18nProvider or Workbench.');
   },
@@ -48,5 +49,6 @@ export function I18nProvider({ children, initialLocale = 'en', languages = [], a
 /** Read the nearest language state; standalone components default to read-only English. */
 export function useI18n(): I18nControls {
   const store = useContext(I18nContext);
-  return useStore(store ?? english);
+  const state = useStore(store ?? english);
+  return store ? state : readOnlyEnglish;
 }
