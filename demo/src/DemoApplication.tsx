@@ -2,6 +2,7 @@ import { Button, Input, Tag } from 'antd';
 import { Workbench, useNotifications } from 'dash-lab';
 import type { WorkbenchPanel } from 'dash-lab';
 import { HelloWorld } from './plugins/hello-world';
+import { CommandExamples } from './CommandExamples';
 
 function WorkspaceGuide() {
   return (
@@ -36,6 +37,24 @@ function WorkspaceGuide() {
         <span className="status-dot" />
         All panels are live React components.
       </div>
+      <details className="demo-shortcuts">
+        <summary>Keyboard shortcuts</summary>
+        <p>
+          <kbd>Ctrl/⌘ + Alt + F</kbd> Focus
+        </p>
+        <p>
+          <kbd>Ctrl/⌘ + Alt + T</kbd> Theme
+        </p>
+        <p>
+          <kbd>Ctrl/⌘ + Alt + S</kbd> Save layout
+        </p>
+        <p>
+          <kbd>Ctrl/⌘ + Alt + N</kbd> Notifications
+        </p>
+        <p>
+          <kbd>Esc</kbd> Leave Focus mode
+        </p>
+      </details>
     </div>
   );
 }
@@ -67,6 +86,7 @@ function Playground() {
           Send error
         </Button>
       </div>
+      <CommandExamples />
     </div>
   );
 }

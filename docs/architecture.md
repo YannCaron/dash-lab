@@ -20,7 +20,7 @@ The Hello World module lives in the demo's `src/plugins/hello-world/` directory 
 
 Storybook and Vitest run independently of the demo. Distribution includes only library artifacts, documentation, and license notices.
 
-Each workbench owns a separate Zustand visibility store. Focus mode suppresses chrome without changing header/footer preferences or unmounting Dockview. Focus returns to the trigger when leaving focus mode. Escape handling is scoped to the workbench; there is no global command registry in this increment.
+Each workbench owns a separate Zustand visibility store. Focus mode suppresses chrome without changing header/footer preferences or unmounting Dockview. Focus returns to the trigger when leaving focus mode. Keyboard dispatch, including Escape, is scoped to the focused workbench.
 
 Panel definitions are validated before Dockview receives them. Application components are passed through stable renderers, and Dockview's `always` renderer retains inactive panel state. The demo uses only the MIT edition's docking features.
 
@@ -31,3 +31,5 @@ ThemeProvider owns another instance-local Zustand store. A single palette suppli
 Reduced-motion preferences are observed with a media query, including changes during a session. CSS transitions and Ant Design motion durations become zero. Ant Design's boolean motion flag stays stable because changing it can insert provider wrappers and remount the application subtree. Contrast tests independently compute luminance for primary, secondary, and primary-button text in both palettes.
 
 NotificationProvider owns a bounded Zustand history, unread flags, and the active toast IDs. Dismissing a toast never removes or acknowledges its history entry. Toast components own and clean up their timers. A native modal dialog supplies keyboard focus containment and Escape handling for the history. Layout feedback is published once per action into the same center; the library does not have a second feedback system. Each workbench creates a provider unless an application supplies one.
+
+CommandRegistry is independent of React and browser globals. It stores action definitions, checks canonical shortcut conflicts, blocks overlapping runs of the same registration, and provides disposable registrations and external-store snapshots. React's CommandProvider adapts it to notification error feedback. The workbench integration registers built-in actions over the existing theme, visibility, notification, and layout operations, and handles keyboard events at the workbench boundary. No lower-level service imports Workbench. Application actions follow the same lifecycle, demonstrated by the Playground commands. The command palette remains outside this increment.

@@ -1,6 +1,31 @@
 body {
   margin: 0;
 }
+.demo-command-examples {
+  margin-top: 20px;
+  border-top: 1px solid var(--dl-border);
+  padding-top: 4px;
+}
+.demo-shortcuts {
+  margin-top: 20px;
+  font-size: 10px;
+  color: var(--dl-muted);
+}
+.demo-shortcuts summary {
+  cursor: pointer;
+  color: var(--dl-accent);
+}
+.demo-shortcuts p {
+  display: flex;
+  gap: 8px;
+  line-height: 1.7;
+}
+.demo-shortcuts kbd,
+.demo-command-examples kbd {
+  font-family: inherit;
+  font-size: 9px;
+  color: var(--dl-text);
+}
 .demo-notification-controls {
   display: flex;
   flex-wrap: wrap;

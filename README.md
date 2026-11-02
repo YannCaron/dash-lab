@@ -2,7 +2,7 @@
 
 Build once. Create many.
 
-A reusable React workbench and a separate Hello World demo. Features 1–5 provide the foundation, dockable workbench, themes, saved layouts, and notifications; the remaining features are tracked in [prompt.md](prompt.md).
+A reusable React workbench and a separate Hello World demo. Features 1–6 provide the foundation, dockable workbench, themes, saved layouts, notifications, and commands; the remaining features are tracked in [prompt.md](prompt.md).
 
 ## Run the demo
 
@@ -88,6 +88,45 @@ Call `useNotifications().notify({ title: 'Saved', description: 'Your work is rea
 Toasts disappear after five seconds; errors remain until dismissed. Override this per notification with `durationMs` (zero means sticky). Dismissing or timing out a toast keeps its unread history entry. History contains up to 100 entries and the visible stack up to three. History lives in memory for the current session.
 
 Workbench supplies an isolated center automatically. For custom composition, wrap a workbench in `NotificationProvider` inside `ThemeProvider`, and set `historyLimit` when needed. `NotificationButton` is exported for custom controls. Layout feedback and application notifications use the same center. The Hello World greeting and Playground buttons demonstrate all severities.
+
+## Commands and shortcuts
+
+`useCommands()` exposes `register`, `execute`, `canExecute`, and a reactive `commands` list. Register application actions in an effect and return the cleanup function:
+
+```tsx
+const { register, execute } = useCommands();
+const { notify } = useNotifications();
+
+useEffect(
+  () =>
+    register({
+      id: 'my-app.greet',
+      title: 'Say hello',
+      shortcut: 'Mod+Enter',
+      execute: () => {
+        notify({ title: 'Hello!', level: 'success' });
+      },
+    }),
+  [register, notify],
+);
+```
+
+The same action can run from a button with `void execute('my-app.greet')`. Handlers may return promises. Duplicate IDs and equivalent shortcuts are rejected. Disabled, unknown, or already-running commands return false. Failures are reported through the nearest notification center; a standalone CommandProvider without one propagates the error. For non-React use, `new CommandRegistry('mac' | 'other')` supplies the same registration and execution engine, whose errors always propagate.
+
+Workbench creates a provider automatically. Custom provider composition is ThemeProvider → NotificationProvider → CommandProvider → Workbench; use one command registry per workbench, and keep the `workbench.*` namespace reserved for built-in actions. `CommandProvider` also accepts an existing `registry`.
+
+| Action                              | Shortcut                          |
+| ----------------------------------- | --------------------------------- |
+| Toggle theme                        | Mod+Alt+T                         |
+| Toggle Focus mode                   | Mod+Alt+F                         |
+| Leave Focus mode                    | Escape                            |
+| Toggle header / footer              | Mod+Alt+H / Mod+Alt+B             |
+| Save / restore layout               | Mod+Alt+S / Mod+Alt+R             |
+| Reset layout                        | Mod+Alt+0                         |
+| Application / columns / rows layout | Mod+Alt+1 / Mod+Alt+2 / Mod+Alt+3 |
+| Open notifications                  | Mod+Alt+N                         |
+
+Mod means Command on macOS and Control elsewhere. Shortcuts use semantic key names and exact modifiers; supported named keys include Enter, Escape, arrows, Space, Plus, and function keys. Registered application shortcuts ignore editable controls by default; set `allowInEditable: true` to opt in. Built-in workbench combinations opt in explicitly. Repeated keys, IME composition, AltGraph, already-handled events, and modal dialogs are left to their existing handlers. Keyboard dispatch is scoped to the focused workbench, with no document-wide listener. The command palette belongs to Feature 7.
 
 ## License
 

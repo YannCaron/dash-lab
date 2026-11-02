@@ -20,3 +20,9 @@ Seventeen unit tests and sixteen browser checks pass. Layout checks cover column
 ## Feature 5
 
 Twenty-three unit tests and twenty-three browser checks pass. Notification checks cover bounded history, toast dismissal without losing unread entries, automatic toast expiry, sticky errors, per-item acknowledgment/removal, marking all read, clearing history, modal keyboard focus, and Escape. Layout actions publish into the same center. Warning/error text colors satisfy the same contrast tests as the other theme text.
+
+## Feature 6
+
+Thirty-two unit tests and thirty-two browser checks pass. The complete browser suite runs against development (including React StrictMode) and compiled demo servers. Command tests cover registration cleanup, ID and canonical shortcut conflicts, independent platform mappings, dynamic availability, asynchronous overlap prevention, error propagation, subscriptions, text-entry and contenteditable protection, IME/repeat/AltGraph filtering, scoped keyboard dispatch, modal boundaries, and built-in actions over layouts/themes/focus/notifications. A failing asynchronous demo action creates a notification without breaking the workspace.
+
+The packaged library is installed into a fresh consumer after Features 4–6. Public types pass strict NodeNext checking; ESM execution, explicit provider composition, and the CSS export pass. Storybook includes interactive command and notification examples. The runtime audit reports zero vulnerabilities; the dependency versions are unchanged.

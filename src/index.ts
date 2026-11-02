@@ -11,3 +11,10 @@ export type { NotificationProviderProps } from './notifications/NotificationProv
 export { useNotifications } from './notifications/NotificationContext.js';
 export { NotificationButton } from './notifications/NotificationButton.js';
 export type { NotificationInput, NotificationItem, NotificationLevel, NotificationCenterState } from './notifications/notificationStore.js';
+export { CommandRegistry } from './commands/CommandRegistry.js';
+export type { CommandDefinition } from './commands/CommandRegistry.js';
+export { CommandProvider } from './commands/CommandProvider.js';
+export type { CommandProviderProps } from './commands/CommandProvider.js';
+export { useCommands } from './commands/CommandContext.js';
+export type { CommandControls } from './commands/CommandContext.js';
+export type { ShortcutEvent, ShortcutPlatform } from './commands/shortcuts.js';

@@ -12,6 +12,9 @@ import { useLayoutManagement } from './useLayoutManagement.js';
 import { NotificationContext, useNotifications } from '../notifications/NotificationContext.js';
 import { NotificationProvider } from '../notifications/NotificationProvider.js';
 import { NotificationButton } from '../notifications/NotificationButton.js';
+import { CommandContext } from '../commands/CommandContext.js';
+import { CommandProvider } from '../commands/CommandProvider.js';
+import { useWorkbenchCommands } from './useWorkbenchCommands.js';
 
 /** Properties of the reusable application workbench. */
 export interface WorkbenchProps {
@@ -31,7 +34,7 @@ export interface WorkbenchProps {
   footer?: ReactNode;
   /** Initial panel definitions; keep this collection stable for the lifetime of the workbench. */
   panels?: readonly WorkbenchPanel[];
-  /** Called once when Dockview has created the initial panels. */
+  /** Called once after the initial panels and any compatible saved layout are ready. */
   onWorkspaceReady?: (api: DockviewApi) => void;
   /** Whether the header is shown on first mount. Defaults to true. */
   initialHeaderVisible?: boolean;
@@ -75,11 +78,22 @@ export function Workbench(props: WorkbenchProps) {
 function WorkbenchNotifications(props: WorkbenchProps) {
   const notifications = useContext(NotificationContext);
   return notifications ? (
-    <WorkbenchShell {...props} />
+    <WorkbenchCommands {...props} />
   ) : (
     <NotificationProvider>
-      <WorkbenchShell {...props} />
+      <WorkbenchCommands {...props} />
     </NotificationProvider>
+  );
+}
+
+function WorkbenchCommands(props: WorkbenchProps) {
+  const commands = useContext(CommandContext);
+  return commands ? (
+    <WorkbenchShell {...props} />
+  ) : (
+    <CommandProvider>
+      <WorkbenchShell {...props} />
+    </CommandProvider>
   );
 }
 
@@ -102,12 +116,18 @@ function WorkbenchShell({
   const [api, setApi] = useState<DockviewApi | null>(null);
   const [storageKey] = useState(() => layoutStorageKey ?? `dash-lab:${encodeURIComponent(title)}:layout:v1`);
   const layout = useLayoutManagement(api, panels, store, storageKey, onWorkspaceReady);
+  const handleKeyDown = useWorkbenchCommands(store, layout);
+  const root = useRef<HTMLElement>(null);
   const { notify } = useNotifications();
   const reportedFeedback = useRef(layout.feedback);
   const state = useStore(store);
   const exitFocus = useRef<HTMLButtonElement>(null);
   const enterFocus = useRef<HTMLButtonElement>(null);
   const wasFocused = useRef(false);
+
+  useEffect(() => {
+    if (document.activeElement === document.body) root.current?.focus({ preventScroll: true });
+  }, []);
 
   useEffect(() => {
     if (layout.feedback && reportedFeedback.current !== layout.feedback) {
@@ -123,17 +143,7 @@ function WorkbenchShell({
   }, [state.focusMode]);
 
   return (
-    <section
-      className="dl-workbench"
-      aria-label={title}
-      data-focus-mode={state.focusMode}
-      onKeyDown={(event) => {
-        if (event.key === 'Escape' && state.focusMode && !event.defaultPrevented) {
-          event.preventDefault();
-          state.toggleFocus();
-        }
-      }}
-    >
+    <section className="dl-workbench" ref={root} tabIndex={-1} aria-label={title} data-focus-mode={state.focusMode} onKeyDown={handleKeyDown}>
       {!state.focusMode && state.headerVisible && (
         <header className="dl-header">
           <div className="dl-identity">

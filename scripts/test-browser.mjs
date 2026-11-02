@@ -71,6 +71,11 @@ async function reload() {
   );
 }
 
+async function pressKey(key, code, modifiers = 0, windowsVirtualKeyCode = key.length === 1 ? key.toUpperCase().charCodeAt(0) : 13) {
+  await command('Input.dispatchKeyEvent', { type: 'keyDown', key, code, modifiers, windowsVirtualKeyCode });
+  await command('Input.dispatchKeyEvent', { type: 'keyUp', key, code, modifiers, windowsVirtualKeyCode });
+}
+
 try {
   let port;
   await waitFor(async () => {
@@ -298,6 +303,73 @@ try {
   await command('Input.dispatchKeyEvent', { type: 'keyDown', key: 'Escape', code: 'Escape', windowsVirtualKeyCode: 27 });
   await command('Input.dispatchKeyEvent', { type: 'keyUp', key: 'Escape', code: 'Escape', windowsVirtualKeyCode: 27 });
   await waitFor(() => evaluate('!document.querySelector(".dl-notification-center").open'), 'close notification history with Escape');
+  await evaluate('document.querySelector(".dl-workbench").focus()');
+  await pressKey('Enter', 'Enter', 2);
+  await waitFor(() => evaluate('document.querySelector(".dl-notification-toast strong")?.textContent === "Command executed"'), 'custom keyboard command');
+  await check('document.querySelector(".dl-notification-count")?.textContent === "1"', 'An application command executes once through its keyboard shortcut');
+  await evaluate('document.querySelector("#demo-note").focus()');
+  await pressKey('Enter', 'Enter', 2);
+  await check('document.querySelector(".dl-notification-count")?.textContent === "1"', 'Application shortcuts leave text-entry shortcuts available by default');
+  await evaluate(
+    'globalThis.editableProbe = document.createElement("div"); globalThis.editableProbe.contentEditable = "true"; globalThis.editableProbe.textContent = "Editable area"; document.querySelector(".dl-workbench").appendChild(globalThis.editableProbe); globalThis.editableProbe.focus()',
+  );
+  await pressKey('Enter', 'Enter', 2);
+  await check('document.querySelector(".dl-notification-count")?.textContent === "1"', 'Contenteditable regions keep their default shortcut behavior');
+  await evaluate('globalThis.editableProbe.remove(); document.querySelector("#demo-note").focus()');
+  await pressKey('h', 'KeyH', 3);
+  await waitFor(() => evaluate('!document.querySelector(".dl-header")'), 'header shortcut in an input');
+  await check('document.activeElement?.id === "demo-note"', 'Explicit workbench shortcuts work in inputs without stealing focus');
+  await pressKey('h', 'KeyH', 3);
+  await waitFor(() => evaluate('!!document.querySelector(".dl-header")'), 'show header shortcut');
+  await evaluate(
+    'globalThis.outsideProbe = document.createElement("button"); globalThis.outsideProbe.textContent = "Outside workbench"; document.body.appendChild(globalThis.outsideProbe); globalThis.outsideProbe.focus()',
+  );
+  await pressKey('h', 'KeyH', 3);
+  await check('!!document.querySelector(".dl-header")', 'Shortcuts do not capture keys outside the active workbench');
+  await evaluate('globalThis.outsideProbe.remove(); document.querySelector("#demo-note").focus()');
+  await pressKey('t', 'KeyT', 3);
+  await waitFor(() => evaluate('document.querySelector(".dl-theme").dataset.theme === "dark"'), 'theme command shortcut');
+  await pressKey('t', 'KeyT', 3);
+  await waitFor(() => evaluate('document.querySelector(".dl-theme").dataset.theme === "light"'), 'restore theme command shortcut');
+  await pressKey('f', 'KeyF', 3);
+  await waitFor(() => evaluate('!!document.querySelector(".dl-exit-focus")'), 'focus command shortcut');
+  await pressKey('Escape', 'Escape', 0, 27);
+  await waitFor(() => evaluate('!document.querySelector(".dl-exit-focus")'), 'focus exit command');
+  await check('document.activeElement?.getAttribute("aria-label") === "Enter focus mode"', 'Focus commands preserve Escape and keyboard focus restoration');
+  await pressKey('s', 'KeyS', 3);
+  await waitFor(() => evaluate('document.querySelector(".dl-notification-toast strong")?.textContent === "Layout saved."'), 'save layout shortcut');
+  await pressKey('3', 'Digit3', 3);
+  await waitFor(
+    () => evaluate('document.querySelector(".demo-guide").getBoundingClientRect().top > document.querySelector(".hello-world").getBoundingClientRect().top'),
+    'rows shortcut',
+  );
+  await pressKey('r', 'KeyR', 3);
+  await waitFor(
+    () =>
+      evaluate('document.querySelector(".demo-playground").getBoundingClientRect().left > document.querySelector(".hello-world").getBoundingClientRect().left'),
+    'restore layout shortcut',
+  );
+  await check(
+    'document.querySelectorAll(".dv-tab").length === 3 && document.querySelector(".hello-result").textContent === "Hello, Ada!"',
+    'Layout commands use the same state-preserving actions as the toolbar',
+  );
+  await evaluate('[...document.querySelectorAll(".demo-command-examples button")].find(button => button.textContent === "Try failed command").click()');
+  await waitFor(
+    () => evaluate('document.querySelector(".dl-notification-toast[role=alert] strong")?.textContent === "Command failed: Example failed action"'),
+    'asynchronous command error feedback',
+  );
+  await check('document.querySelectorAll(".dv-tab").length === 3', 'Asynchronous command errors enter notification history and keep the workspace usable');
+  await evaluate('document.querySelector(".dl-workbench").focus()');
+  await pressKey('n', 'KeyN', 3);
+  await waitFor(() => evaluate('document.querySelector(".dl-notification-center").open'), 'open notifications shortcut');
+  await pressKey('h', 'KeyH', 3);
+  await check(
+    '!!document.querySelector(".dl-header") && document.activeElement?.getAttribute("aria-label") === "Close notifications"',
+    'Modal dialogs retain their keyboard scope',
+  );
+  await screenshot('demo-commands');
+  await pressKey('Escape', 'Escape', 0, 27);
+  await waitFor(() => evaluate('!document.querySelector(".dl-notification-center").open'), 'dismiss command history');
   assert.deepEqual(errors, [], 'No browser runtime errors');
   console.log('Browser checks passed. Screenshots are in test-results/.');
 } catch (error) {
