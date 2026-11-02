@@ -23,6 +23,7 @@ let socket;
 let sequence = 0;
 const pending = new Map();
 const errors = [];
+const fileChoosers = [];
 
 async function waitFor(probe, description) {
   const deadline = Date.now() + 30000;
@@ -44,7 +45,7 @@ function command(method, params = {}) {
 
 async function evaluate(expression) {
   const result = await command('Runtime.evaluate', { expression, returnByValue: true, awaitPromise: true });
-  if (result.exceptionDetails) throw new Error(result.exceptionDetails.text);
+  if (result.exceptionDetails) throw new Error(result.exceptionDetails.exception?.description ?? result.exceptionDetails.text);
   return result.result.value;
 }
 
@@ -81,6 +82,69 @@ async function searchPalette(text) {
   await command('Input.insertText', { text });
 }
 
+async function clickText(selector, text) {
+  let point;
+  await waitFor(async () => {
+    const previousPoint = point;
+    point = await evaluate(`(() => {
+      for (const node of document.querySelectorAll(${JSON.stringify(selector)})) {
+        if (node.textContent.trim() !== ${JSON.stringify(text)}) continue;
+        const rect = node.getBoundingClientRect();
+        const popup = node.closest('.ant-dropdown');
+        if (!rect.width) continue;
+        const x = rect.x + rect.width / 2;
+        const y = rect.y + rect.height / 2;
+        if (node.contains(document.elementFromPoint(x, y)) && !popup?.getAnimations({subtree: true}).some(animation => animation.playState === 'running')) return {x, y};
+      }
+      return null;
+    })()`);
+    return point !== null && previousPoint?.x === point.x && previousPoint?.y === point.y;
+  }, `visible, settled control: ${text}`);
+  await command('Input.dispatchMouseEvent', { type: 'mouseMoved', ...point });
+  await command('Input.dispatchMouseEvent', { type: 'mousePressed', button: 'left', clickCount: 1, ...point });
+  await command('Input.dispatchMouseEvent', { type: 'mouseReleased', button: 'left', clickCount: 1, ...point });
+}
+
+async function openMenuItem(text) {
+  await click('Open application menu');
+  await waitFor(() => evaluate('document.querySelector(".dl-menu-trigger").getAttribute("aria-expanded") === "true"'), 'application menu');
+  const expanded = await evaluate(
+    '[...document.querySelectorAll("[role=menuitem]")].find(node => node.textContent.trim() === "File" && node.getBoundingClientRect().width)?.getAttribute("aria-expanded") === "true"',
+  );
+  if (!expanded) await clickText('[role=menuitem]', 'File');
+  await waitFor(
+    () =>
+      evaluate(
+        `[...document.querySelectorAll('[role=menuitem]')].some(node => node.textContent.trim() === ${JSON.stringify(text)} && node.getBoundingClientRect().width > 0)`,
+      ),
+    'File submenu',
+  );
+  await clickText('[role=menuitem]', text);
+}
+
+async function openPreferences() {
+  await openMenuItem('Preferences');
+  await waitFor(
+    () => evaluate('document.querySelector(".dl-settings-dialog").open && document.querySelector(".dl-settings-dialog h2").textContent === "Preferences"'),
+    'preferences dialog',
+  );
+}
+
+async function chooseSelect(index, value) {
+  await evaluate(`document.querySelectorAll('.dl-settings-dialog select')[${index}].focus()`);
+  await pressKey('Home', 'Home', 0, 36);
+  if (value === 'dark' || value === 'reduced') await pressKey('ArrowDown', 'ArrowDown', 0, 40);
+  await pressKey('Tab', 'Tab', 0, 9);
+}
+
+async function importConfiguration(path, fromSettings = false) {
+  const previous = fileChoosers.length;
+  if (fromSettings) await clickText('.dl-settings-dialog button', 'Import configuration');
+  else await openMenuItem('Import configuration…');
+  await waitFor(() => fileChoosers.length > previous, 'native configuration file chooser');
+  await command('DOM.setFileInputFiles', { files: [resolve(path)], backendNodeId: fileChoosers.at(-1).backendNodeId });
+}
+
 try {
   let port;
   await waitFor(async () => {
@@ -101,6 +165,7 @@ try {
   socket.onmessage = ({ data }) => {
     const message = JSON.parse(data);
     if (message.method === 'Runtime.exceptionThrown') errors.push(message.params.exceptionDetails);
+    if (message.method === 'Page.fileChooserOpened') fileChoosers.push(message.params);
     const request = pending.get(message.id);
     if (request) {
       pending.delete(message.id);
@@ -114,6 +179,7 @@ try {
   };
   await command('Runtime.enable');
   await command('Page.enable');
+  await command('Page.setInterceptFileChooserDialog', { enabled: true });
   await command('Emulation.setDeviceMetricsOverride', { width: 1440, height: 1000, deviceScaleFactor: 1, mobile: false });
   await waitFor(() => evaluate('document.querySelectorAll(".dv-tab").length === 3 && !!document.querySelector("#hello-name")'), 'Hello World panels');
   await check('document.querySelector(".dl-dock").getBoundingClientRect().height > 400', 'Dockview has usable workspace dimensions');
@@ -454,10 +520,178 @@ try {
     'exit focus through palette',
   );
   await check('document.activeElement?.getAttribute("aria-label") === "Enter focus mode"', 'The palette respects live availability and focus-mode restoration');
+  await evaluate('document.querySelector(".dl-menu-trigger").focus()');
+  await pressKey('ArrowDown', 'ArrowDown', 0, 40);
+  await waitFor(
+    () => evaluate('document.activeElement?.getAttribute("role") === "menuitem" && document.activeElement.textContent.trim() === "File"'),
+    'keyboard application menu',
+  );
+  await pressKey('ArrowRight', 'ArrowRight', 0, 39);
+  await waitFor(
+    () => evaluate('document.activeElement?.getAttribute("role") === "menuitem" && document.activeElement.textContent.trim() === "Settings"'),
+    'keyboard submenu focus',
+  );
+  await waitFor(
+    () =>
+      evaluate(
+        '[...document.querySelectorAll("[role=menuitem]")].some(node => node.textContent.trim() === "Settings" && node.getBoundingClientRect().width > 0)',
+      ),
+    'keyboard File submenu',
+  );
+  await pressKey('Enter', 'Enter');
+  await waitFor(() => evaluate('document.querySelector(".dl-settings-dialog").open'), 'keyboard settings dialog');
+  await check(
+    'document.querySelector(".dl-settings-dialog h2").textContent === "Settings" && document.activeElement?.getAttribute("aria-label") === "Close settings"',
+    'The hamburger menu opens File > Settings entirely by keyboard',
+  );
+  await evaluate('document.querySelectorAll(".dl-settings-dialog input[type=checkbox]")[0].click()');
+  await waitFor(() => evaluate('!document.querySelector(".dl-header")'), 'settings header choice');
+  await clickText('.dl-settings-dialog button', 'Save workspace layout');
+  await pressKey('Escape', 'Escape', 0, 27);
+  await waitFor(() => evaluate('!document.querySelector(".dl-settings-dialog").open'), 'close settings');
+  await check(
+    'document.activeElement === document.querySelector(".dl-menu-trigger") && document.querySelector(".hello-result").textContent === "Hello, Ada!"',
+    'Settings preserve panel content and restore focus to the menu trigger',
+  );
+  await reload();
+  await waitFor(() => evaluate('!document.querySelector(".dl-header")'), 'saved settings on reload');
+  await check('!document.querySelector(".dl-header") && !!document.querySelector(".dl-footer")', 'Settings save through the existing workspace checkpoint');
+  await click('Show header');
+  await evaluate('document.querySelector("#hello-name").focus(); document.querySelector("#hello-name").select()');
+  await command('Input.insertText', { text: 'Ada' });
+  await evaluate('document.querySelector(".hello-form button").click(); globalThis.configurationPanel = document.querySelector(".hello-world"); true');
+  await openPreferences();
+  await chooseSelect(0, 'dark');
+  await clickText('.dl-settings-dialog button', 'Cancel');
+  await waitFor(() => evaluate('!document.querySelector(".dl-settings-dialog").open'), 'cancel preference draft');
+  await check('document.querySelector(".dl-theme").dataset.theme === "light"', 'Cancel discards preference edits');
+  await openPreferences();
+  await chooseSelect(0, 'dark');
+  await chooseSelect(1, 'reduced');
+  await evaluate('document.querySelector(".dl-settings-dialog input[type=checkbox]").click()');
+  await evaluate(
+    'document.querySelector(".dl-settings-dialog input[type=number]").focus(); document.querySelector(".dl-settings-dialog input[type=number]").select()',
+  );
+  await command('Input.insertText', { text: '2' });
+  await screenshot('demo-preferences');
+  await clickText('.dl-settings-dialog button', 'Apply preferences');
+  await waitFor(
+    () => evaluate('!document.querySelector(".dl-settings-dialog").open && document.querySelector(".dl-theme").dataset.theme === "dark"'),
+    'apply preference draft',
+  );
+  await check(
+    'document.querySelector(".hello-world") === globalThis.configurationPanel && document.querySelector(".hello-result").textContent === "Hello, Ada!" && getComputedStyle(document.querySelector(".dl-header")).transitionDuration.split(",")[0].trim() === "0s"',
+    'Applying theme and motion preferences preserves mounted panels and their state',
+  );
+  await check('document.querySelectorAll(".dl-notification-toast").length === 0', 'Disabling popups dismisses active toasts');
+  await reload();
+  await waitFor(() => evaluate('document.querySelector(".dl-theme").dataset.theme === "dark"'), 'restore preferences on reload');
+  await check(
+    '!document.querySelector(".dl-header") && document.querySelector(".dl-theme").dataset.motion === "reduced"',
+    'Preferences persist independently and do not save unsaved workspace changes',
+  );
+  await openPreferences();
+  await check(
+    '!document.querySelector(".dl-settings-dialog input[type=checkbox]").checked && document.querySelector(".dl-settings-dialog input[type=number]").value === "2"',
+    'Notification visibility and duration persist across reload',
+  );
+  await pressKey('Escape', 'Escape', 0, 27);
+  await waitFor(() => evaluate('!document.querySelector(".dl-settings-dialog").open'), 'close restored preferences');
+  const downloads = await mkdtemp(`${output}/downloads-`);
+  await command('Browser.setDownloadBehavior', { behavior: 'allow', downloadPath: resolve(downloads) });
+  await openMenuItem('Export configuration…');
+  const exportedPath = `${downloads}/dash-lab-configuration.json`;
+  await waitFor(async () => {
+    try {
+      JSON.parse(await readFile(exportedPath, 'utf8'));
+      return true;
+    } catch {
+      return false;
+    }
+  }, 'download configuration JSON');
+  const exported = JSON.parse(await readFile(exportedPath, 'utf8'));
+  assert.equal(exported.format, 'dash-lab');
+  assert.equal(exported.version, 1);
+  assert.equal(exported.workspace.headerVisible, false);
+  assert.equal(exported.preferences.theme, 'dark');
+  assert.equal(exported.preferences.notifications.toastDurationMs, 2000);
+  assert.equal(JSON.stringify(exported).includes('Hello, Ada!'), false);
+  assert.deepEqual(Object.keys(exported).sort(), ['format', 'preferences', 'version', 'workspace']);
+  console.log('PASS Export downloads a versioned JSON configuration without greeting content or history');
+  const imported = globalThis.structuredClone(exported);
+  imported.workspace.headerVisible = true;
+  imported.workspace.footerVisible = false;
+  imported.preferences = { theme: 'light', motion: 'system', notifications: { toastsEnabled: true, toastDurationMs: 1000 } };
+  const importedPath = `${downloads}/import.json`;
+  await writeFile(importedPath, JSON.stringify(imported));
+  await evaluate('document.querySelector("#hello-name").focus(); document.querySelector("#hello-name").select()');
+  await command('Input.insertText', { text: 'Ada' });
+  await evaluate('document.querySelector(".hello-form button").click(); globalThis.configurationPanel = document.querySelector(".hello-world"); true');
+  await openMenuItem('Settings');
+  await waitFor(() => evaluate('document.querySelector(".dl-settings-dialog").open'), 'settings before import');
+  await screenshot('demo-settings');
+  await importConfiguration(importedPath, true);
+  await waitFor(
+    () =>
+      evaluate(
+        'document.querySelector(".dl-theme").dataset.theme === "light" && !!document.querySelector(".dl-header") && !document.querySelector(".dl-footer")',
+      ),
+    'import configuration',
+  );
+  await check(
+    'document.querySelector(".hello-world") === globalThis.configurationPanel && document.querySelector(".hello-result").textContent === "Hello, Ada!"',
+    'Import from Settings applies configuration without remounting panels or clearing their content',
+  );
+  await pressKey('Escape', 'Escape', 0, 27);
+  await waitFor(() => evaluate('!document.querySelector(".dl-settings-dialog").open'), 'close import settings');
+  await reload();
+  await waitFor(() => evaluate('!!document.querySelector(".dl-header") && !document.querySelector(".dl-footer")'), 'imported checkpoint after reload');
+  await check(
+    'document.querySelector(".dl-theme").dataset.theme === "light" && document.querySelector(".dl-theme").dataset.motion === "system"',
+    'Imported workspace and preferences are restored together on reload',
+  );
+  for (const [name, invalid] of [
+    ['future', { ...imported, version: 2 }],
+    ['foreign', { ...imported, workspace: { ...imported.workspace, layout: { ...imported.workspace.layout, panels: {} } } }],
+  ]) {
+    const path = `${downloads}/${name}.json`;
+    await writeFile(path, JSON.stringify({ ...invalid, preferences: { ...imported.preferences, theme: 'dark' } }));
+    await importConfiguration(path);
+    await waitFor(
+      () => evaluate('document.querySelector(".dl-notification-toast strong")?.textContent === "Configuration could not be imported"'),
+      `reject ${name} configuration`,
+    );
+    await check(
+      'document.querySelector(".dl-theme").dataset.theme === "light" && !!document.querySelector(".dl-header") && !document.querySelector(".dl-footer")',
+      `Invalid ${name} configuration leaves current workspace and preferences unchanged`,
+    );
+    await click('Dismiss notification: Configuration could not be imported');
+  }
+  await importConfiguration(importedPath);
+  await waitFor(() => evaluate('document.querySelector(".dl-notification-toast strong")?.textContent === "Configuration imported."'), 'repeat import');
+  await check('document.querySelector("input[type=file]").value === ""', 'The same configuration file can be selected again');
+  await evaluate('globalThis.preferenceWrite = Storage.prototype.setItem; Storage.prototype.setItem = function() { throw new Error("Blocked test storage"); }');
+  await openPreferences();
+  await chooseSelect(0, 'dark');
+  await clickText('.dl-settings-dialog button', 'Apply preferences');
+  await waitFor(
+    () => evaluate('document.querySelector(".dl-notification-toast strong")?.textContent === "Preferences kept for this session"'),
+    'blocked preference storage',
+  );
+  await check(
+    'document.querySelector(".dl-theme").dataset.theme === "dark" && document.querySelectorAll(".dv-tab").length === 3',
+    'Blocked preference storage keeps the chosen preferences usable for the current session',
+  );
+  await evaluate('Storage.prototype.setItem = globalThis.preferenceWrite');
   assert.deepEqual(errors, [], 'No browser runtime errors');
   console.log('Browser checks passed. Screenshots are in test-results/.');
 } catch (error) {
   if (socket?.readyState === 1) {
+    console.error(
+      await evaluate(
+        `JSON.stringify([...document.querySelectorAll('[role=menuitem]')].map(node => {const rect = node.getBoundingClientRect(); const popup = node.closest('.ant-dropdown'); return {text:node.textContent,rect,popup:popup?.className,animations:popup?.getAnimations({subtree:true}).map(a=>({state:a.playState,time:a.currentTime})),hit:document.elementFromPoint(rect.x+rect.width/2,rect.y+rect.height/2)?.outerHTML.slice(0,250)};}))`,
+      ),
+    );
     console.error(
       await evaluate(
         'JSON.stringify({ theme: document.querySelector(".dl-theme")?.dataset.theme, samePanel: document.querySelector(".hello-world") === globalThis.testPanel, greeting: document.querySelector(".hello-result")?.textContent, groups: [...document.querySelectorAll(".hello-world,.demo-guide,.demo-playground")].map(node => ({className:node.className, top:node.getBoundingClientRect().top, left:node.getBoundingClientRect().left})), layoutFeedback: document.querySelector(".dl-notification-toast strong")?.textContent })',

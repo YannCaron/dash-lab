@@ -7,7 +7,21 @@ import { useNotifications } from '../notifications/NotificationContext.js';
 import type { createLayoutStore } from './layoutStore.js';
 import type { useLayoutManagement } from './useLayoutManagement.js';
 
-export function useWorkbenchCommands(store: ReturnType<typeof createLayoutStore>, layout: ReturnType<typeof useLayoutManagement>, openPalette: () => void) {
+interface ConfigurationActions {
+  openSettings: () => void;
+  openPreferences: () => void;
+  importConfiguration: () => void;
+  exportConfiguration: () => void;
+  ready: boolean;
+  busy: boolean;
+}
+
+export function useWorkbenchCommands(
+  store: ReturnType<typeof createLayoutStore>,
+  layout: ReturnType<typeof useLayoutManagement>,
+  openPalette: () => void,
+  configuration: ConfigurationActions,
+) {
   const context = useContext(CommandContext);
   if (!context) throw new Error('Workbench command provider is missing.');
   const { registry, execute } = context;
@@ -15,10 +29,26 @@ export function useWorkbenchCommands(store: ReturnType<typeof createLayoutStore>
   const { setOpen, notify } = useNotifications();
   const currentLayout = useRef(layout);
   currentLayout.current = layout;
+  const currentConfiguration = useRef(configuration);
+  currentConfiguration.current = configuration;
 
   useEffect(() => {
     const commands: CommandDefinition[] = [
       { id: 'workbench.commands.open', title: 'Open command palette', shortcut: 'Mod+Shift+P', execute: openPalette },
+      { id: 'workbench.settings.open', title: 'Open settings', execute: () => currentConfiguration.current.openSettings() },
+      { id: 'workbench.preferences.open', title: 'Open preferences', execute: () => currentConfiguration.current.openPreferences() },
+      {
+        id: 'workbench.configuration.import',
+        title: 'Import configuration',
+        isEnabled: () => currentConfiguration.current.ready && !currentConfiguration.current.busy,
+        execute: () => currentConfiguration.current.importConfiguration(),
+      },
+      {
+        id: 'workbench.configuration.export',
+        title: 'Export configuration',
+        isEnabled: () => currentConfiguration.current.ready,
+        execute: () => currentConfiguration.current.exportConfiguration(),
+      },
       { id: 'workbench.theme.toggle', title: 'Toggle theme', shortcut: 'Mod+Alt+T', execute: toggleTheme },
       { id: 'workbench.focus.toggle', title: 'Toggle focus mode', shortcut: 'Mod+Alt+F', execute: () => store.getState().toggleFocus() },
       {

@@ -30,3 +30,9 @@ The packaged library is installed into a fresh consumer after Features 4–6. Pu
 ## Feature 7
 
 Thirty-five unit tests and forty-one compiled-demo browser checks pass. Palette checks cover normalized and abbreviated search, empty results, live availability, unavailable actions, keyboard selection, recent successful commands, retained panel state, Escape focus restoration, Focus mode, and transfer to the notification dialog without stacking modals. Search ranking has separate unit coverage. No dependency was added.
+
+## Feature 8
+
+Forty-two unit tests and fifty-six compiled-demo browser checks pass. Coverage includes the File menu entirely by keyboard, Settings focus restoration and layout saving, preference drafts and cancellation, retained panel state, independent preference persistence, popup choices, real JSON download and file-picker imports, successful restoration after reload, rejection of incompatible versions/panels without partial application, repeated file selection, and blocked browser storage. Configuration validation also covers malformed preferences, missing workspaces, byte-size limits, and unknown fields.
+
+The full browser suite also passes against the development server with React StrictMode. The packed package installs into a fresh consumer and passes strict NodeNext type checking, ESM execution, SSR provider composition, and CSS-export checks. Storybook builds with a settings example. The runtime dependency audit reports zero vulnerabilities; no dependency was added.

@@ -24,6 +24,9 @@ describe('theme state', () => {
     first.getState().setMode('dark');
     expect(first.getState().mode).toBe('dark');
     expect(second.getState().mode).toBe('light');
+    first.getState().setMotionPreference('reduced');
+    expect(first.getState().motionPreference).toBe('reduced');
+    expect(second.getState().motionPreference).toBe('system');
   });
 });
 

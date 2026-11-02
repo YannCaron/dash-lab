@@ -2,7 +2,7 @@
 
 Build once. Create many.
 
-A reusable React workbench and a separate Hello World demo. Features 1–7 provide the foundation, dockable workbench, themes, saved layouts, notifications, commands, and command palette; the remaining features are tracked in [prompt.md](prompt.md).
+A reusable React workbench and a separate Hello World demo. Features 1–8 provide the foundation, dockable workbench, themes, saved layouts, notifications, commands, command palette, menus, and settings; the remaining features are tracked in [prompt.md](prompt.md).
 
 ## Run the demo
 
@@ -61,7 +61,7 @@ Use the `headerActions`, `controlBar`, `monitoringBar`, and `footer` slots for a
 
 The layout toolbar offers application, columns, and rows presets, plus Save, Restore, and Reset. Presets and restoration reuse the existing React panels. Reset restores the application's initial positions and header/footer preferences; it keeps the saved checkpoint available.
 
-Save explicitly stores the panel layout and header/footer visibility in browser local storage. That checkpoint is restored automatically on reload. Unsaved rearrangements, panel content, Focus mode, and theme choice are not persisted. Set `layoutStorageKey="my-lab:layout:v1"` on Workbench to choose an application-specific key, or `layoutStorageKey={false}` for in-memory checkpoints only. The default key uses the workbench title. Keep the key stable while mounted.
+Save explicitly stores the panel layout and header/footer visibility in browser local storage. That checkpoint is restored automatically on reload. Unsaved rearrangements, panel content, and Focus mode are not persisted. Set `layoutStorageKey="my-lab:layout:v1"` on Workbench to choose an application-specific key, or `layoutStorageKey={false}` for in-memory checkpoints only. The default key uses the workbench title. Keep the key stable while mounted.
 
 Saved data is versioned and checked against the current panel definitions. Corrupt or incompatible saves leave the default workspace usable and show an error. If browser storage is blocked or full, Save retains a checkpoint for the current session. Layouts in separate browser windows are outside this increment.
 
@@ -77,7 +77,7 @@ import { ThemeProvider, Workbench } from 'dash-lab';
 </ThemeProvider>;
 ```
 
-`useTheme()` exposes `mode`, `setMode('light' | 'dark')`, and `toggleTheme()` to components inside the provider or workbench. `ThemeToggle` is also exported for custom application controls. Theme changes update CSS tokens, Ant Design's ConfigProvider, and Dockview in place. They do not reset panel layout or component state. Theme selection is in memory for this increment.
+`useTheme()` exposes `mode`, `setMode('light' | 'dark')`, `toggleTheme()`, `motionPreference`, and `setMotionPreference('system' | 'reduced')` to components inside the provider or workbench. `ThemeToggle` is also exported for custom application controls. Theme changes update CSS tokens, Ant Design's ConfigProvider, and Dockview in place. They do not reset panel layout or component state. Workbench persists these preferences automatically; a standalone ThemeProvider keeps them in memory.
 
 Public CSS tokens are `--dl-canvas`, `--dl-surface`, `--dl-raised`, `--dl-text`, `--dl-muted`, `--dl-border`, `--dl-accent`, `--dl-accent-soft`, `--dl-on-accent`, `--dl-success`, `--dl-warning`, and `--dl-error`. Transitions take 180 ms and respect `prefers-reduced-motion`.
 
@@ -85,7 +85,7 @@ Public CSS tokens are `--dl-canvas`, `--dl-surface`, `--dl-raised`, `--dl-text`,
 
 Call `useNotifications().notify({ title: 'Saved', description: 'Your work is ready.', level: 'success' })` from a component inside Workbench. Supported levels are info, success, warning, and error. The toolbar bell opens the history dialog and displays the unread count. Users can mark entries read, remove them, or clear history.
 
-Toasts disappear after five seconds; errors remain until dismissed. Override this per notification with `durationMs` (zero means sticky). Dismissing or timing out a toast keeps its unread history entry. History contains up to 100 entries and the visible stack up to three. History lives in memory for the current session.
+Toasts disappear after five seconds by default; errors remain until dismissed. Preferences can disable popups and set their default duration to 1–30 seconds. `useNotifications()` exposes `preferences` and `setPreferences({ toastsEnabled, toastDurationMs })` for custom controls. Override duration per notification with `durationMs` (zero means sticky). Disabling popups dismisses active toasts and keeps history; re-enabling does not replay old entries. Dismissing or timing out a toast keeps its unread history entry. History contains up to 100 entries and the visible stack up to three. History lives in memory for the current session.
 
 Workbench supplies an isolated center automatically. For custom composition, wrap a workbench in `NotificationProvider` inside `ThemeProvider`, and set `historyLimit` when needed. `NotificationButton` is exported for custom controls. Layout feedback and application notifications use the same center. The Hello World greeting and Playground buttons demonstrate all severities.
 
@@ -133,6 +133,16 @@ Mod means Command on macOS and Control elsewhere. Shortcuts use semantic key nam
 Open Commands in the toolbar or press Mod+Shift+P. Search command titles or IDs; matching ignores case and accents and supports abbreviated letters. Arrow keys select available actions, Enter runs one, and Escape closes the palette and restores focus. Disabled commands remain visible. Shortcuts appear alongside their actions, and the six most recently successful palette selections lead an empty search for the current session.
 
 The palette uses the same registry and error handling as buttons and shortcuts. It remains accessible by keyboard in Focus mode. `CommandPalette` is exported as a controlled component with `open` and `onClose` props for applications composing their own command and notification providers.
+
+## Menus and settings
+
+The hamburger menu contains File → Settings, Preferences, Import configuration, and Export configuration. All four actions are also searchable in the command palette. Open the menu with Enter, Space, or Arrow Down; use arrows to navigate and Escape to dismiss it.
+
+Settings controls header/footer visibility and saves or resets the current workspace through the existing layout service. Changes apply immediately; Save workspace layout stores a checkpoint. Preferences edits the theme, motion choice, popup visibility, and popup duration. Apply saves these choices; Cancel or Escape discards the draft. System reduced motion always takes priority.
+
+Preferences persist independently from saved layouts, including changes made by the theme toolbar button. Set `preferencesStorageKey="my-lab:preferences:v1"` to customize storage or `preferencesStorageKey={false}` to keep preferences in memory. The default key uses the workbench title; keep it stable while mounted. Storage failures retain the current choices and report the session-only fallback in notification history.
+
+Export downloads `dash-lab-configuration.json`, containing `format: 'dash-lab'`, `version: 1`, the current workspace checkpoint structure, and preferences. It includes the current arrangement even when unsaved. Import validates the whole file, its version, preferences, and compatibility with the current panel IDs before applying it; accepted imports update the saved checkpoint. React panel state, notification history, and recent commands are excluded. Files are limited to 1 MB. Workbenches without panels export `workspace: null`. `WorkbenchConfiguration`, `WorkbenchPreferences`, and the pure `decodeConfiguration(text, panels)` validator are exported for application integrations.
 
 ## License
 

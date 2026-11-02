@@ -47,7 +47,7 @@ export function LayoutControls({ layout }: { layout: ReturnType<typeof useLayout
         );
       })}
       <span className="dl-divider" />
-      <button type="button" className="dl-icon-button" aria-label="Save layout" title="Save layout" disabled={!layout.ready} onClick={layout.save}>
+      <button type="button" className="dl-icon-button" aria-label="Save layout" title="Save layout" disabled={!layout.ready} onClick={() => layout.save()}>
         <LayoutIcon kind="save" />
       </button>
       <button

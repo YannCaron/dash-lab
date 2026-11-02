@@ -5,10 +5,15 @@ import type { WorkbenchPanel } from './panels.js';
 /** Built-in arrangements for the application's initial panels. */
 export type LayoutPreset = 'default' | 'columns' | 'rows';
 
+/** Versioned native workspace checkpoint, excluding React panel state. */
 export interface SavedLayout {
+  /** Checkpoint schema version. */
   version: 1;
+  /** Dockview's serialized arrangement. */
   layout: SerializedDockview;
+  /** Header visibility outside Focus mode. */
   headerVisible: boolean;
+  /** Footer visibility outside Focus mode. */
   footerVisible: boolean;
 }
 

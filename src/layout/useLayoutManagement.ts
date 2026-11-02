@@ -66,28 +66,38 @@ export function useLayoutManagement(
     onReady?.(api);
   }, [api, apply, onReady, panels, reportError, storageKey]);
 
-  const save = useCallback(() => {
-    if (!api) return false;
-    try {
-      const { headerVisible, footerVisible } = store.getState();
-      const snapshot: SavedLayout = { version: 1, layout: api.toJSON(), headerVisible, footerVisible };
-      validateLayout(snapshot.layout, panels);
-      const text = JSON.stringify(snapshot);
-      saved.current = JSON.parse(text) as SavedLayout;
-      setHasSaved(true);
-      if (storageKey) {
-        try {
-          localStorage.setItem(storageKey, text);
-        } catch {
-          return reportError(new Error('Layout kept for this session. Browser storage is unavailable or full.'));
+  const capture = useCallback((): SavedLayout | null => {
+    if (!api) return null;
+    const { headerVisible, footerVisible } = store.getState();
+    const snapshot: SavedLayout = { version: 1, layout: api.toJSON(), headerVisible, footerVisible };
+    validateLayout(snapshot.layout, panels);
+    return structuredClone(snapshot);
+  }, [api, panels, store]);
+
+  const save = useCallback(
+    (silent = false) => {
+      try {
+        const snapshot = capture();
+        if (!snapshot) return false;
+        const text = JSON.stringify(snapshot);
+        saved.current = JSON.parse(text) as SavedLayout;
+        setHasSaved(true);
+        if (storageKey) {
+          try {
+            localStorage.setItem(storageKey, text);
+          } catch {
+            if (!silent) reportError(new Error('Layout kept for this session. Browser storage is unavailable or full.'));
+            return false;
+          }
         }
+        if (!silent) setFeedback({ message: storageKey ? 'Layout saved.' : 'Layout saved for this session.', error: false });
+        return true;
+      } catch (error) {
+        return reportError(error);
       }
-      setFeedback({ message: storageKey ? 'Layout saved.' : 'Layout saved for this session.', error: false });
-      return true;
-    } catch (error) {
-      return reportError(error);
-    }
-  }, [api, panels, reportError, storageKey, store]);
+    },
+    [capture, reportError, storageKey],
+  );
 
   const restore = useCallback(() => {
     if (!saved.current) return false;
@@ -127,5 +137,5 @@ export function useLayoutManagement(
     }
   }, [apply, reportError, store]);
 
-  return { save, restore, reset, selectPreset, hasSaved, feedback, ready: api !== null };
+  return { save, restore, reset, selectPreset, capture, apply, hasSaved, feedback, ready: api !== null };
 }

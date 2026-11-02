@@ -1,0 +1,55 @@
+import type { ThemeMode, MotionPreference } from '../theme/themeStore.js';
+import type { NotificationPreferences } from '../notifications/preferences.js';
+import { validateNotificationPreferences } from '../notifications/preferences.js';
+import { decodeLayout } from '../layout/layoutPersistence.js';
+import type { SavedLayout } from '../layout/layoutPersistence.js';
+import type { WorkbenchPanel } from '../layout/panels.js';
+
+/** Preferences persisted independently from explicit layout checkpoints. */
+export interface WorkbenchPreferences {
+  /** Active color scheme. */
+  theme: ThemeMode;
+  /** Animation preference. */
+  motion: MotionPreference;
+  /** Popup visibility and default duration. */
+  notifications: NotificationPreferences;
+}
+
+/** Portable configuration; excludes panel content and notification history. */
+export interface WorkbenchConfiguration {
+  /** Identifies a dash-lab configuration file. */
+  format: 'dash-lab';
+  /** Supported configuration schema version. */
+  version: 1;
+  /** Current native layout and chrome visibility; null for a workbench without panels. */
+  workspace: SavedLayout | null;
+  /** Application preferences. */
+  preferences: WorkbenchPreferences;
+}
+
+export const configurationSizeLimit = 1_000_000;
+
+export function validatePreferences(value: unknown): WorkbenchPreferences {
+  const preferences = value as Partial<WorkbenchPreferences> | null;
+  if (!preferences || !['light', 'dark'].includes(preferences.theme ?? '') || !['system', 'reduced'].includes(preferences.motion ?? '')) {
+    throw new Error('Preferences have an invalid theme or animation choice.');
+  }
+  validateNotificationPreferences(preferences.notifications);
+  return {
+    theme: preferences.theme!,
+    motion: preferences.motion!,
+    notifications: { toastsEnabled: preferences.notifications.toastsEnabled, toastDurationMs: preferences.notifications.toastDurationMs },
+  };
+}
+
+/** Validate a JSON configuration against the current application's panels before applying any changes. */
+export function decodeConfiguration(text: string, panels: readonly WorkbenchPanel[]): WorkbenchConfiguration {
+  if (new TextEncoder().encode(text).byteLength > configurationSizeLimit) throw new Error('Configuration exceeds the 1 MB limit.');
+  const value = JSON.parse(text) as Partial<WorkbenchConfiguration> | null;
+  if (!value || value.format !== 'dash-lab' || value.version !== 1) throw new Error('Configuration has an unsupported format or version.');
+  const preferences = validatePreferences(value.preferences);
+  if (value.workspace === undefined) throw new Error('Configuration is missing a workspace.');
+  const workspace = value.workspace === null ? null : decodeLayout(JSON.stringify(value.workspace), panels);
+  if (workspace === null && panels.length) throw new Error('Configuration is missing this application’s workspace.');
+  return { format: 'dash-lab', version: 1, workspace, preferences };
+}

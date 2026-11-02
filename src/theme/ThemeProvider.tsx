@@ -21,7 +21,9 @@ export interface ThemeProviderProps {
 export function ThemeProvider({ children, initialMode = 'light' }: ThemeProviderProps) {
   const [store] = useState(() => createThemeStore(initialMode));
   const mode = useStore(store, (state) => state.mode);
-  const [reducedMotion, setReducedMotion] = useState(() => typeof matchMedia !== 'undefined' && matchMedia('(prefers-reduced-motion: reduce)').matches);
+  const motionPreference = useStore(store, (state) => state.motionPreference);
+  const [systemReducedMotion, setReducedMotion] = useState(() => typeof matchMedia !== 'undefined' && matchMedia('(prefers-reduced-motion: reduce)').matches);
+  const reducedMotion = systemReducedMotion || motionPreference === 'reduced';
   const root = useRef<HTMLDivElement>(null);
   const themeId = useId();
   const tokens = palettes[mode];
@@ -68,7 +70,7 @@ export function ThemeProvider({ children, initialMode = 'light' }: ThemeProvider
   return (
     <ThemeContext.Provider value={store}>
       <ConfigProvider theme={antTheme} getPopupContainer={(trigger) => trigger?.closest<HTMLElement>('.dl-theme') ?? root.current ?? document.body}>
-        <div ref={root} className="dl-theme" data-theme={mode} style={{ ...tokens, colorScheme: mode }}>
+        <div ref={root} className="dl-theme" data-theme={mode} data-motion={motionPreference} style={{ ...tokens, colorScheme: mode }}>
           {children}
         </div>
       </ConfigProvider>

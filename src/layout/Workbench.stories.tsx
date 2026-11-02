@@ -26,7 +26,7 @@ const panels: readonly WorkbenchPanel[] = [
 const meta = {
   title: 'Workbench/Shell',
   component: Workbench,
-  args: { title: 'Example application', children: 'Hello World' },
+  args: { title: 'Example application', children: 'Hello World', layoutStorageKey: false, preferencesStorageKey: false },
   decorators: [
     (Story) => (
       <div style={{ height: '100vh' }}>
@@ -50,4 +50,7 @@ export const DarkWorkspace: Story = {
       </ThemeProvider>
     ),
   ],
+};
+export const SettingsAndPreferences: Story = {
+  args: { ...DockedWorkspace.args, controlBar: 'Open File in the hamburger menu to try Settings, Preferences, and JSON configuration.' },
 };

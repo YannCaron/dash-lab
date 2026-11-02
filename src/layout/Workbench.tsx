@@ -16,6 +16,10 @@ import { CommandContext } from '../commands/CommandContext.js';
 import { CommandProvider } from '../commands/CommandProvider.js';
 import { useWorkbenchCommands } from './useWorkbenchCommands.js';
 import { CommandPalette } from '../commands/CommandPalette.js';
+import { ApplicationMenu } from '../settings/ApplicationMenu.js';
+import { SettingsDialog } from '../settings/SettingsDialog.js';
+import type { SettingsPage } from '../settings/SettingsDialog.js';
+import { useWorkbenchConfiguration } from '../settings/useWorkbenchConfiguration.js';
 
 /** Properties of the reusable application workbench. */
 export interface WorkbenchProps {
@@ -43,6 +47,8 @@ export interface WorkbenchProps {
   initialFooterVisible?: boolean;
   /** Browser storage key for explicitly saved layouts. Defaults to a title-based key; false keeps saves in memory. Keep stable while mounted. */
   layoutStorageKey?: string | false;
+  /** Storage key for automatically saved preferences. Defaults to a title-based key; false keeps preferences in memory. Keep stable while mounted. */
+  preferencesStorageKey?: string | false;
   /** Fallback content displayed when no panels are supplied. */
   children?: ReactNode;
 }
@@ -111,16 +117,28 @@ function WorkbenchShell({
   initialHeaderVisible = true,
   initialFooterVisible = true,
   layoutStorageKey,
+  preferencesStorageKey,
   children,
 }: WorkbenchProps) {
   const [store] = useState(() => createLayoutStore(initialHeaderVisible, initialFooterVisible));
   const [api, setApi] = useState<DockviewApi | null>(null);
   const [storageKey] = useState(() => layoutStorageKey ?? `dash-lab:${encodeURIComponent(title)}:layout:v1`);
   const layout = useLayoutManagement(api, panels, store, storageKey, onWorkspaceReady);
+  const [preferenceKey] = useState(() => preferencesStorageKey ?? `dash-lab:${encodeURIComponent(title)}:preferences:v1`);
+  const configuration = useWorkbenchConfiguration(layout, panels, preferenceKey);
+  const [settingsPage, setSettingsPage] = useState<SettingsPage | null>(null);
+  const closeSettings = useCallback(() => setSettingsPage(null), []);
   const [paletteOpen, setPaletteOpen] = useState(false);
   const openPalette = useCallback(() => setPaletteOpen(true), []);
   const closePalette = useCallback(() => setPaletteOpen(false), []);
-  const handleKeyDown = useWorkbenchCommands(store, layout, openPalette);
+  const handleKeyDown = useWorkbenchCommands(store, layout, openPalette, {
+    openSettings: () => setSettingsPage('settings'),
+    openPreferences: () => setSettingsPage('preferences'),
+    importConfiguration: configuration.chooseImport,
+    exportConfiguration: configuration.exportConfiguration,
+    ready: configuration.ready,
+    busy: configuration.busy,
+  });
   const root = useRef<HTMLElement>(null);
   const { notify } = useNotifications();
   const reportedFeedback = useRef(layout.feedback);
@@ -161,12 +179,17 @@ function WorkbenchShell({
 
       {!state.focusMode && (
         <div className="dl-control-bar" role="toolbar" aria-label="Workbench controls">
-          <div className="dl-application-controls">{controlBar}</div>
+          <div className="dl-application-controls">
+            <ApplicationMenu />
+            {controlBar}
+          </div>
           <div className="dl-view-controls">
             <button
               type="button"
               className="dl-icon-button dl-palette-trigger"
               aria-label="Open command palette"
+              aria-haspopup="dialog"
+              aria-expanded={paletteOpen}
               title="Commands (Ctrl/⌘+Shift+P)"
               onClick={openPalette}
             >
@@ -234,6 +257,19 @@ function WorkbenchShell({
       </main>
       {!state.focusMode && state.footerVisible && footer && <footer className="dl-footer">{footer}</footer>}
       <CommandPalette open={paletteOpen} onClose={closePalette} />
+      <SettingsDialog page={settingsPage} onClose={closeSettings} configuration={configuration} layout={layout} store={store} />
+      <input
+        type="file"
+        ref={configuration.input}
+        hidden
+        accept="application/json,.json"
+        aria-label="Import configuration file"
+        onChange={(event) => {
+          const file = event.target.files?.[0];
+          event.target.value = '';
+          if (file) void configuration.importFile(file);
+        }}
+      />
       {state.focusMode && (
         <button ref={exitFocus} type="button" className="dl-exit-focus" onClick={state.toggleFocus}>
           Exit focus mode <kbd>Esc</kbd>

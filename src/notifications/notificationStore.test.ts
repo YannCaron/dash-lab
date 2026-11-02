@@ -2,6 +2,34 @@ import { describe, expect, it } from 'vitest';
 import { createNotificationStore } from './notificationStore.js';
 
 describe('notification history', () => {
+  it('disables popups without losing history and applies duration preferences to new non-error toasts', () => {
+    const center = createNotificationStore();
+    center.getState().notify({ title: 'Existing' });
+    center.getState().setPreferences({ toastsEnabled: false, toastDurationMs: 2000 });
+    center.getState().notify({ title: 'Silent error', level: 'error' });
+    expect(center.getState().toasts).toEqual([]);
+    expect(center.getState().items).toHaveLength(2);
+    expect(center.getState().items[0]).toMatchObject({ title: 'Silent error', durationMs: 0, read: false });
+    center.getState().setPreferences({ toastsEnabled: true, toastDurationMs: 2000 });
+    const id = center.getState().notify({ title: 'Timed' });
+    expect(center.getState().toasts).toEqual([id]);
+    expect(center.getState().items[0]?.durationMs).toBe(2000);
+    center.getState().notify({ title: 'Explicit', durationMs: 125 });
+    expect(center.getState().items[0]?.durationMs).toBe(125);
+  });
+
+  it('rejects invalid popup preferences before changing state and copies accepted input', () => {
+    const center = createNotificationStore();
+    const original = center.getState();
+    for (const toastDurationMs of [0, 500, 1500, 31000, NaN]) {
+      expect(() => original.setPreferences({ toastsEnabled: false, toastDurationMs })).toThrow('1–30');
+      expect(center.getState()).toBe(original);
+    }
+    const preferences = { toastsEnabled: false, toastDurationMs: 1000 };
+    original.setPreferences(preferences);
+    preferences.toastsEnabled = true;
+    expect(center.getState().preferences.toastsEnabled).toBe(false);
+  });
   it('keeps dismissed toasts in unread history until explicitly acknowledged', () => {
     const center = createNotificationStore();
     const id = center.getState().notify({ title: 'Saved', level: 'success' });

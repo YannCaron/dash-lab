@@ -36,6 +36,8 @@ const meta = {
   component: Workbench,
   args: {
     title: 'Command example',
+    preferencesStorageKey: false,
+    layoutStorageKey: false,
     controlBar: <ExampleAction />,
     children: 'Click the command button or use its shortcut. Try Ctrl/⌘+Alt+T for the built-in theme command.',
   },
