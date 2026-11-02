@@ -76,6 +76,11 @@ async function pressKey(key, code, modifiers = 0, windowsVirtualKeyCode = key.le
   await command('Input.dispatchKeyEvent', { type: 'keyUp', key, code, modifiers, windowsVirtualKeyCode });
 }
 
+async function searchPalette(text) {
+  await evaluate('document.querySelector(".dl-palette-search input").focus(); document.querySelector(".dl-palette-search input").select()');
+  await command('Input.insertText', { text });
+}
+
 try {
   let port;
   await waitFor(async () => {
@@ -370,6 +375,85 @@ try {
   await screenshot('demo-commands');
   await pressKey('Escape', 'Escape', 0, 27);
   await waitFor(() => evaluate('!document.querySelector(".dl-notification-center").open'), 'dismiss command history');
+  await evaluate('document.querySelector(".dl-workbench").focus()');
+  await pressKey('P', 'KeyP', 10);
+  await waitFor(
+    () => evaluate('document.querySelector(".dl-command-palette").open && document.activeElement?.getAttribute("aria-label") === "Search commands"'),
+    'open command palette shortcut',
+  );
+  await searchPalette('no-such-action-zzzz');
+  await waitFor(() => evaluate('!!document.querySelector(".dl-palette-empty")'), 'empty command search');
+  await check(
+    'document.querySelector(".dl-palette-empty").textContent === "No commands match your search."',
+    'The palette presents an explicit empty search state',
+  );
+  await pressKey('Escape', 'Escape', 0, 27);
+  await waitFor(() => evaluate('!document.querySelector(".dl-command-palette").open'), 'dismiss empty palette');
+  await check('document.activeElement === document.querySelector(".dl-workbench")', 'Dismissing the palette restores keyboard focus');
+  await click('Open command palette');
+  await waitFor(() => evaluate('document.querySelector(".dl-command-palette").open'), 'open palette from toolbar');
+  await searchPalette('workbench.focus.exit');
+  await waitFor(() => evaluate('document.querySelectorAll(".dl-palette-option").length === 1'), 'disabled command result');
+  await pressKey('Enter', 'Enter');
+  await check(
+    'document.querySelector(".dl-command-palette").open && document.querySelector(".dl-palette-option").getAttribute("aria-disabled") === "true" && !document.querySelector(".dl-palette-search input").getAttribute("aria-activedescendant")',
+    'Unavailable commands cannot be selected or executed',
+  );
+  await searchPalette('workbench.header.toggle');
+  await pressKey('Enter', 'Enter');
+  await waitFor(
+    () => evaluate('!document.querySelector(".dl-command-palette").open && !document.querySelector(".dl-header")'),
+    'execute palette command by ID',
+  );
+  await check('document.querySelector(".hello-result").textContent === "Hello, Ada!"', 'The palette executes the existing action without resetting panels');
+  await click('Open command palette');
+  await waitFor(() => evaluate('document.querySelector(".dl-command-palette").open'), 'recent palette commands');
+  await waitFor(() => evaluate('document.querySelector(".dl-palette-search input").value === ""'), 'reset palette query');
+  await check(
+    'document.querySelector(".dl-palette-option").textContent.includes("Toggle header") && document.querySelector(".dl-palette-search input").value === ""',
+    'Recent successful commands lead the next empty search',
+  );
+  await pressKey('Enter', 'Enter');
+  await waitFor(
+    () => evaluate('!!document.querySelector(".dl-header") && !document.querySelector(".dl-command-palette").open'),
+    'restore header through recent command',
+  );
+  await click('Open command palette');
+  await waitFor(() => evaluate('document.querySelector(".dl-command-palette").open'), 'palette navigation');
+  await searchPalette('layout');
+  const firstOption = await evaluate('document.querySelector(".dl-palette-search input").getAttribute("aria-activedescendant")');
+  await pressKey('ArrowDown', 'ArrowDown', 0, 40);
+  await check(
+    `document.querySelector('.dl-palette-search input').getAttribute('aria-activedescendant') !== ${JSON.stringify(firstOption)} && document.activeElement?.getAttribute('aria-label') === 'Search commands'`,
+    'Arrow navigation changes the active option while keeping focus in the search field',
+  );
+  await pressKey('ArrowUp', 'ArrowUp', 0, 38);
+  await check(
+    `document.querySelector('.dl-palette-search input').getAttribute('aria-activedescendant') === ${JSON.stringify(firstOption)}`,
+    'Arrow navigation returns to the previous command',
+  );
+  await screenshot('demo-command-palette');
+  await searchPalette('workbench.notifications.open');
+  await pressKey('Enter', 'Enter');
+  await waitFor(
+    () => evaluate('document.querySelector(".dl-notification-center").open && !document.querySelector(".dl-command-palette").open'),
+    'palette dialog handoff',
+  );
+  await check('document.querySelectorAll("dialog[open]").length === 1', 'Palette actions hand focus to the next dialog without stacking modals');
+  await pressKey('Escape', 'Escape', 0, 27);
+  await waitFor(() => evaluate('!document.querySelector(".dl-notification-center").open'), 'close palette-opened notification history');
+  await evaluate('document.querySelector(".dl-workbench").focus()');
+  await pressKey('f', 'KeyF', 3);
+  await waitFor(() => evaluate('!!document.querySelector(".dl-exit-focus")'), 'focus before palette');
+  await pressKey('P', 'KeyP', 10);
+  await waitFor(() => evaluate('document.querySelector(".dl-command-palette").open'), 'palette while focused');
+  await searchPalette('workbench.focus.exit');
+  await pressKey('Enter', 'Enter');
+  await waitFor(
+    () => evaluate('!document.querySelector(".dl-exit-focus") && !document.querySelector(".dl-command-palette").open'),
+    'exit focus through palette',
+  );
+  await check('document.activeElement?.getAttribute("aria-label") === "Enter focus mode"', 'The palette respects live availability and focus-mode restoration');
   assert.deepEqual(errors, [], 'No browser runtime errors');
   console.log('Browser checks passed. Screenshots are in test-results/.');
 } catch (error) {

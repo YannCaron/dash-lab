@@ -18,3 +18,5 @@ export type { CommandProviderProps } from './commands/CommandProvider.js';
 export { useCommands } from './commands/CommandContext.js';
 export type { CommandControls } from './commands/CommandContext.js';
 export type { ShortcutEvent, ShortcutPlatform } from './commands/shortcuts.js';
+export { CommandPalette } from './commands/CommandPalette.js';
+export type { CommandPaletteProps } from './commands/CommandPalette.js';

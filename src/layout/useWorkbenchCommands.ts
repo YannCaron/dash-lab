@@ -7,7 +7,7 @@ import { useNotifications } from '../notifications/NotificationContext.js';
 import type { createLayoutStore } from './layoutStore.js';
 import type { useLayoutManagement } from './useLayoutManagement.js';
 
-export function useWorkbenchCommands(store: ReturnType<typeof createLayoutStore>, layout: ReturnType<typeof useLayoutManagement>) {
+export function useWorkbenchCommands(store: ReturnType<typeof createLayoutStore>, layout: ReturnType<typeof useLayoutManagement>, openPalette: () => void) {
   const context = useContext(CommandContext);
   if (!context) throw new Error('Workbench command provider is missing.');
   const { registry, execute } = context;
@@ -18,6 +18,7 @@ export function useWorkbenchCommands(store: ReturnType<typeof createLayoutStore>
 
   useEffect(() => {
     const commands: CommandDefinition[] = [
+      { id: 'workbench.commands.open', title: 'Open command palette', shortcut: 'Mod+Shift+P', execute: openPalette },
       { id: 'workbench.theme.toggle', title: 'Toggle theme', shortcut: 'Mod+Alt+T', execute: toggleTheme },
       { id: 'workbench.focus.toggle', title: 'Toggle focus mode', shortcut: 'Mod+Alt+F', execute: () => store.getState().toggleFocus() },
       {
@@ -75,7 +76,7 @@ export function useWorkbenchCommands(store: ReturnType<typeof createLayoutStore>
       throw error;
     }
     return () => cleanup.forEach((remove) => remove());
-  }, [registry, store, toggleTheme, setOpen]);
+  }, [registry, store, toggleTheme, setOpen, openPalette]);
 
   return useCallback(
     (event: ReactKeyboardEvent<HTMLElement>) => {

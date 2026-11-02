@@ -2,7 +2,7 @@
 
 Build once. Create many.
 
-A reusable React workbench and a separate Hello World demo. Features 1–6 provide the foundation, dockable workbench, themes, saved layouts, notifications, and commands; the remaining features are tracked in [prompt.md](prompt.md).
+A reusable React workbench and a separate Hello World demo. Features 1–7 provide the foundation, dockable workbench, themes, saved layouts, notifications, commands, and command palette; the remaining features are tracked in [prompt.md](prompt.md).
 
 ## Run the demo
 
@@ -126,7 +126,13 @@ Workbench creates a provider automatically. Custom provider composition is Theme
 | Application / columns / rows layout | Mod+Alt+1 / Mod+Alt+2 / Mod+Alt+3 |
 | Open notifications                  | Mod+Alt+N                         |
 
-Mod means Command on macOS and Control elsewhere. Shortcuts use semantic key names and exact modifiers; supported named keys include Enter, Escape, arrows, Space, Plus, and function keys. Registered application shortcuts ignore editable controls by default; set `allowInEditable: true` to opt in. Built-in workbench combinations opt in explicitly. Repeated keys, IME composition, AltGraph, already-handled events, and modal dialogs are left to their existing handlers. Keyboard dispatch is scoped to the focused workbench, with no document-wide listener. The command palette belongs to Feature 7.
+Mod means Command on macOS and Control elsewhere. Shortcuts use semantic key names and exact modifiers; supported named keys include Enter, Escape, arrows, Space, Plus, and function keys. Registered application shortcuts ignore editable controls by default; set `allowInEditable: true` to opt in. Built-in workbench combinations opt in explicitly. Repeated keys, IME composition, AltGraph, already-handled events, and modal dialogs are left to their existing handlers. Keyboard dispatch is scoped to the focused workbench, with no document-wide listener. The palette is available with Mod+Shift+P or the Commands toolbar button.
+
+## Command palette
+
+Open Commands in the toolbar or press Mod+Shift+P. Search command titles or IDs; matching ignores case and accents and supports abbreviated letters. Arrow keys select available actions, Enter runs one, and Escape closes the palette and restores focus. Disabled commands remain visible. Shortcuts appear alongside their actions, and the six most recently successful palette selections lead an empty search for the current session.
+
+The palette uses the same registry and error handling as buttons and shortcuts. It remains accessible by keyboard in Focus mode. `CommandPalette` is exported as a controlled component with `open` and `onClose` props for applications composing their own command and notification providers.
 
 ## License
 

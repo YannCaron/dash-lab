@@ -1,5 +1,6 @@
 @import 'dockview-react/dist/styles/dockview.css';
 @import './notifications/notifications.css';
+@import './commands/palette.css';
 
 .dl-theme {
   --dl-theme-duration: 180ms;

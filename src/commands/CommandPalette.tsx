@@ -1,0 +1,152 @@
+import { useEffect, useId, useMemo, useRef, useState } from 'react';
+import { useCommands } from './CommandContext.js';
+import { useNotifications } from '../notifications/NotificationContext.js';
+import { searchCommands } from './searchCommands.js';
+
+/** Options for the controlled command palette. */
+export interface CommandPaletteProps {
+  /** Whether the palette should be open. */
+  open: boolean;
+  /** Requests closure after dismissal or selection. */
+  onClose: () => void;
+}
+
+/** Searches and executes the nearest registry's commands; requires command and notification providers. */
+export function CommandPalette({ open, onClose }: CommandPaletteProps) {
+  const { commands, canExecute, execute } = useCommands();
+  const { notify } = useNotifications();
+  const [query, setQuery] = useState('');
+  const [selected, setSelected] = useState<string | null>(null);
+  const [recent, setRecent] = useState<readonly string[]>([]);
+  const dialog = useRef<HTMLDialogElement>(null);
+  const input = useRef<HTMLInputElement>(null);
+  const prefix = useId();
+  const listId = `${prefix}-commands`;
+  const results = useMemo(
+    () =>
+      searchCommands(
+        commands.filter((command) => command.id !== 'workbench.commands.open'),
+        query,
+        recent,
+      ),
+    [commands, query, recent],
+  );
+  const entries = results.map((command, index) => {
+    try {
+      return { command, index, enabled: canExecute(command.id), error: '' };
+    } catch (error) {
+      return { command, index, enabled: false, error: error instanceof Error ? error.message : 'Availability check failed.' };
+    }
+  });
+  const enabled = entries.filter((entry) => entry.enabled);
+  const active = enabled.find((entry) => entry.command.id === selected) ?? enabled[0];
+  const activeId = active ? `${prefix}-command-${active.index}` : undefined;
+
+  useEffect(() => {
+    if (open) {
+      setQuery('');
+      setSelected(null);
+      if (!dialog.current?.open) dialog.current?.showModal();
+      input.current?.focus();
+    } else if (dialog.current?.open) dialog.current.close();
+  }, [open]);
+
+  useEffect(() => {
+    if (open && activeId) document.getElementById(activeId)?.scrollIntoView({ block: 'nearest' });
+  }, [open, activeId]);
+
+  const run = async (id: string) => {
+    try {
+      if (!canExecute(id)) return;
+      dialog.current?.close();
+      onClose();
+      if (await execute(id)) setRecent((previous) => [id, ...previous.filter((entry) => entry !== id)].slice(0, 6));
+    } catch (error) {
+      notify({ title: 'Command could not run', description: error instanceof Error ? error.message : 'The action failed.', level: 'error' });
+    }
+  };
+
+  return (
+    <dialog
+      ref={dialog}
+      className="dl-command-palette"
+      aria-label="Command palette"
+      onCancel={(event) => {
+        event.preventDefault();
+        onClose();
+      }}
+    >
+      <div className="dl-palette-search">
+        <span aria-hidden="true">&gt;</span>
+        <input
+          ref={input}
+          role="combobox"
+          aria-label="Search commands"
+          aria-expanded={open}
+          aria-autocomplete="list"
+          aria-controls={listId}
+          aria-activedescendant={activeId}
+          autoComplete="off"
+          placeholder="Type a command…"
+          value={query}
+          onChange={(event) => {
+            setQuery(event.target.value);
+            setSelected(null);
+          }}
+          onKeyDown={(event) => {
+            if (event.nativeEvent.isComposing || event.repeat) return;
+            if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+              event.preventDefault();
+              if (!enabled.length) return;
+              const index = enabled.findIndex((entry) => entry.command.id === active?.command.id);
+              const next = (index + (event.key === 'ArrowDown' ? 1 : -1) + enabled.length) % enabled.length;
+              setSelected(enabled[next]!.command.id);
+            } else if (event.key === 'Enter') {
+              event.preventDefault();
+              if (active) void run(active.command.id);
+            }
+          }}
+        />
+        <button type="button" className="dl-icon-button" aria-label="Close command palette" onClick={onClose}>
+          ×
+        </button>
+      </div>
+      <div id={listId} className="dl-palette-results" role="listbox" aria-label="Commands">
+        {entries.map(({ command, index, enabled: available, error }) => (
+          <div
+            key={command.id}
+            id={`${prefix}-command-${index}`}
+            role="option"
+            aria-selected={active?.command.id === command.id}
+            aria-disabled={!available}
+            className="dl-palette-option"
+            title={error || undefined}
+            onMouseDown={(event) => event.preventDefault()}
+            onMouseMove={() => {
+              if (available) setSelected(command.id);
+            }}
+            onClick={() => {
+              if (available) void run(command.id);
+            }}
+          >
+            <span>
+              {command.title}
+              {error && <small>Unavailable: {error}</small>}
+            </span>
+            {command.shortcut && <kbd>{command.shortcut}</kbd>}
+            {!available && <span className="dl-palette-unavailable">Unavailable</span>}
+          </div>
+        ))}
+        {!entries.length && <p className="dl-palette-empty">{commands.length ? 'No commands match your search.' : 'No commands are registered yet.'}</p>}
+      </div>
+      <footer className="dl-palette-footer">
+        <span role="status">
+          {entries.length} {entries.length === 1 ? 'command' : 'commands'}
+        </span>
+        <span>
+          <kbd>↑ ↓</kbd> navigate <kbd>Enter</kbd> run <kbd>Esc</kbd> close
+        </span>
+      </footer>
+    </dialog>
+  );
+}

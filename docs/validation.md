@@ -26,3 +26,7 @@ Twenty-three unit tests and twenty-three browser checks pass. Notification check
 Thirty-two unit tests and thirty-two browser checks pass. The complete browser suite runs against development (including React StrictMode) and compiled demo servers. Command tests cover registration cleanup, ID and canonical shortcut conflicts, independent platform mappings, dynamic availability, asynchronous overlap prevention, error propagation, subscriptions, text-entry and contenteditable protection, IME/repeat/AltGraph filtering, scoped keyboard dispatch, modal boundaries, and built-in actions over layouts/themes/focus/notifications. A failing asynchronous demo action creates a notification without breaking the workspace.
 
 The packaged library is installed into a fresh consumer after Features 4–6. Public types pass strict NodeNext checking; ESM execution, explicit provider composition, and the CSS export pass. Storybook includes interactive command and notification examples. The runtime audit reports zero vulnerabilities; the dependency versions are unchanged.
+
+## Feature 7
+
+Thirty-five unit tests and forty-one compiled-demo browser checks pass. Palette checks cover normalized and abbreviated search, empty results, live availability, unavailable actions, keyboard selection, recent successful commands, retained panel state, Escape focus restoration, Focus mode, and transfer to the notification dialog without stacking modals. Search ranking has separate unit coverage. No dependency was added.

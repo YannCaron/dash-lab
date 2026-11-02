@@ -1,4 +1,4 @@
-import { useContext, useEffect, useRef, useState } from 'react';
+import { useCallback, useContext, useEffect, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
 import type { DockviewApi } from 'dockview-react';
 import { useStore } from 'zustand';
@@ -15,6 +15,7 @@ import { NotificationButton } from '../notifications/NotificationButton.js';
 import { CommandContext } from '../commands/CommandContext.js';
 import { CommandProvider } from '../commands/CommandProvider.js';
 import { useWorkbenchCommands } from './useWorkbenchCommands.js';
+import { CommandPalette } from '../commands/CommandPalette.js';
 
 /** Properties of the reusable application workbench. */
 export interface WorkbenchProps {
@@ -116,7 +117,10 @@ function WorkbenchShell({
   const [api, setApi] = useState<DockviewApi | null>(null);
   const [storageKey] = useState(() => layoutStorageKey ?? `dash-lab:${encodeURIComponent(title)}:layout:v1`);
   const layout = useLayoutManagement(api, panels, store, storageKey, onWorkspaceReady);
-  const handleKeyDown = useWorkbenchCommands(store, layout);
+  const [paletteOpen, setPaletteOpen] = useState(false);
+  const openPalette = useCallback(() => setPaletteOpen(true), []);
+  const closePalette = useCallback(() => setPaletteOpen(false), []);
+  const handleKeyDown = useWorkbenchCommands(store, layout, openPalette);
   const root = useRef<HTMLElement>(null);
   const { notify } = useNotifications();
   const reportedFeedback = useRef(layout.feedback);
@@ -159,6 +163,20 @@ function WorkbenchShell({
         <div className="dl-control-bar" role="toolbar" aria-label="Workbench controls">
           <div className="dl-application-controls">{controlBar}</div>
           <div className="dl-view-controls">
+            <button
+              type="button"
+              className="dl-icon-button dl-palette-trigger"
+              aria-label="Open command palette"
+              title="Commands (Ctrl/⌘+Shift+P)"
+              onClick={openPalette}
+            >
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true">
+                <circle cx="10" cy="10" r="6" />
+                <path d="m15 15 6 6" />
+              </svg>
+              <span>Commands</span>
+            </button>
+            <span className="dl-divider" />
             <NotificationButton />
             <span className="dl-divider" />
             <LayoutControls layout={layout} />
@@ -215,6 +233,7 @@ function WorkbenchShell({
         )}
       </main>
       {!state.focusMode && state.footerVisible && footer && <footer className="dl-footer">{footer}</footer>}
+      <CommandPalette open={paletteOpen} onClose={closePalette} />
       {state.focusMode && (
         <button ref={exitFocus} type="button" className="dl-exit-focus" onClick={state.toggleFocus}>
           Exit focus mode <kbd>Esc</kbd>
