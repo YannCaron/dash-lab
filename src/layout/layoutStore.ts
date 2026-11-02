@@ -6,6 +6,7 @@ interface LayoutState {
   focusMode: boolean;
   toggleHeader: () => void;
   toggleFooter: () => void;
+  toggleView: () => void;
   toggleFocus: () => void;
   setVisibility: (headerVisible: boolean, footerVisible: boolean) => void;
 }
@@ -17,6 +18,8 @@ export function createLayoutStore(headerVisible = true, footerVisible = true) {
     focusMode: false,
     toggleHeader: () => set((state) => ({ headerVisible: !state.headerVisible })),
     toggleFooter: () => set((state) => ({ footerVisible: !state.footerVisible })),
+    toggleView: () =>
+      set((state) => ({ headerVisible: !(state.headerVisible || state.footerVisible), footerVisible: !(state.headerVisible || state.footerVisible) })),
     toggleFocus: () => set((state) => ({ focusMode: !state.focusMode })),
     setVisibility: (headerVisible, footerVisible) => set({ headerVisible, footerVisible }),
   }));

@@ -58,6 +58,11 @@ async function click(label) {
   await evaluate(`[...document.querySelectorAll('button')].find(button => button.getAttribute('aria-label') === ${JSON.stringify(label)}).click()`);
 }
 
+async function toggleChromePart(part) {
+  await evaluate('document.querySelector(".dl-workbench").focus()');
+  await pressKey(part === 'header' ? 'h' : 'b', part === 'header' ? 'KeyH' : 'KeyB', 3);
+}
+
 async function screenshot(name) {
   const result = await command('Page.captureScreenshot', { format: 'png' });
   await writeFile(`${output}/${name}.png`, Buffer.from(result.data, 'base64'));
@@ -189,9 +194,17 @@ try {
   await waitFor(() => evaluate('document.querySelector(".hello-result").textContent === "Hello, Ada!"'), 'greeting interaction');
   await check('document.querySelector(".hello-result").textContent === "Hello, Ada!"', 'Hello World handles real input');
   await evaluate('globalThis.testPanel = document.querySelector(".hello-world"); true');
-  await click('Hide header');
+  await click('Hide header and footer');
+  await waitFor(() => evaluate('!document.querySelector(".dl-header") && !document.querySelector(".dl-footer")'), 'combined View hide');
+  await check(
+    'document.querySelector(".hello-world") === globalThis.testPanel && document.querySelector("#hello-name").value === "Ada"',
+    'One View control hides header and footer without resetting the panel',
+  );
+  await click('Show header and footer');
+  await waitFor(() => evaluate('!!document.querySelector(".dl-header") && !!document.querySelector(".dl-footer")'), 'combined View show');
+  await toggleChromePart('header');
   await waitFor(() => evaluate('!document.querySelector(".dl-header")'), 'hide header');
-  await click('Hide footer');
+  await toggleChromePart('footer');
   await waitFor(() => evaluate('!document.querySelector(".dl-footer")'), 'hide footer');
   await click('Enter focus mode');
   await waitFor(() => evaluate('!!document.querySelector(".dl-exit-focus")'), 'enter focus mode');
@@ -210,8 +223,8 @@ try {
     'document.querySelector(".hello-world") === globalThis.testPanel && document.querySelector("#hello-name").value === "Ada"',
     'Visibility changes preserve panel instances and input state',
   );
-  await click('Show header');
-  await click('Show footer');
+  await toggleChromePart('header');
+  await toggleChromePart('footer');
   await waitFor(() => evaluate('!!document.querySelector(".dl-header") && !!document.querySelector(".dl-footer")'), 'restore chrome');
   await check('getComputedStyle(document.querySelector(".dl-header")).transitionDuration.split(",")[0].trim() === "0.18s"', 'Theme transitions are enabled');
   await screenshot('demo-light');
@@ -257,7 +270,7 @@ try {
       ),
     'columns preset',
   );
-  await click('Hide header');
+  await toggleChromePart('header');
   await click('Save layout');
   await waitFor(() => evaluate('document.querySelector(".dl-notification-toast strong")?.textContent === "Layout saved."'), 'save layout');
   await click('Rows layout');
@@ -265,7 +278,7 @@ try {
     () => evaluate('document.querySelector(".demo-guide").getBoundingClientRect().top > document.querySelector(".hello-world").getBoundingClientRect().top'),
     'rows preset',
   );
-  await click('Show header');
+  await toggleChromePart('header');
   await click('Restore saved layout');
   await waitFor(() => evaluate('!document.querySelector(".dl-header")'), 'restore saved chrome');
   await waitFor(
@@ -556,7 +569,7 @@ try {
   await reload();
   await waitFor(() => evaluate('!document.querySelector(".dl-header")'), 'saved settings on reload');
   await check('!document.querySelector(".dl-header") && !!document.querySelector(".dl-footer")', 'Settings save through the existing workspace checkpoint');
-  await click('Show header');
+  await toggleChromePart('header');
   await evaluate('document.querySelector("#hello-name").focus(); document.querySelector("#hello-name").select()');
   await command('Input.insertText', { text: 'Ada' });
   await evaluate('document.querySelector(".hello-form button").click(); globalThis.configurationPanel = document.querySelector(".hello-world"); true');

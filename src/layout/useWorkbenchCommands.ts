@@ -50,6 +50,7 @@ export function useWorkbenchCommands(
         execute: () => currentConfiguration.current.exportConfiguration(),
       },
       { id: 'workbench.theme.toggle', title: 'Toggle theme', shortcut: 'Mod+Alt+T', execute: toggleTheme },
+      { id: 'workbench.view.toggle', title: 'Toggle header and footer', shortcut: 'Mod+Alt+V', execute: () => store.getState().toggleView() },
       { id: 'workbench.focus.toggle', title: 'Toggle focus mode', shortcut: 'Mod+Alt+F', execute: () => store.getState().toggleFocus() },
       {
         id: 'workbench.focus.exit',

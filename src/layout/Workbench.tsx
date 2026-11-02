@@ -55,7 +55,7 @@ export interface WorkbenchProps {
 
 const emptyPanels: readonly WorkbenchPanel[] = [];
 
-function ChromeIcon({ name }: { name: 'header' | 'footer' | 'focus' }) {
+function ChromeIcon({ name }: { name: 'view' | 'focus' }) {
   return (
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true">
       {name === 'focus' ? (
@@ -63,7 +63,7 @@ function ChromeIcon({ name }: { name: 'header' | 'footer' | 'focus' }) {
       ) : (
         <>
           <rect x="3" y="4" width="18" height="16" rx="2" />
-          <path d={name === 'header' ? 'M3 9h18' : 'M3 15h18'} />
+          <path d="M3 9h18M3 15h18" />
         </>
       )}
     </svg>
@@ -206,26 +206,16 @@ function WorkbenchShell({
             <span className="dl-divider" />
             <ThemeToggle />
             <span className="dl-divider" />
-            <span className="dl-toolbar-label">VIEW</span>
             <button
               type="button"
               className="dl-icon-button"
-              aria-label={state.headerVisible ? 'Hide header' : 'Show header'}
-              title={state.headerVisible ? 'Hide header' : 'Show header'}
-              aria-pressed={state.headerVisible}
-              onClick={state.toggleHeader}
+              aria-label={state.headerVisible || state.footerVisible ? 'Hide header and footer' : 'Show header and footer'}
+              title="Toggle header and footer (Ctrl/⌘+Alt+V)"
+              aria-pressed={state.headerVisible !== state.footerVisible ? 'mixed' : state.headerVisible}
+              onClick={state.toggleView}
             >
-              <ChromeIcon name="header" />
-            </button>
-            <button
-              type="button"
-              className="dl-icon-button"
-              aria-label={state.footerVisible ? 'Hide footer' : 'Show footer'}
-              title={state.footerVisible ? 'Hide footer' : 'Show footer'}
-              aria-pressed={state.footerVisible}
-              onClick={state.toggleFooter}
-            >
-              <ChromeIcon name="footer" />
+              <ChromeIcon name="view" />
+              <span>View</span>
             </button>
             <span className="dl-divider" />
             <button

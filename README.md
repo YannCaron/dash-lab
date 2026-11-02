@@ -55,7 +55,7 @@ Give the workbench a parent with an explicit height. React and React DOM are pee
 
 Supply `panels` with unique IDs, titles and React components. Optional positions reference panels listed earlier. Keep the initial panel collection stable for the lifetime of a workbench. The library exposes `WorkbenchPanel` for TypeScript consumers and `onWorkspaceReady` for access to the Dockview API.
 
-Use the `headerActions`, `controlBar`, `monitoringBar`, and `footer` slots for application content. The control bar toggles header/footer visibility and enters Focus mode. Escape or the visible exit button leaves Focus mode and restores the previous visibility preferences. The docked workspace stays mounted throughout, preserving component state. Default tabs stay open.
+Use the `headerActions`, `controlBar`, `monitoringBar`, and `footer` slots for application content. The single View control hides or shows the header and footer together; individual choices remain in Settings and their existing shortcuts. Mod+Alt+V invokes the same combined action. The Focus control hides all chrome. Escape or the visible exit button leaves Focus mode and restores the previous visibility preferences. The docked workspace stays mounted throughout, preserving component state. Default tabs stay open.
 
 ## Saved layouts
 
