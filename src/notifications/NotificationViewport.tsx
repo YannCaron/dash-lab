@@ -60,7 +60,7 @@ export function NotificationViewport() {
               {unread} unread · {items.length} in history
             </p>
           </div>
-          <button ref={closeButton} type="button" className="dl-icon-button" aria-label="Close notifications" onClick={() => setOpen(false)}>
+          <button ref={closeButton} type="button" className="dl-icon-button dl-dialog-close" aria-label="Close notifications" onClick={() => setOpen(false)}>
             ×
           </button>
         </header>

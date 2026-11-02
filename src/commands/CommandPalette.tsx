@@ -107,7 +107,7 @@ export function CommandPalette({ open, onClose }: CommandPaletteProps) {
             }
           }}
         />
-        <button type="button" className="dl-icon-button" aria-label="Close command palette" onClick={onClose}>
+        <button type="button" className="dl-icon-button dl-dialog-close" aria-label="Close command palette" onClick={onClose}>
           ×
         </button>
       </div>

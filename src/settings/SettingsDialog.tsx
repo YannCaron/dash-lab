@@ -63,7 +63,7 @@ export function SettingsDialog({
     >
       <header>
         <h2 id={titleId}>{page === 'preferences' ? 'Preferences' : 'Settings'}</h2>
-        <button ref={close} type="button" className="dl-icon-button" aria-label="Close settings" onClick={onClose}>
+        <button ref={close} type="button" className="dl-icon-button dl-dialog-close" aria-label="Close settings" onClick={onClose}>
           ×
         </button>
       </header>
