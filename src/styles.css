@@ -2,6 +2,7 @@
 @import './notifications/notifications.css';
 @import './commands/palette.css';
 @import './settings/settings.css';
+@import './overlays/overlays.css';
 
 .dl-theme {
   --dl-theme-duration: 180ms;

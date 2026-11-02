@@ -69,7 +69,7 @@ export function CommandPalette({ open, onClose }: CommandPaletteProps) {
   return (
     <dialog
       ref={dialog}
-      className="dl-command-palette"
+      className="dl-command-palette dl-modal"
       aria-label="Command palette"
       onCancel={(event) => {
         event.preventDefault();

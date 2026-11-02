@@ -46,7 +46,7 @@ export function NotificationViewport() {
       </div>
       <dialog
         ref={dialog}
-        className="dl-notification-center"
+        className="dl-notification-center dl-modal"
         aria-labelledby={titleId}
         onCancel={(event) => {
           event.preventDefault();

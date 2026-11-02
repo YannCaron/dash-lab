@@ -81,6 +81,8 @@ import { ThemeProvider, Workbench } from 'dash-lab';
 
 Public CSS tokens are `--dl-canvas`, `--dl-surface`, `--dl-raised`, `--dl-text`, `--dl-muted`, `--dl-border`, `--dl-accent`, `--dl-accent-soft`, `--dl-on-accent`, `--dl-success`, `--dl-warning`, and `--dl-error`. Transitions take 180 ms and respect `prefers-reduced-motion`.
 
+Modal windows enter from outside the viewport while the backdrop fades in; notifications enter from the right. Reduced motion disables these animations as well as color transitions.
+
 ## Notifications
 
 Call `useNotifications().notify({ title: 'Saved', description: 'Your work is ready.', level: 'success' })` from a component inside Workbench. Supported levels are info, success, warning, and error. The toolbar bell opens the history dialog and displays the unread count. Users can mark entries read, remove them, or clear history.

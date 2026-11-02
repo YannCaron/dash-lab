@@ -54,7 +54,7 @@ export function SettingsDialog({
   return (
     <dialog
       ref={dialog}
-      className="dl-settings-dialog"
+      className="dl-settings-dialog dl-modal"
       aria-labelledby={titleId}
       onCancel={(event) => {
         event.preventDefault();
