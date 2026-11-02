@@ -22,7 +22,7 @@ describe('theme provider composition', () => {
     expect(html).toContain('<output>light</output>');
     expect(html).toContain('data-theme="dark"');
     expect(html).toContain('data-theme="light"');
-    expect(html).toContain('--dl-surface:#171e28');
+    expect(html).toContain('--dl-surface:#171c24');
     expect(html).toContain('--dl-surface:#ffffff');
   });
 

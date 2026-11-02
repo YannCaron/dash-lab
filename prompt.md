@@ -123,8 +123,42 @@ feat(menu): add settings and preferences
 
 ---
 
+# TODO: Restart from here
+
+# Modification 1 - View icons
+
+- Create only one view icon to hide header and footer simuteneously. Order icon first then label, like focus control.
+
+# Modification 2 - Close icon
+
+- The close icon is too small on modal windows
+
+# Modification 3 - Colors
+
+- Check the following designes and try to align to these propositions
+
+![](./prompt-light.png)
+
+![](./prompt-dark.png)
+
+# Modification 4 - Notifications
+
+- Notifications are too small
+
+# Modification 5 - Animations
+
+- Add animations for all modal popups, windows and notification. Fade in the gray over interface. And modal windows must slide from outsite of the global window.
+
+# Modification 6 - Close modal windows
+
+- When clicking outside the modal window, the modal window must close
+
+# Modification 7 - Scrolling
+
+- Add automatic vertical scrolling when content overload the tab
+
 # Feature 9 - Plugin SDK
-Implement a minimal plugin architecture using directories local to the consuming application.
+Implement a minimal plugin architecture using directories local to the consuming application
 
 Plugin loading:
 - Store each plugin in its own directory under `src/plugins/` in the application.
