@@ -1,0 +1,11 @@
+node_modules
+dist
+demo-dist
+storybook-static
+coverage
+test-results
+package-lock.json
+AGENTS.md
+prompt.md
+LICENSE
+THIRD_PARTY_NOTICES.md

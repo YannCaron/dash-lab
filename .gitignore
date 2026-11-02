@@ -1,0 +1,14 @@
+node_modules/
+dist/
+demo-dist/
+storybook-static/
+coverage/
+test-results/
+*.tsbuildinfo
+*.tgz
+.history/
+.vscode/
+.env
+.env.*
+!.env.example
+*.log

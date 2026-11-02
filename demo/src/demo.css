@@ -1,0 +1,28 @@
+body {
+  margin: 0;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+.hello-world {
+  padding: 56px;
+}
+
+.hello-world h1 {
+  font-size: 54px;
+  letter-spacing: -2px;
+}
+
+.hello-world h1 span {
+  color: #087f82;
+}
+
+.eyebrow {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 2px;
+}

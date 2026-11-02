@@ -1,0 +1,14 @@
+.dl-workbench {
+  box-sizing: border-box;
+  height: 100%;
+  min-height: 0;
+  color: #202b3b;
+  background: #f4f6f9;
+  font-family: Inter, ui-sans-serif, system-ui, sans-serif;
+}
+
+.dl-workbench *,
+.dl-workbench *::before,
+.dl-workbench *::after {
+  box-sizing: border-box;
+}
