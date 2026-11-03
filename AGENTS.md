@@ -41,6 +41,7 @@ For decisions requiring approval, explain the need, realistic alternatives, trad
 - Add line space between logic blocks of codes, separate blocks as **variable declarations**, different **logic parts of code** and **results** with line space.
 - Limite usage of comments as minimum
 - Write the comments in English
+- Follow the naming conventions defined in the `convention/` directory whenever they apply to the language or framework used in the project.
 
 ## 4. Compose components; keep architecture light
 
@@ -97,6 +98,7 @@ When building an interface, treat usability as a first-class acceptance criterio
 - Support keyboard use, semantic HTML, accessible labels, sensible contrast.
 - Keep interactions responsive; measure before adding rendering complexity or optimizations.
 - Respect the existing design language and component conventions; do not introduce a UI framework or component library without approval.
+- For web projects, assess whether responsive design is appropriate for the intended use case. Do not assume it is required by default. If unclear, ask for confirmation before implementing it.
 
 ## 9. Finish with a self-review and concise handover
 
@@ -115,7 +117,7 @@ End with a short report: **what changed; noteworthy decisions; tests run and res
 When developpment is finished, commit it in the local repository.
 
 - DO NOT push it automatically to the repository. A human check is necessary and a manual intervension is needed.
-- Create per feature commits if necessary
+- Create one commit per feature. Prompt will enumerate each features.S
 - Commit with idiomatic and concise message
 - Every commit must be atomic and must be able to compile and perform tests without any error
 
