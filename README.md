@@ -1,5 +1,7 @@
 # dash-lab
 
+npm package name: `@cyann/dash-lab`.
+
 Build once. Create many.
 
 A reusable React workbench for desktop applications: dockable panels, light/dark themes, saved layouts, commands and shortcuts, notifications, settings, local plugins, and English/French interfaces. The Hello World demo consumes the same public API as an application.
@@ -55,7 +57,7 @@ export function Counter() {
 Create `demo/src/plugins/counter/index.ts`:
 
 ```ts
-import type { WorkbenchPlugin } from 'dash-lab';
+import type { WorkbenchPlugin } from '@cyann/dash-lab';
 import { Counter } from './Counter';
 
 const plugin: WorkbenchPlugin = {
@@ -96,11 +98,17 @@ Save a layout, change Preferences → Language, and try JSON export/import from 
 
 ## Use the library
 
+```sh
+npm install @cyann/dash-lab
+```
+
+Maintainers can prepare publication with `npm run publish:npm -- --dry-run`, then publish a committed release with `npm run publish:npm`. See [the publication guide](CONTRIBUTING.md#publish-to-npm) for account setup, versioning, and prerelease tags.
+
 Build a local tarball with `npm pack` and install it in a consuming application. No npm publication is assumed. React and React DOM are peers; import the stylesheet explicitly and give the workbench a parent with a height:
 
 ```tsx
-import { Workbench } from 'dash-lab';
-import 'dash-lab/style.css';
+import { Workbench } from '@cyann/dash-lab';
+import '@cyann/dash-lab/style.css';
 
 export function App() {
   return (

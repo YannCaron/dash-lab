@@ -6,6 +6,7 @@ The package currently declares version `0.1.0`. No publication or release tag is
 
 ### Added
 
+- Validated npm publication script with simulation, account verification for `cyann`, public scoped publication, and prerelease tags.
 - Optional `PluginAPI.registerState` callbacks for centralized JSON export/import and layout checkpoints, including plugin rollback, legacy-file compatibility, and a stateful Hello World demo.
 - Reusable React/TypeScript library and a separate Vite Hello World demo, with watch and one-shot startup commands.
 - Dockview panels, chrome slots, Focus mode, and a combined View control.
@@ -25,6 +26,7 @@ The package currently declares version `0.1.0`. No publication or release tag is
 
 ### Changed
 
+- Package name and consumer imports now use `@cyann/dash-lab`, following the existing `@cyann/js-parsec` and `@cyann/js-commons` convention. JSON configuration identifiers and browser-storage keys remain compatible.
 - Airier vertical spacing across library, demo, tests, Storybook examples, and scripts, separating declarations, processing steps, and results.
 
 ### Compatibility

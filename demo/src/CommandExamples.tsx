@@ -1,7 +1,7 @@
-import { useI18n } from 'dash-lab';
+import { useI18n } from '@cyann/dash-lab';
 import { useEffect } from 'react';
 import { Button } from 'antd';
-import { useCommands, useNotifications } from 'dash-lab';
+import { useCommands, useNotifications } from '@cyann/dash-lab';
 
 export function CommandExamples() {
   const { t } = useI18n();

@@ -37,7 +37,7 @@ Tutorial validation also updates the demo's dynamic panel count and places its a
 
 ### Verification and limits
 
-Seventy-four Vitest tests, strict TypeScript, ESLint, library/demo builds, Storybook, and packed-consumer checks pass locally. Seventy-six browser checks pass against both compiled and development demos, including plugin state restoration and French persistence. Changed files pass Prettier; the global format check currently flags the pre-existing `reviews/review-flash-2026-11-03-0938.md`, which remains untouched. Earlier tutorial verification is recorded in [validation](docs/validation.md).
+Seventy-four Vitest tests, seven publication-script tests, strict TypeScript, ESLint, Prettier, library/demo builds, Storybook, and packed-consumer checks pass locally. Seventy-six browser checks pass against both compiled and development demos, including plugin state restoration and French persistence. Earlier tutorial verification is recorded in [validation](docs/validation.md).
 
 Runtime audit: zero findings. Fourteen moderate development-tooling findings remain documented in [dependencies](docs/dependencies.md), along with Vite chunk-size and Storybook directive warnings. Local browser verification covers Edge/Chromium, not Firefox or Safari. GitHub-hosted workflow execution and the Linux/Node 22.13 matrix require a repository push and have not been executed here.
 
@@ -54,6 +54,14 @@ Optional `api.registerState({ exportState, importState })` callbacks associate J
 Version-1 files without plugin data retain current plugin state. Missing handlers are ignored, while malformed JSON state is rejected. Domain import failures prevent layout/preferences changes and trigger reverse-order plugin rollback; incomplete rollback is reported. Handlers must synchronously validate input and accept their own exported data. The existing 1 MB limit includes plugin data. Panel-less workbenches support JSON transfer in the current session; local checkpoints require a docking workspace.
 
 Verification includes fourteen new unit tests, state round-trips through the compiled/development demos, legacy-file import, domain-invalid import preserving live state/layout/preferences, retained panel identity, strict packed-consumer declarations, and a Storybook build. No dependencies were added.
+
+### npm publication tooling
+
+The npm package is named `@cyann/dash-lab`, matching the owner's existing library scopes. Demo imports, TypeScript/Vite resolution, packed-consumer checks, and documentation use this package name. The product/repository name, CSS export filename, JSON format identifier, and browser-storage keys remain unchanged.
+
+`npm run publish:npm -- --dry-run` validates and simulates the current version. Real `npm run publish:npm` requires a clean Git checkout and the npm account `cyann`, then publishes the exact validated tarball publicly to npmjs. Stable versions use `latest`; prereleases default to `next`. The script never automatically bumps versions, tags, commits, or pushes. Version/release-note preparation remains explicit, and npm manages login/two-factor authentication.
+
+Publication-script tests use isolated local Git fixtures and a fake npm CLI; no tests upload a package. The complete real-CLI dry run succeeds for `@cyann/dash-lab@0.1.0`, including seven script tests, seventy-four Vitest tests, formatting/lint/type checks, and installation of the scoped tarball into a fresh consumer. Live authentication and actual publication have not been exercised. Further validation is recorded in [validation](docs/validation.md). No package has been published by this implementation task.
 
 ### Future updates
 

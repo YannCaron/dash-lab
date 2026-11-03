@@ -37,7 +37,11 @@ await writeFile(
       name: 'dash-lab-consumer-check',
       private: true,
       type: 'module',
-      dependencies: { 'dash-lab': `file:./${packed.filename}`, react: manifest.devDependencies.react, 'react-dom': manifest.devDependencies['react-dom'] },
+      dependencies: {
+        '@cyann/dash-lab': `file:./${packed.filename}`,
+        react: manifest.devDependencies.react,
+        'react-dom': manifest.devDependencies['react-dom'],
+      },
       devDependencies: { '@types/react': manifest.devDependencies['@types/react'], '@types/react-dom': manifest.devDependencies['@types/react-dom'] },
     },
     null,
@@ -47,8 +51,8 @@ await writeFile(
 
 run([npm, 'install', '--offline', '--no-audit', '--no-fund', '--cache', cache], directory);
 
-const consumer = `import { I18nProvider, Workbench, registerLocalPlugins, useI18n, useNotifications } from 'dash-lab';
-import type { WorkbenchPlugin, WorkbenchPreferences, PluginAPI, PluginStateHandler, WorkbenchConfiguration } from 'dash-lab';
+const consumer = `import { I18nProvider, Workbench, registerLocalPlugins, useI18n, useNotifications } from '@cyann/dash-lab';
+import type { WorkbenchPlugin, WorkbenchPreferences, PluginAPI, PluginStateHandler, WorkbenchConfiguration } from '@cyann/dash-lab';
 function Panel() { const {t}=useI18n(); const {notify}=useNotifications(); return <button onClick={()=>notify({title:t('Hello')})}>{t('Hello')}</button>; }
 const handler: PluginStateHandler = { exportState: () => ({version:1,note:'saved'}), importState(value) { if(!value || typeof value !== 'object') throw new Error('Invalid state'); } };
 const plugin: WorkbenchPlugin = {id:'consumer',activate(api:PluginAPI){api.registerState(handler);api.registerPanel({id:'panel',title:'Panel',component:Panel});}};
@@ -87,7 +91,7 @@ await writeFile(
 import {readFile} from 'node:fs/promises';
 import {createElement} from 'react';
 import {renderToStaticMarkup} from 'react-dom/server';
-import {I18nProvider,Workbench,PluginRegistry,decodeConfiguration} from 'dash-lab';
+import {I18nProvider,Workbench,PluginRegistry,decodeConfiguration} from '@cyann/dash-lab';
 const plugins=new PluginRegistry();
 plugins.registerPlugin({id:'consumer',activate(api){api.registerStatusItem({id:'status',component:()=> 'Consumer status'});}});
 const html=renderToStaticMarkup(createElement(I18nProvider,{initialLocale:'fr',children:createElement(Workbench,{title:'Consumer',plugins,preferencesStorageKey:false,children:'Consumer content'})}));
@@ -95,7 +99,7 @@ assert.ok(html.includes('Consumer status'));
 assert.ok(html.includes('Consumer content'));
 assert.ok(html.includes('lang="fr"'));
 assert.ok(html.includes('Ouvrir la palette de commandes'));
-const css=await readFile(new URL(import.meta.resolve('dash-lab/style.css')),'utf8');
+const css=await readFile(new URL(import.meta.resolve('@cyann/dash-lab/style.css')),'utf8');
 assert.ok(css.includes('.dl-panel-content'));
 assert.ok(css.includes('--dl-accent'));
 const configuration=decodeConfiguration(JSON.stringify({format:'dash-lab',version:1,workspace:null,preferences:{theme:'light',motion:'system',notifications:{toastsEnabled:true,toastDurationMs:5000}}}),[]);

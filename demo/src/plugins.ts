@@ -1,5 +1,5 @@
-import { registerLocalPlugins } from 'dash-lab';
-import type { WorkbenchPlugin } from 'dash-lab';
+import { registerLocalPlugins } from '@cyann/dash-lab';
+import type { WorkbenchPlugin } from '@cyann/dash-lab';
 
 const modules = import.meta.glob<{ default: WorkbenchPlugin }>('./plugins/*/index.ts', { eager: true });
 

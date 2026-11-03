@@ -1,7 +1,7 @@
-import { useI18n } from 'dash-lab';
+import { useI18n } from '@cyann/dash-lab';
 import { useStore } from 'zustand';
 import { Button, Input } from 'antd';
-import { useNotifications } from 'dash-lab';
+import { useNotifications } from '@cyann/dash-lab';
 import { helloState } from './state';
 
 export function HelloWorld() {

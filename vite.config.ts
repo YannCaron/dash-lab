@@ -11,8 +11,8 @@ export default defineConfig(({ command }) => ({
     alias:
       command === 'serve'
         ? [
-            { find: /^dash-lab$/, replacement: `${projectRoot}/src/index.ts` },
-            { find: /^dash-lab\/style.css$/, replacement: `${projectRoot}/src/styles.css` },
+            { find: /^@cyann\/dash-lab$/, replacement: `${projectRoot}/src/index.ts` },
+            { find: /^@cyann\/dash-lab\/style.css$/, replacement: `${projectRoot}/src/styles.css` },
           ]
         : [],
   },

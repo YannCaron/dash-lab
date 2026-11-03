@@ -1,8 +1,8 @@
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { BrowserRouter, Route, Routes } from 'react-router-dom';
-import { I18nProvider } from 'dash-lab';
-import 'dash-lab/style.css';
+import { I18nProvider } from '@cyann/dash-lab';
+import '@cyann/dash-lab/style.css';
 import { DemoApplication } from './DemoApplication';
 import './demo.css';
 

@@ -82,3 +82,13 @@ On 2026-11-03, seventy-four Vitest tests pass. New tests cover optional/scoped r
 All seventy-six Edge checks pass against both the compiled demo and the development server with React StrictMode. They verify explicit plugin checkpoint restoration, startup reload, export without duplicated state, import into the existing mounted panel, imported state surviving reload, rejected plugin versions leaving state/layout/preferences intact, and legacy JSON leaving live plugin data untouched. The demo's Hello World state uses the same registration mechanism as external plugins.
 
 Library/demo and Storybook builds pass, as does the fresh packed-consumer check with the new public state handler/configuration types. Existing bundle-size and Storybook directive warnings remain. Modified files pass Prettier and `git diff --check`; the global format command flags the unrelated pre-existing `reviews/review-flash-2026-11-03-0938.md`, which is left unchanged. No dependency was added.
+
+## Scoped package and npm publication script
+
+The package is named `@cyann/dash-lab`, consistent with the adjacent libraries' manifests. Source imports, TypeScript/Vite aliases, documentation, and the packed-consumer fixtures use that name. Configuration JSON identifiers and browser-storage keys stay `dash-lab` for compatibility.
+
+`npm run publish:npm -- --dry-run` succeeds with the real npm CLI. It runs strict TypeScript, ESLint, global Prettier, all seventy-four Vitest tests, seven script integration tests, and the packed-consumer check. It then packs `cyann-dash-lab-0.1.0.tgz` and successfully simulates publishing that exact artifact to npmjs with public access and the `latest` tag. Nothing is uploaded. The earlier review-format warning has been resolved by the intervening documentation commit; the global check now passes.
+
+The seven script tests use temporary local Git repositories and a fake npm executable. They cover dirty-checkout rejection, account mismatch, early stop on failed validation, simulation without authentication, selection of the exact tarball, prerelease tags, invalid arguments, and package identity restrictions. Live account authentication and real publication remain untested; no account credentials are requested by these tests. No dependency was added.
+
+Library/demo and Storybook builds also pass after the package rename. All seventy-six Edge checks pass against both compiled and development demos, confirming public package resolution, plugin state, configuration compatibility, and localization with the scoped imports.

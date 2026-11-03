@@ -1,13 +1,13 @@
 # Public API
 
-Import JavaScript/types from `dash-lab` and styles from `dash-lab/style.css`. The package is ESM and requires React/React DOM 19 peers. Public declarations ship in `dist/`; source JSDoc and this document describe the same contracts.
+Import JavaScript/types from `@cyann/dash-lab` and styles from `@cyann/dash-lab/style.css`. The package is ESM and requires React/React DOM 19 peers. Public declarations ship in `dist/`; source JSDoc and this document describe the same contracts. The package scope does not change the `dash-lab` JSON format identifier or existing browser-storage keys.
 
 ## Workbench
 
 ```tsx
-import { Workbench } from 'dash-lab';
-import type { WorkbenchPanel } from 'dash-lab';
-import 'dash-lab/style.css';
+import { Workbench } from '@cyann/dash-lab';
+import type { WorkbenchPanel } from '@cyann/dash-lab';
+import '@cyann/dash-lab/style.css';
 
 const panels: readonly WorkbenchPanel[] = [{ id: 'main', title: 'Main', component: () => <p>Ready</p> }];
 export function App() {

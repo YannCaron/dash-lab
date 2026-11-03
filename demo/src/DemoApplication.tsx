@@ -1,7 +1,7 @@
-import { useI18n } from 'dash-lab';
+import { useI18n } from '@cyann/dash-lab';
 import { Button, Input, Tag } from 'antd';
-import { Workbench, useNotifications } from 'dash-lab';
-import type { WorkbenchPanel } from 'dash-lab';
+import { Workbench, useNotifications } from '@cyann/dash-lab';
+import type { WorkbenchPanel } from '@cyann/dash-lab';
 import { plugins } from './plugins';
 import { CommandExamples } from './CommandExamples';
 

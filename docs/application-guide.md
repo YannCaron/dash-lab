@@ -25,7 +25,7 @@ To consume a local build elsewhere:
 npm pack
 ```
 
-This produces `dash-lab-0.1.0.tgz` using the current package version. It contains ESM, declarations, CSS, license notices, and documentation. It does not contain the demo or require package publication.
+This produces `cyann-dash-lab-0.1.0.tgz` using the current package version. It contains ESM, declarations, CSS, license notices, and documentation. It does not contain the demo or require package publication.
 
 ## Create a separate Vite application
 
@@ -33,7 +33,7 @@ In a sibling `my-lab` directory, install the tarball and the same application st
 
 ```sh
 npm init -y
-npm install ../dash-lab/dash-lab-0.1.0.tgz react@19 react-dom@19
+npm install ../dash-lab/cyann-dash-lab-0.1.0.tgz react@19 react-dom@19
 npm install --save-dev vite@8 @vitejs/plugin-react@6 typescript@6 @types/react@19 @types/react-dom@19
 ```
 
@@ -100,9 +100,9 @@ Create `src/main.tsx`:
 ```tsx
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
-import { Workbench } from 'dash-lab';
+import { Workbench } from '@cyann/dash-lab';
 import { plugins } from './plugins';
-import 'dash-lab/style.css';
+import '@cyann/dash-lab/style.css';
 import './style.css';
 
 const root = document.getElementById('root');
@@ -131,8 +131,8 @@ body {
 Create `src/plugins.ts`:
 
 ```ts
-import { registerLocalPlugins } from 'dash-lab';
-import type { WorkbenchPlugin } from 'dash-lab';
+import { registerLocalPlugins } from '@cyann/dash-lab';
+import type { WorkbenchPlugin } from '@cyann/dash-lab';
 
 const modules = import.meta.glob<{ default: WorkbenchPlugin }>('./plugins/*/index.ts', { eager: true });
 export const plugins = registerLocalPlugins(modules);
@@ -160,7 +160,7 @@ Create `src/plugins/notes/NotesPanel.tsx`:
 
 ```tsx
 import { useState } from 'react';
-import { useI18n, useNotifications } from 'dash-lab';
+import { useI18n, useNotifications } from '@cyann/dash-lab';
 
 export function NotesPanel() {
   const [note, setNote] = useState('');
@@ -186,7 +186,7 @@ export function NotesPanel() {
 Create `src/plugins/notes/index.ts`:
 
 ```ts
-import type { WorkbenchPlugin } from 'dash-lab';
+import type { WorkbenchPlugin } from '@cyann/dash-lab';
 import { NotesPanel } from './NotesPanel';
 
 const plugin: WorkbenchPlugin = {
@@ -215,7 +215,7 @@ IDs are unique within each contribution kind. Keep them stable across versions, 
 
 ## Add application and plugin translations
 
-Update `src/main.tsx` to import `I18nProvider` from `dash-lab` and wrap Workbench with this provider:
+Update `src/main.tsx` to import `I18nProvider` from `@cyann/dash-lab` and wrap Workbench with this provider:
 
 ```tsx
 <I18nProvider
@@ -314,7 +314,7 @@ Update public JSDoc and [API reference](api.md) when contracts change. Update [r
 
 | Symptom                                  | Check                                                                                                                    |
 | ---------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
-| Blank or tiny docking area               | Import `dash-lab/style.css` and give html/body/root and the workbench parent a height.                                   |
+| Blank or tiny docking area               | Import `@cyann/dash-lab/style.css` and give html/body/root and the workbench parent a height.                            |
 | Plugin absent                            | The entry must match `src/plugins/*/index.ts`, default-export a plugin, and be included in the application's eager glob. |
 | Registration closed                      | Finish registration before mounting; create a new registry and remount to change membership.                             |
 | Panel reference error                    | Register the referenced ID first; consider sorted plugin path order.                                                     |

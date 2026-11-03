@@ -1,5 +1,5 @@
 import { createStore } from 'zustand/vanilla';
-import type { PluginStateHandler } from 'dash-lab';
+import type { PluginStateHandler } from '@cyann/dash-lab';
 
 export const helloState = createStore<{ name: string; greeting: string | null }>(() => ({ name: 'World', greeting: null }));
 

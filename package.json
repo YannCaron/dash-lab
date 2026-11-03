@@ -1,9 +1,18 @@
 {
-  "name": "dash-lab",
+  "name": "@cyann/dash-lab",
   "version": "0.1.0",
   "description": "A composable React workbench for focused applications.",
   "type": "module",
   "license": "MIT",
+  "author": "cyann",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/YannCaron/dash-lab.git"
+  },
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
+  },
   "engines": {
     "node": "^22.13.0 || ^24.0.0 || >=26.0.0"
   },
@@ -42,6 +51,8 @@
     "test:watch": "vitest",
     "test:browser": "node scripts/test-browser.mjs",
     "test:package": "npm run build:lib && node scripts/test-package.mjs",
+    "test:publish": "node --test scripts/publish-npm.test.mjs",
+    "publish:npm": "node scripts/publish-npm.mjs",
     "lint": "eslint .",
     "format": "prettier --write .",
     "format:check": "prettier --check .",

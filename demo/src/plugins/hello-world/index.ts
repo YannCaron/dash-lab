@@ -1,5 +1,5 @@
-import type { WorkbenchPlugin } from 'dash-lab';
-import { useI18n } from 'dash-lab';
+import type { WorkbenchPlugin } from '@cyann/dash-lab';
+import { useI18n } from '@cyann/dash-lab';
 import { HelloWorld } from './HelloWorld';
 import { helloStateHandler } from './state';
 
