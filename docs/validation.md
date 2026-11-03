@@ -66,3 +66,11 @@ The API reference documents every public export group and its contracts. Contrib
 CI and issue-form YAML structures are parsed locally; Conventional Commits validation accepts a valid message and rejects an invalid one. Husky is installed locally, with staged checks and commit-message validation enabled. The browser CI runner starts/closes its own server and passes all seventy-two checks against both compiled and development demos. Packed-consumer verification also passes with normal install lifecycle handling after hook setup.
 
 GitHub-hosted workflow execution and the Linux/Node 22.13 matrix have not been run locally. They require pushing the repository; no push, deployment, package publication, or GitHub-side mutation is performed here.
+
+## Feature 14
+
+The README's Counter plugin and the complete application's Notes plugin, discovery module, language catalogs, HTML/CSS, and Vite/TypeScript configuration are extracted from their Markdown examples into a fresh packed-library consumer. They pass strict type checking and a real Vite build. Three additional browser checks verify local discovery, Counter state through View/theme changes, and its command's notification without state reset. The settled screenshot is `test-results/tutorial-counter.png`.
+
+Documentation links resolve locally. `release-node.md` records all fourteen features, compatibility, verification, and publication status; AGENTS.md requires agents to update it in the same work/commit as future changes. Package contents include the guide, API docs, contribution/agent instructions, changelog, and release notes. The demo monitoring count derives from actual plugin/application panels rather than a fixed number.
+
+Final visual review and the French browser regression also cover translated application-constructed header/footer/monitoring content and plugin status, with all toolbar controls remaining inside the desktop viewport.

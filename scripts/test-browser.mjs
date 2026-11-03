@@ -864,7 +864,7 @@ try {
   await openMenuItem('Préférences', 'Fichier');
   await waitFor(() => evaluate('document.querySelector(".dl-settings-dialog").open'), 'French preferences menu');
   await check(
-    'document.querySelector(".dl-settings-dialog h2").textContent === "Préférences" && document.querySelector("select[aria-label=Langue]").value === "fr"',
+    'document.querySelector(".dl-settings-dialog h2").textContent === "Préférences" && document.querySelector("select[aria-label=Langue]").value === "fr" && document.querySelector(".demo-status").textContent.trim() === "Espace de travail prêt" && document.querySelector("[data-plugin-status-item]").textContent === "Bonjour le monde prêt" && [...document.querySelectorAll("button")].find(button => button.getAttribute("aria-label") === "Activer le mode focus").getBoundingClientRect().right <= window.innerWidth',
     'French is restored on reload and used by menus, preferences, and accessible labels',
   );
   await screenshot('demo-french');

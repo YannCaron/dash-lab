@@ -51,3 +51,5 @@ For the same browser orchestration locally, run `npm run build`, then `npm run t
 Use the current stack and platform APIs first. Obtain approval before adding a dependency not explicitly requested by the owner. Record versions, authoritative license texts, transitive implications, Node requirements, and relevant security findings in [dependency notes](docs/dependencies.md). Do not apply forced audit downgrades or hide failures.
 
 Bug reports should contain Node/browser versions, steps, expected and actual behavior, and a minimal reproduction. Remove private data from logs and configuration files before sharing them. Contributions are provided under the project's [MIT license](LICENSE).
+
+Keep [release-node.md](release-node.md) current in the same commit as each feature or fix, including verified outcomes and limits. Use the [application/plugin guide](docs/application-guide.md) for complete setup recipes. Tutorial code is part of the handover contract and should compile against the public package.

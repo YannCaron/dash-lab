@@ -14,7 +14,10 @@
     "THIRD_PARTY_NOTICES.md",
     "docs",
     "CHANGELOG.md",
-    "scripts/install-hooks.mjs"
+    "scripts/install-hooks.mjs",
+    "CONTRIBUTING.md",
+    "AGENTS.md",
+    "release-node.md"
   ],
   "sideEffects": [
     "**/*.css"

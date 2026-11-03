@@ -1,5 +1,13 @@
 import type { WorkbenchPlugin } from 'dash-lab';
+import { useI18n } from 'dash-lab';
 import { HelloWorld } from './HelloWorld';
+
+function StatusItem() {
+  return useI18n().t('Hello World ready');
+}
+function MonitoringItem() {
+  return useI18n().t('Local plugin active');
+}
 
 const plugin: WorkbenchPlugin = {
   id: 'hello-world',
@@ -13,8 +21,8 @@ const plugin: WorkbenchPlugin = {
       },
     });
     api.registerMenu({ id: 'hello-world.greet', title: 'Say hello', commandId: 'hello-world.greet' });
-    api.registerStatusItem({ id: 'hello-world.status', component: () => 'Hello World ready' });
-    api.registerMonitoringItem({ id: 'hello-world.monitoring', component: () => 'Local plugin active' });
+    api.registerStatusItem({ id: 'hello-world.status', component: StatusItem });
+    api.registerMonitoringItem({ id: 'hello-world.monitoring', component: MonitoringItem });
   },
 };
 export default plugin;

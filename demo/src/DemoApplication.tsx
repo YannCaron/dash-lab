@@ -128,7 +128,7 @@ export function DemoApplication() {
             <span className="status-dot" />
             {t('Workspace ready')}
           </span>
-          <span>{t('3 panels')}</span>
+          <span>{t('{count} panels', { count: panels.length + plugins.seal().panels.length })}</span>
           <span>{t('Local demo')}</span>
           <span className="demo-monitor-end">{t('YOUR NEXT IDEA STARTS HERE')}</span>
         </>

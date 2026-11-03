@@ -58,6 +58,8 @@ Workbench reuses the nearest providers or supplies defaults. For explicit compos
 
 Use one command registry per workbench. Provider props are initial configuration, not controlled replacements. A surrounding router is optional and belongs to the consuming application; the demo uses React Router. Hooks below are called from React components, not from plugin activation functions.
 
+Automatic providers cover workbench descendants. If an application component calls `useI18n` to construct header/footer/monitoring props, place an explicit `I18nProvider` above that application component; a provider inside its returned Workbench cannot provide context to its parent.
+
 ### Theme
 
 `ThemeProviderProps` contains `children` and optional `initialMode: 'light' | 'dark'`. `useTheme(): ThemeControls` returns `mode`, `setMode`, `toggleTheme`, `motionPreference`, and `setMotionPreference`. `MotionPreference` is system or reduced. System reduced motion always wins. `ThemeToggle` is an exported ready-made control.

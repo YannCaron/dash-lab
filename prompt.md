@@ -133,14 +133,6 @@ feat(menu): add settings and preferences
 
 - The close icon is too small on modal windows
 
-# Modification 3 - Colors
-
-- Check the following designes and try to align to these propositions
-
-![](./prompt-light.png)
-
-![](./prompt-dark.png)
-
 # Modification 4 - Notifications
 
 - Notifications are too small
@@ -224,11 +216,18 @@ Add:
 - Issue templates
 - PR template
 - optimized .gitignore including .history
+- separate rules by tool in .gitignore and add the tool name in comment
 
 Commit:
 chore(github): add automation and workflows
 
 ---
+
+# Feature 14 - documentation
+
+- Add to readme.md a 10 minute tutorial that explain quickly how to setup the project and create a simple plugin.
+- Add a more complex markdown to give possibility to human and IA agent to understant how to build project and create a plugin without reading the code
+- Add a release-node.md and notify all features and releases. Add to AGENT.md a mention to update automatically thiy file
 
 # Final Deliverables
 Provide a production-ready framework named dash-lab under the MIT license, with examples and a sample Hello World plugin loaded through the same local-directory discovery mechanism.

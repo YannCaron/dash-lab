@@ -19,6 +19,8 @@ The package currently declares version `0.1.0`. No publication or release tag is
 - Vitest service/store/provider contracts, real-browser interactions, Storybook, and a packed-consumer compatibility check.
 - API, architecture, contribution, dependency/license, and validation documentation under MIT.
 - GitHub Actions quality/browser workflows, Husky, staged lint/format checks, Conventional Commits, and issue/PR templates.
+- Ten-minute plugin tutorial, complete application/plugin guide, detailed [release notes](release-node.md), and agent instructions to maintain release records with future work.
+- Demo panel counts derived from discovered plugin contributions, with application chrome and plugin status following the selected language.
 
 ### Compatibility
 

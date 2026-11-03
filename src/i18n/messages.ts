@@ -179,8 +179,11 @@ export const french: MessageCatalog = {
   'Workspace ready': 'Espace de travail prêt',
   'All systems ready': 'Tous les systèmes sont prêts',
   '3 panels': '3 panneaux',
+  '{count} panels': '{count} panneaux',
   'Local demo': 'Démo locale',
   'YOUR NEXT IDEA STARTS HERE': 'VOTRE PROCHAINE IDÉE COMMENCE ICI',
   'HELLO WORLD DEMO': 'DÉMO BONJOUR LE MONDE',
   'Say hello from the plugin': 'Dire bonjour depuis le plugin',
+  'Hello World ready': 'Bonjour le monde prêt',
+  'Local plugin active': 'Plugin local actif',
 };

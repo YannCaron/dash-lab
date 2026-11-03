@@ -124,6 +124,12 @@ Public library exports live in `src/index.ts`; implementation is organized by ca
 
 Use Node.js 24 LTS. Run the relevant strict type, Vitest, lint/format, build, browser, and packed-consumer checks described in `CONTRIBUTING.md`. Update public JSDoc, English/French labels, affected Markdown, Storybook examples, and `CHANGELOG.md` with each feature. Generated `dist/`, demo builds, profiles, and test artifacts are ignored and must not be edited as sources.
 
+## 12. Maintain release notes automatically
+
+For every implemented feature, fix, public-contract change, or release, update `release-node.md` as part of the same work and commit. Do this without waiting for a separate documentation request. Record concrete resulting behavior, compatibility implications, verification, and remaining limits; keep the shorter `CHANGELOG.md` consistent. Move entries to an actual version/date only when a release is made. Never claim a package was published, deployed, or remotely verified without evidence.
+
+For application/plugin work, read `docs/application-guide.md` and `docs/api.md` first. Keep the README's ten-minute tutorial executable, including its file paths, discovery pattern, commands, and examples.
+
 ---
 
 **North star:** an agent's best contribution is not code that merely works today, but a system its human owner can confidently understand, maintain, and evolve tomorrow.
