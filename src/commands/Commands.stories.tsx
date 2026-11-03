@@ -54,3 +54,8 @@ const meta = {
 
 export default meta;
 export const Default: StoryObj<typeof meta> = {};
+export const AnimatedDialogs: StoryObj<typeof meta> = {
+  args: {
+    children: 'Open Commands, Settings, Preferences, or Notifications. Close with Escape, the backdrop, or the close button to preview entry and exit motion.',
+  },
+};

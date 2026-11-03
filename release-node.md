@@ -37,7 +37,7 @@ Tutorial validation also updates the demo's dynamic panel count and places its a
 
 ### Verification and limits
 
-Seventy-four Vitest tests, twelve publication-script tests, strict TypeScript, ESLint, Prettier, library/demo builds, Storybook, and packed-consumer checks pass locally. Seventy-six browser checks pass against both compiled and development demos, including plugin state restoration and French persistence. Earlier tutorial verification is recorded in [validation](docs/validation.md).
+Seventy-four Vitest tests, twelve publication-script tests, strict TypeScript, ESLint, Prettier, library/demo builds, Storybook, and packed-consumer checks pass locally. Eighty-seven browser checks pass against both compiled and development demos, including modal entry/exit, plugin state restoration, and French persistence. Earlier tutorial verification is recorded in [validation](docs/validation.md).
 
 Runtime audit: zero findings. Fourteen moderate development-tooling findings remain documented in [dependencies](docs/dependencies.md), along with Vite chunk-size and Storybook directive warnings. Local browser verification covers Edge/Chromium, not Firefox or Safari. GitHub-hosted workflow execution and the Linux/Node 22.13 matrix require a repository push and have not been executed here.
 
@@ -70,6 +70,14 @@ Publication records HEAD, checks tag compatibility and committer identity before
 If Git tagging fails after npm success, the script reports that publication succeeded and asks for manual tag repair rather than another publish. Version preparation now recommends `npm version patch --no-git-tag-version` followed by a release commit, allowing the publication script to create the tag at the correct time. Actual npm publication is not performed by this development task; tag behavior is tested in isolated local repositories with a fake npm CLI.
 
 Twelve script integration tests cover tag timing, annotated tag identity, prerelease tags, preservation of an existing tag, conflicting targets, npm failure, Git signing failure after npm success, and a concurrent HEAD change. Simulation leaves the repository's release tags untouched.
+
+### Modal exit animations
+
+Commands, Settings/Preferences, and notification history now slide and fade when closed; their backdrops fade out too. The same native CSS transitions handle both directions while preserving `close()` semantics, focus restoration, and command-palette handoff. Escape, backdrop dismissal, close buttons, Cancel, and Apply share this behavior. Reopening during exit interrupts the transition without a delayed callback closing the reopened dialog.
+
+Preferences retains its title/form during exit and notification history keeps its column layout. System and explicit reduced-motion choices disable all modal entry/exit motion. Browsers without discrete display/overlay support retain immediate native closure. No dependency or public API was added. Storybook includes an interactive dialog-motion example.
+
+Verification: seventy-four Vitest tests, strict TypeScript, lint/format, library/demo and Storybook builds, packed-consumer checks, and eighty-seven Edge checks against both compiled and development demos pass. Exit checks pause real transitions halfway to inspect dialog/backdrop opacity, slide direction, retained top-layer rendering/content, then finish them and verify hiding. Screenshots were visually inspected. Native focus handoff, rapid reopening, and both reduced-motion preferences are covered; Firefox and Safari were not tested.
 
 ### Future updates
 

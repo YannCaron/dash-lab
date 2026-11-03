@@ -98,3 +98,11 @@ Library/demo and Storybook builds also pass after the package rename. All sevent
 Twelve publication-script integration tests pass using real temporary Git repositories and a fake npm CLI. They verify annotated `v<version>` tags on the validated commit, no tag before npm success or after npm failure, no Git tag during dry runs, unchanged reuse of existing tags, rejection of conflicting tags before npm contact, prerelease tag names, refusal when HEAD moves during checks, and explicit partial-success reporting when Git signing fails after publication.
 
 The full real-npm dry-run pipeline passes with all seventy-four Vitest tests, the twelve script tests, strict TypeScript, ESLint, Prettier, library build, and packed-consumer validation. No actual npm publication or tag creation in the project repository is performed. Browser/Storybook checks are unchanged from the preceding package-scope verification; this change affects publication tooling only.
+
+## Modal exit animations
+
+Seventy-four Vitest tests, strict TypeScript, ESLint, Prettier, library/demo and Storybook builds, and packed-consumer validation pass. Eighty-seven Edge checks pass against both compiled and development demos, including eleven new checks for animated modal closure, focus handoff, rapid reopening, and immediate closure under system/explicit reduced motion.
+
+Browser checks wait for entry to finish, trigger real dismissal, pause actual exit transitions halfway, and inspect opacity, slide direction, top-layer retention, backdrop fading, and the retained Preferences title. They finish the transitions and verify `display: none`. Escape, backdrop clicks, close buttons, Cancel, and Apply are exercised. Visual review of `test-results/demo-modal-exit.png` and `test-results/demo-notifications-exit.png` confirms the exit appearance and retained notification column layout. The palette still hands focus to Settings without stacking open modal dialogs.
+
+The first browser run exposed the old entry keyframes masking exit opacity; replacing modal/backdrop entry keyframes with shared native CSS transitions resolved it. Toast entry remains unchanged. Firefox/Safari exit motion was not verified; browsers without discrete display/overlay support retain instant native closure. Existing build-size/Storybook warnings remain. No dependency or public API was added.

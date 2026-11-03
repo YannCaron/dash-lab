@@ -1,31 +1,39 @@
+.dl-modal {
+  opacity: 0;
+  translate: var(--dl-dialog-entry, 0 -100vh);
+}
+.dl-modal,
+.dl-modal::backdrop {
+  transition-property: opacity, translate, display, overlay;
+  transition-duration: calc(var(--dl-theme-duration, 180ms) * 1.5);
+  transition-timing-function: ease-in;
+  transition-behavior: allow-discrete;
+}
 .dl-modal[open] {
-  animation: dl-modal-enter calc(var(--dl-theme-duration, 180ms) * 1.5) cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  opacity: 1;
+  translate: 0 0;
+  transition-timing-function: cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 .dl-notification-center {
   --dl-dialog-entry: 100vw 0;
 }
 .dl-modal::backdrop {
-  animation: dl-backdrop-enter calc(var(--dl-theme-duration, 180ms) * 1.5) ease-out both;
+  opacity: 0;
+}
+.dl-modal[open]::backdrop {
+  opacity: 1;
+  transition-timing-function: ease-out;
 }
 .dl-notification-toast {
   animation: dl-toast-enter calc(var(--dl-theme-duration, 180ms) * 1.5) ease-out backwards;
 }
-@keyframes dl-modal-enter {
-  from {
+@starting-style {
+  .dl-modal[open] {
     opacity: 0;
     translate: var(--dl-dialog-entry, 0 -100vh);
   }
-  to {
-    opacity: 1;
-    translate: 0 0;
-  }
-}
-@keyframes dl-backdrop-enter {
-  from {
+  .dl-modal[open]::backdrop {
     opacity: 0;
-  }
-  to {
-    opacity: 1;
   }
 }
 @keyframes dl-toast-enter {
@@ -42,11 +50,13 @@
 .dl-theme[data-motion='reduced'] .dl-modal::backdrop,
 .dl-theme[data-motion='reduced'] .dl-notification-toast {
   animation: none;
+  transition: none;
 }
 @media (prefers-reduced-motion: reduce) {
-  .dl-modal[open],
+  .dl-modal,
   .dl-modal::backdrop,
   .dl-notification-toast {
     animation: none;
+    transition: none;
   }
 }

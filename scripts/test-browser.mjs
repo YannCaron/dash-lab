@@ -80,7 +80,7 @@ async function screenshot(name) {
   await waitFor(
     () =>
       evaluate(
-        '[...document.querySelectorAll(".dl-modal[open],.dl-notification-toast")].every(node => node.getAnimations().every(animation => animation.playState !== "running"))',
+        '[...document.querySelectorAll(".dl-modal,.dl-notification-toast")].every(node => node.getAnimations({subtree:true}).every(animation => animation.playState !== "running"))',
       ),
     'settled overlay screenshot',
   );
@@ -99,6 +99,52 @@ async function reload() {
     () => evaluate(`performance.timeOrigin !== ${origin} && document.querySelectorAll('.dv-tab').length === 3 && !!document.querySelector('#hello-name')`),
     'reload demo',
   );
+}
+
+async function checkModalExit(selector, close, description, horizontal = false, title) {
+  await waitFor(
+    () => evaluate(`document.querySelector(${JSON.stringify(selector)}).getAnimations({subtree:true}).every(animation => animation.playState !== 'running')`),
+    'settled modal before closing',
+  );
+  await close();
+
+  const snapshot = await evaluate(`(async () => {
+    await new Promise(requestAnimationFrame);
+    await new Promise(requestAnimationFrame);
+
+    const dialog = document.querySelector(${JSON.stringify(selector)});
+    const animations = dialog.getAnimations({subtree:true});
+
+    globalThis.modalExitAnimations = animations;
+
+    for (const animation of animations) {
+      animation.pause();
+      animation.currentTime = Number(animation.effect.getTiming().duration) / 2;
+    }
+
+    const style = getComputedStyle(dialog);
+    const backdrop = getComputedStyle(dialog, '::backdrop');
+
+    return {open:dialog.open,display:style.display,overlay:style.overlay,opacity:Number(style.opacity),translate:style.translate,backdrop:Number(backdrop.opacity),title:dialog.querySelector('h2')?.textContent};
+  })()`);
+
+  assert.equal(snapshot.open, false, 'Native close releases modal state immediately');
+  assert.notEqual(snapshot.display, 'none', 'The closing modal stays rendered');
+  assert.equal(snapshot.overlay, 'auto', 'The closing modal stays in the top layer');
+  assert.ok(snapshot.opacity > 0 && snapshot.opacity < 1, 'The modal fades out: ' + JSON.stringify(snapshot));
+  assert.ok(snapshot.backdrop > 0 && snapshot.backdrop < 1, 'The backdrop fades out: ' + JSON.stringify(snapshot));
+
+  const [x, y = 0] = snapshot.translate.split(' ').map(Number.parseFloat);
+
+  assert.ok(horizontal ? x > 0 : y < 0, 'The modal slides out in its entry direction');
+
+  if (title) assert.equal(snapshot.title, title, 'Closing preserves the displayed page');
+
+  await screenshot(horizontal ? 'demo-notifications-exit' : 'demo-modal-exit');
+  await evaluate('globalThis.modalExitAnimations.forEach(animation => animation.finish()); delete globalThis.modalExitAnimations');
+  await waitFor(() => evaluate(`getComputedStyle(document.querySelector(${JSON.stringify(selector)})).display === 'none'`), 'completed modal exit');
+
+  console.log('PASS ' + description);
 }
 
 async function pressKey(key, code, modifiers = 0, windowsVirtualKeyCode = key.length === 1 ? key.toUpperCase().charCodeAt(0) : 13) {
@@ -913,7 +959,7 @@ try {
   await waitFor(() => evaluate('document.querySelector(".dl-command-palette").open'), 'animated palette');
 
   await check(
-    'getComputedStyle(document.querySelector(".dl-command-palette")).animationName === "dl-modal-enter" && getComputedStyle(document.querySelector(".dl-command-palette"), "::backdrop").animationName === "dl-backdrop-enter"',
+    'document.querySelector(".dl-command-palette").getAnimations({subtree:true}).some(animation => animation instanceof CSSTransition && animation.transitionProperty === "translate") && getComputedStyle(document.querySelector(".dl-command-palette"), "::backdrop").transitionProperty.includes("opacity")',
     'Modal windows slide into view and their backdrops fade in',
   );
 
@@ -936,8 +982,7 @@ try {
   await command('Input.dispatchMouseEvent', { type: 'mouseMoved', buttons: 1, x: 2, y: 2 });
   await command('Input.dispatchMouseEvent', { type: 'mouseReleased', button: 'left', clickCount: 1, x: 2, y: 2 });
   await check('document.querySelector(".dl-command-palette").open', 'Dragging from inside a modal to its backdrop does not dismiss it');
-  await clickBackdrop();
-  await waitFor(() => evaluate('!document.querySelector(".dl-command-palette").open'), 'palette backdrop dismissal');
+  await checkModalExit('.dl-command-palette', clickBackdrop, 'Palette backdrop dismissal animates the dialog and backdrop before hiding');
 
   await check(
     'document.activeElement?.getAttribute("aria-label") === "Open command palette"',
@@ -946,14 +991,13 @@ try {
 
   await openPreferences();
   await chooseSelect(0, 'light');
-  await clickBackdrop();
-  await waitFor(() => evaluate('!document.querySelector(".dl-settings-dialog").open'), 'preferences backdrop dismissal');
+  await checkModalExit('.dl-settings-dialog', clickBackdrop, 'Preferences animate out while retaining their content', false, 'Preferences');
   await check('document.querySelector(".dl-theme").dataset.theme === "dark"', 'Clicking outside Preferences discards the unapplied draft');
   await click('Open notifications');
   await waitFor(() => evaluate('document.querySelector(".dl-notification-center").open'), 'animated notification history');
 
   await check(
-    'getComputedStyle(document.querySelector(".dl-notification-center")).animationName === "dl-modal-enter" && document.querySelector(".dl-notification-center").getBoundingClientRect().width >= 480 && getComputedStyle(document.querySelector(".dl-notification-entry h3")).fontSize === "16px"',
+    'document.querySelector(".dl-notification-center").getAnimations({subtree:true}).some(animation => animation instanceof CSSTransition && animation.transitionProperty === "translate") && document.querySelector(".dl-notification-center").getBoundingClientRect().width >= 480 && getComputedStyle(document.querySelector(".dl-notification-entry h3")).fontSize === "16px"',
     'Notification history uses an animated, larger panel with readable text',
   );
 
@@ -963,8 +1007,57 @@ try {
   );
 
   await screenshot('demo-notifications-updated');
-  await clickBackdrop();
-  await waitFor(() => evaluate('!document.querySelector(".dl-notification-center").open'), 'notification backdrop dismissal');
+  await checkModalExit('.dl-notification-center', clickBackdrop, 'Notification history slides right and fades out on dismissal', true, 'Notifications');
+
+  await click('Open command palette');
+  await waitFor(() => evaluate('document.querySelector(".dl-command-palette").open'), 'palette for Escape exit');
+  await checkModalExit('.dl-command-palette', () => pressKey('Escape', 'Escape', 0, 27), 'Escape animates palette closure');
+  await openMenuItem('Settings');
+  await waitFor(() => evaluate('document.querySelector(".dl-settings-dialog").open'), 'settings for close button');
+  await checkModalExit('.dl-settings-dialog', () => click('Close settings'), 'The close button animates Settings closure', false, 'Settings');
+  await openPreferences();
+  await checkModalExit(
+    '.dl-settings-dialog',
+    () => clickText('.dl-settings-dialog button', 'Cancel'),
+    'Cancel animates Preferences closure',
+    false,
+    'Preferences',
+  );
+  await openPreferences();
+  await checkModalExit(
+    '.dl-settings-dialog',
+    () => clickText('.dl-settings-dialog button', 'Apply preferences'),
+    'Apply animates Preferences closure',
+    false,
+    'Preferences',
+  );
+
+  await click('Open command palette');
+  await waitFor(() => evaluate('document.querySelector(".dl-command-palette").open'), 'animated command handoff palette');
+  await searchPalette('Open settings');
+  await pressKey('Enter', 'Enter');
+  await waitFor(() => evaluate('document.querySelector(".dl-settings-dialog").open'), 'animated settings handoff');
+  await check(
+    'document.querySelectorAll("dialog[open]").length === 1 && document.activeElement?.getAttribute("aria-label") === "Close settings"',
+    'Animated palette exit preserves immediate focus handoff to Settings',
+  );
+  await click('Close settings');
+  await waitFor(() => evaluate('!document.querySelector(".dl-settings-dialog").open'), 'close handoff settings');
+
+  await click('Open command palette');
+  await waitFor(() => evaluate('document.querySelector(".dl-command-palette").open'), 'palette for rapid reopen');
+  await click('Close command palette');
+  await waitFor(() => evaluate('!document.querySelector(".dl-command-palette").open'), 'start rapid exit');
+  await click('Open command palette');
+  await waitFor(
+    () =>
+      evaluate(
+        'document.querySelector(".dl-command-palette").open && document.querySelector(".dl-command-palette").getAnimations({subtree:true}).every(animation => animation.playState !== "running")',
+      ),
+    'settled reopened palette',
+  );
+  await check('document.activeElement === document.querySelector(".dl-palette-search input")', 'Rapid reopening keeps the palette open and focused');
+  await click('Close command palette');
   await evaluate('[...document.querySelectorAll(".demo-playground button")].find(button => button.textContent.trim() === "Send warning").click()');
   await waitFor(() => evaluate('!!document.querySelector(".dl-notification-toast[data-level=warning]")'), 'animated warning toast');
 
@@ -991,12 +1084,32 @@ try {
   await waitFor(() => evaluate('document.querySelector(".dl-command-palette").open'), 'reduced-motion palette');
 
   await check(
-    'getComputedStyle(document.querySelector(".dl-command-palette")).animationName === "none" && getComputedStyle(document.querySelector(".dl-command-palette"), "::backdrop").animationName === "none"',
+    'getComputedStyle(document.querySelector(".dl-command-palette")).transitionProperty === "none" && getComputedStyle(document.querySelector(".dl-command-palette"), "::backdrop").transitionProperty === "none"',
     'Reduced motion disables both dialog and backdrop animations',
   );
 
   await clickBackdrop();
   await waitFor(() => evaluate('!document.querySelector(".dl-command-palette").open'), 'close reduced-motion palette');
+  await check(
+    'getComputedStyle(document.querySelector(".dl-command-palette")).display === "none" && document.querySelector(".dl-command-palette").getAnimations({subtree:true}).length === 0',
+    'System reduced motion closes dialogs immediately without exit transitions',
+  );
+
+  await command('Emulation.setEmulatedMedia', { features: [{ name: 'prefers-reduced-motion', value: 'no-preference' }] });
+  await openPreferences();
+  await chooseSelect(1, 'reduced');
+  await clickText('.dl-settings-dialog button', 'Apply preferences');
+  await waitFor(() => evaluate('!document.querySelector(".dl-settings-dialog").open'), 'explicit reduced-motion closure');
+  await check(
+    'getComputedStyle(document.querySelector(".dl-settings-dialog")).display === "none" && document.querySelector(".dl-settings-dialog").getAnimations({subtree:true}).length === 0',
+    'Applying explicit reduced motion disables the Preferences exit transition immediately',
+  );
+  await openPreferences();
+  await chooseSelect(1, 'system');
+  await clickText('.dl-settings-dialog button', 'Apply preferences');
+  await waitFor(() => evaluate('!document.querySelector(".dl-settings-dialog").open'), 'restore system motion');
+  await command('Emulation.setEmulatedMedia', { features: [{ name: 'prefers-reduced-motion', value: 'reduce' }] });
+
   await toggleChromePart('footer');
   await waitFor(() => evaluate('!!document.querySelector("[data-plugin-status-item]")'), 'plugin footer visibility');
 

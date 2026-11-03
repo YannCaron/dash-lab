@@ -113,6 +113,8 @@ Built-in IDs reserve `workbench.*`. Mod+Alt combinations are T for theme, V for 
 
 `CommandPaletteProps` is `{ open, onClose }`. The controlled `CommandPalette` needs command and notification providers. It searches translated titles and stable IDs, supports arrows/Enter/Escape, shows unavailable actions, and keeps six recent successful choices in memory. It closes before executing an action that may open another modal.
 
+Workbench dialogs (Commands, Settings/Preferences, and notification history) slide and fade on opening and closing, including their backdrops. Closing releases native modal state and restores focus immediately while CSS finishes the visual transition. System or explicit reduced-motion preferences disable both directions. Browsers without discrete display/overlay transition support keep instant native closure. Storybook's `Workbench/Commands/AnimatedDialogs` example exercises these controls.
+
 ## Plugin SDK
 
 `WorkbenchPlugin` is `{ id, activate(api): void | PluginDisposer }`. `PluginRegistry.registerPlugin` calls synchronous activation and rolls back its registrations on failure. Its returned disposer removes contributions and calls optional cleanup; use it only before mounting. `PluginRegistry.seal()` returns one immutable `PluginContributions` snapshot; mounting calls it automatically. Registrations and disposal are rejected after sealing. Remount with a new registry to change membership.

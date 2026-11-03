@@ -29,6 +29,7 @@ export function SettingsDialog({
   const close = useRef<HTMLButtonElement>(null);
   const [draft, setDraft] = useState<WorkbenchPreferences>(configuration.preferences);
   const [error, setError] = useState('');
+  const [visiblePage, setVisiblePage] = useState<SettingsPage>(page ?? 'settings');
   const titleId = useId();
   const state = useStore(store);
   const { execute } = useCommands();
@@ -38,6 +39,7 @@ export function SettingsDialog({
 
   useEffect(() => {
     if (page) {
+      setVisiblePage(page);
       setDraft(structuredClone(preferences.current));
       setError('');
 
@@ -70,12 +72,12 @@ export function SettingsDialog({
       }}
     >
       <header>
-        <h2 id={titleId}>{t(page === 'preferences' ? 'Preferences' : 'Settings')}</h2>
+        <h2 id={titleId}>{t(visiblePage === 'preferences' ? 'Preferences' : 'Settings')}</h2>
         <button ref={close} type="button" className="dl-icon-button dl-dialog-close" aria-label={t('Close settings')} onClick={onClose}>
           ×
         </button>
       </header>
-      {page === 'preferences' ? (
+      {visiblePage === 'preferences' ? (
         <form onSubmit={submit}>
           <p>{t('Choose how this application looks and notifies you.')}</p>
           <label className="dl-settings-field">
