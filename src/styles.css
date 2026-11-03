@@ -5,7 +5,8 @@
 @import './overlays/overlays.css';
 
 .dl-theme {
-  --dl-theme-duration: 180ms;
+  --dl-theme-duration: 500ms;
+  --dl-overlay-duration: 270ms;
   height: 100%;
   min-height: 0;
   color: var(--dl-text);

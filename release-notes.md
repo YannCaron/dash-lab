@@ -112,3 +112,7 @@ Popups now slide right and fade out before their visual snapshots unmount, inclu
 ## Application workspace initialization (unreleased)
 
 Optional `onWorkspaceInitialize(api)` runs once after panel creation and before baseline capture or saved-layout restoration. Applications can size complex nested layouts and choose initial tabs without owning a separate layout manager. The Application preset preserves that initialized layout; saved custom checkpoints still take precedence at startup, and `onWorkspaceReady` remains after restoration. This is additive and does not change existing applications. Verification: 81 Vitest tests, strict types, lint and packed-consumer checks pass. Real Grammar Lab compiled/development integration verifies initial dimensions, preset restoration, retained Monaco models, configuration reload and theme state. No publication or push.
+
+## Slower theme transitions (unreleased)
+
+Light/dark and palette color transitions now last 500 ms instead of 180 ms. Overlay timing is independent at 270 ms, preserving dialog and toast entry/exit behavior. System and explicit reduced-motion choices continue to disable animations. Verification: strict types, library/demo build, lint/format, 81 Vitest tests and the compiled Edge browser suite pass, including the new color-transition duration, reduced motion and existing overlay exits. No API or persistence change.

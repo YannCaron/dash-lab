@@ -5,7 +5,7 @@
 .dl-modal,
 .dl-modal::backdrop {
   transition-property: opacity, translate, display, overlay;
-  transition-duration: calc(var(--dl-theme-duration, 180ms) * 1.5);
+  transition-duration: var(--dl-overlay-duration, 270ms);
   transition-timing-function: ease-in;
   transition-behavior: allow-discrete;
 }
@@ -25,10 +25,10 @@
   transition-timing-function: ease-out;
 }
 .dl-notification-toast {
-  animation: dl-toast-enter calc(var(--dl-theme-duration, 180ms) * 1.5) ease-out backwards;
+  animation: dl-toast-enter var(--dl-overlay-duration, 270ms) ease-out backwards;
 }
 .dl-notification-toast[data-exiting] {
-  animation: dl-toast-exit calc(var(--dl-theme-duration, 180ms) * 1.5) ease-in forwards;
+  animation: dl-toast-exit var(--dl-overlay-duration, 270ms) ease-in forwards;
   pointer-events: none;
 }
 @starting-style {

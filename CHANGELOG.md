@@ -6,6 +6,8 @@ The package currently declares version `0.1.0`. No publication or release tag is
 
 ### Added
 
+- Slower 500 ms light/dark color transitions; dialog and notification motion retain their 270 ms duration and reduced-motion support.
+
 - Optional `Workbench.onWorkspaceInitialize` callback to configure initial panel dimensions/selection before capturing the Application preset and restoring a saved layout.
 
 - Notification popups slide/fade out on dismissal, expiry, history removal, disabling popups or stack replacement, with immediate logical updates and reduced-motion support.

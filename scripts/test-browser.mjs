@@ -394,7 +394,7 @@ try {
   await toggleChromePart('header');
   await toggleChromePart('footer');
   await waitFor(() => evaluate('!!document.querySelector(".dl-header") && !!document.querySelector(".dl-footer")'), 'restore chrome');
-  await check('getComputedStyle(document.querySelector(".dl-header")).transitionDuration.split(",")[0].trim() === "0.18s"', 'Theme transitions are enabled');
+  await check('getComputedStyle(document.querySelector(".dl-header")).transitionDuration.split(",")[0].trim() === "0.5s"', 'Theme transitions are enabled');
   await screenshot('demo-light');
   await evaluate('globalThis.lightInputBackground = getComputedStyle(document.querySelector("#hello-name")).backgroundColor');
   await command('Emulation.setEmulatedMedia', { features: [{ name: 'prefers-reduced-motion', value: 'reduce' }] });
