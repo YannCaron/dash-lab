@@ -19,6 +19,7 @@ export function useLayoutManagement(
   storageKey: string | false,
   onReady: ((api: DockviewApi) => void) | undefined,
   stateHandlers: Readonly<Record<string, PluginStateHandler>>,
+  onInitialize?: (api: DockviewApi) => void,
 ) {
   const baseline = useRef<SerializedDockview | null>(null);
   const initialized = useRef<DockviewApi | null>(null);
@@ -66,6 +67,7 @@ export function useLayoutManagement(
     if (!api || initialized.current === api) return;
 
     initialized.current = api;
+    onInitialize?.(api);
     baseline.current = structuredClone(api.toJSON());
 
     if (storageKey) {
@@ -86,7 +88,7 @@ export function useLayoutManagement(
     }
 
     onReady?.(api);
-  }, [api, apply, onReady, panels, reportError, storageKey]);
+  }, [api, apply, onInitialize, onReady, panels, reportError, storageKey]);
 
   const capture = useCallback((): SavedLayout | null => {
     if (!api) return null;

@@ -46,6 +46,8 @@ export interface WorkbenchProps {
   plugins?: PluginRegistry;
   /** Called once after the initial panels and any compatible saved layout are ready. */
   onWorkspaceReady?: (api: DockviewApi) => void;
+  /** Configure initial panel sizes/selection before capturing the Application preset and loading a saved layout. Called once; keep panel identities intact. */
+  onWorkspaceInitialize?: (api: DockviewApi) => void;
   /** Whether the header is shown on first mount. Defaults to true. */
   initialHeaderVisible?: boolean;
   /** Whether the footer is shown on first mount. Defaults to true. */
@@ -135,6 +137,7 @@ function WorkbenchShell({
   panels: applicationPanels = emptyPanels,
   plugins,
   onWorkspaceReady,
+  onWorkspaceInitialize,
   initialHeaderVisible = true,
   initialFooterVisible = true,
   layoutStorageKey,
@@ -147,7 +150,7 @@ function WorkbenchShell({
   const [store] = useState(() => createLayoutStore(initialHeaderVisible, initialFooterVisible));
   const [api, setApi] = useState<DockviewApi | null>(null);
   const [storageKey] = useState(() => layoutStorageKey ?? `dash-lab:${encodeURIComponent(title)}:layout:v1`);
-  const layout = useLayoutManagement(api, panels, store, storageKey, onWorkspaceReady, contributions.stateHandlers);
+  const layout = useLayoutManagement(api, panels, store, storageKey, onWorkspaceReady, contributions.stateHandlers, onWorkspaceInitialize);
   const [preferenceKey] = useState(() => preferencesStorageKey ?? `dash-lab:${encodeURIComponent(title)}:preferences:v1`);
   const configuration = useWorkbenchConfiguration(layout, panels, preferenceKey, contributions.stateHandlers);
   const [settingsPage, setSettingsPage] = useState<SettingsPage | null>(null);

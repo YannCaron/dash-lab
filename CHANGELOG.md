@@ -6,6 +6,8 @@ The package currently declares version `0.1.0`. No publication or release tag is
 
 ### Added
 
+- Optional `Workbench.onWorkspaceInitialize` callback to configure initial panel dimensions/selection before capturing the Application preset and restoring a saved layout.
+
 - Notification popups slide/fade out on dismissal, expiry, history removal, disabling popups or stack replacement, with immediate logical updates and reduced-motion support.
 
 - Automatic custom-layout checkpoints and immediate header/footer persistence, with a Custom layout preset replacing the toolbar save/restore/reset buttons. Built-in presets preserve the custom arrangement; existing commands and storage keys remain compatible.
