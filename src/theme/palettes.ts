@@ -1,4 +1,4 @@
-import type { ThemeMode } from './themeStore.js';
+import type { ThemeFamily, ThemeMode } from './themeStore.js';
 
 export const palettes = {
   light: {
@@ -30,3 +30,87 @@ export const palettes = {
     '--dl-error': '#ff9da7',
   },
 } satisfies Record<ThemeMode, Record<string, string>>;
+
+export const familyPalettes = {
+  azure: palettes,
+  emerald: {
+    light: {
+      ...palettes.light,
+      '--dl-canvas': '#e8f1ed',
+      '--dl-surface': '#ffffff',
+      '--dl-raised': '#f0f7f3',
+      '--dl-text': '#163a2c',
+      '--dl-muted': '#486b5b',
+      '--dl-border': '#c7ddd1',
+      '--dl-accent': '#23734f',
+      '--dl-accent-soft': '#e0f2e7',
+    },
+    dark: {
+      ...palettes.dark,
+      '--dl-canvas': '#0e1914',
+      '--dl-surface': '#16241d',
+      '--dl-raised': '#203329',
+      '--dl-text': '#e0f1e7',
+      '--dl-muted': '#a0bfae',
+      '--dl-border': '#355443',
+      '--dl-accent': '#82d4a5',
+      '--dl-accent-soft': '#244333',
+      '--dl-on-accent': '#102e20',
+    },
+  },
+  umber: {
+    light: {
+      ...palettes.light,
+      '--dl-canvas': '#f0eae2',
+      '--dl-surface': '#fffcf7',
+      '--dl-raised': '#f6efe5',
+      '--dl-text': '#3d2b1e',
+      '--dl-muted': '#765b45',
+      '--dl-border': '#deceba',
+      '--dl-accent': '#80512c',
+      '--dl-accent-soft': '#f2e4d3',
+    },
+    dark: {
+      ...palettes.dark,
+      '--dl-canvas': '#1a1511',
+      '--dl-surface': '#261e18',
+      '--dl-raised': '#35291f',
+      '--dl-text': '#f3e7d8',
+      '--dl-muted': '#c5ad92',
+      '--dl-border': '#584433',
+      '--dl-accent': '#e0b182',
+      '--dl-accent-soft': '#483323',
+      '--dl-on-accent': '#302014',
+    },
+  },
+  contrast: {
+    light: {
+      '--dl-canvas': '#ffffff',
+      '--dl-surface': '#ffffff',
+      '--dl-raised': '#f0f0f0',
+      '--dl-text': '#000000',
+      '--dl-muted': '#333333',
+      '--dl-border': '#595959',
+      '--dl-accent': '#003b80',
+      '--dl-accent-soft': '#e1ecff',
+      '--dl-on-accent': '#ffffff',
+      '--dl-success': '#175737',
+      '--dl-warning': '#704400',
+      '--dl-error': '#a00020',
+    },
+    dark: {
+      '--dl-canvas': '#000000',
+      '--dl-surface': '#000000',
+      '--dl-raised': '#181818',
+      '--dl-text': '#ffffff',
+      '--dl-muted': '#dddddd',
+      '--dl-border': '#aaaaaa',
+      '--dl-accent': '#ffdf60',
+      '--dl-accent-soft': '#352e10',
+      '--dl-on-accent': '#000000',
+      '--dl-success': '#9cf0bd',
+      '--dl-warning': '#ffe090',
+      '--dl-error': '#ffb5bf',
+    },
+  },
+} satisfies Record<ThemeFamily, typeof palettes>;

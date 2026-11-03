@@ -28,6 +28,21 @@ const fixture = (): WorkbenchConfiguration => ({
 });
 
 describe('configuration files', () => {
+  it('round-trips palette choices, preserves legacy files, and rejects unknown families', () => {
+    expect(decodeConfiguration(JSON.stringify(fixture()), panels).preferences.themeFamily).toBeUndefined();
+
+    for (const themeFamily of ['azure', 'contrast', 'emerald', 'umber']) {
+      const input = fixture();
+      const preferences = { ...input.preferences, themeFamily };
+
+      expect(decodeConfiguration(JSON.stringify({ ...input, preferences }), panels).preferences).toEqual(preferences);
+    }
+
+    for (const themeFamily of ['blue', null, {}, 42, '__proto__']) {
+      expect(() => decodeConfiguration(JSON.stringify({ ...fixture(), preferences: { ...fixture().preferences, themeFamily } }), panels)).toThrow('family');
+    }
+  });
+
   it('round-trips optional plugin state independently of layout and leaves legacy files unchanged', () => {
     const input = { ...fixture(), plugins: { notes: { version: 1, text: 'saved' }, nullable: null } };
     const decoded = decodeConfiguration(JSON.stringify(input), panels);

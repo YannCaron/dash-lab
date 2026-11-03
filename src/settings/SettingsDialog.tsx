@@ -1,3 +1,4 @@
+import { themeFamilies } from '../theme/themeStore.js';
 import { useI18n } from '../i18n/I18nProvider.js';
 import { useEffect, useId, useRef, useState } from 'react';
 import type { FormEvent } from 'react';
@@ -92,6 +93,19 @@ export function SettingsDialog({
               {locales.map((language) => (
                 <option key={language.id} value={language.id}>
                   {language.label}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className="dl-settings-field">
+            {t('Theme')}
+            <select
+              value={draft.themeFamily ?? 'azure'}
+              onChange={(event) => setDraft({ ...draft, themeFamily: event.target.value as NonNullable<WorkbenchPreferences['themeFamily']> })}
+            >
+              {Object.entries(themeFamilies).map(([id, label]) => (
+                <option key={id} value={id}>
+                  {t(label)}
                 </option>
               ))}
             </select>

@@ -1,4 +1,5 @@
-import type { ThemeMode, MotionPreference } from '../theme/themeStore.js';
+import { themeFamilies } from '../theme/themeStore.js';
+import type { ThemeFamily, ThemeMode, MotionPreference } from '../theme/themeStore.js';
 import type { NotificationPreferences } from '../notifications/preferences.js';
 import { validateNotificationPreferences } from '../notifications/preferences.js';
 import { decodeLayout } from '../layout/layoutPersistence.js';
@@ -13,6 +14,8 @@ export interface WorkbenchPreferences {
   locale?: string;
   /** Active color scheme. */
   theme: ThemeMode;
+  /** Palette; absent in older version-1 files, which use azure. */
+  themeFamily?: ThemeFamily;
   /** Animation preference. */
   motion: MotionPreference;
   /** Popup visibility and default duration. */
@@ -42,6 +45,9 @@ export function validatePreferences(value: unknown): WorkbenchPreferences {
     throw new Error('Preferences have an invalid theme or animation choice.');
   }
 
+  if (preferences.themeFamily !== undefined && !Object.hasOwn(themeFamilies, preferences.themeFamily))
+    throw new Error('Preferences have an invalid theme family.');
+
   validateNotificationPreferences(preferences.notifications);
 
   if (preferences.locale !== undefined && (typeof preferences.locale !== 'string' || !/^[a-z]{2,8}(-[a-z0-9]{1,8})*$/i.test(preferences.locale)))
@@ -50,6 +56,7 @@ export function validatePreferences(value: unknown): WorkbenchPreferences {
   return {
     ...(preferences.locale === undefined ? {} : { locale: preferences.locale }),
     theme: preferences.theme!,
+    ...(preferences.themeFamily === undefined ? {} : { themeFamily: preferences.themeFamily }),
     motion: preferences.motion!,
     notifications: { toastsEnabled: preferences.notifications.toastsEnabled, toastDurationMs: preferences.notifications.toastDurationMs },
   };

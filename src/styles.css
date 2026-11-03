@@ -36,6 +36,24 @@
   box-sizing: border-box;
 }
 
+.dl-theme[data-theme-family='contrast'] .dl-workbench {
+  font-size: 16px;
+}
+
+.dl-theme[data-theme-family='contrast'] .dl-dock {
+  --dv-tabs-and-actions-container-font-size: 15px;
+}
+
+.dl-theme[data-theme-family='contrast'] :is(.dl-toolbar-label, .dl-subtitle, .dl-monitoring-bar, .dl-footer) {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.dl-theme[data-theme-family='contrast'] .dl-icon-button {
+  min-width: 40px;
+  min-height: 40px;
+}
+
 .dl-header {
   display: flex;
   align-items: center;

@@ -71,3 +71,14 @@ export const OverflowingPanel: Story = {
     ],
   },
 };
+
+export const PresentationTheme: Story = {
+  args: { ...DockedWorkspace.args },
+  decorators: [
+    (Story) => (
+      <ThemeProvider initialFamily="contrast" initialMode="dark">
+        <Story />
+      </ThemeProvider>
+    ),
+  ],
+};

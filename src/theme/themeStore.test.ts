@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { createThemeStore } from './themeStore.js';
-import { palettes } from './palettes.js';
+import { familyPalettes } from './palettes.js';
 
 function luminance(hex: string) {
   const channels = [1, 3, 5]
@@ -35,17 +35,36 @@ describe('theme state', () => {
 
     expect(first.getState().motionPreference).toBe('reduced');
     expect(second.getState().motionPreference).toBe('system');
+
+    first.getState().setFamily('emerald');
+    first.getState().toggleTheme();
+
+    expect(first.getState().family).toBe('emerald');
+    expect(second.getState().family).toBe('azure');
   });
 });
 
 describe('theme readability', () => {
-  for (const [name, palette] of Object.entries(palettes)) {
-    it(`${name} provides readable body text, secondary text, and primary-button text`, () => {
-      expect(contrast(palette['--dl-text'], palette['--dl-surface'])).toBeGreaterThanOrEqual(4.5);
-      expect(contrast(palette['--dl-muted'], palette['--dl-surface'])).toBeGreaterThanOrEqual(4.5);
-      expect(contrast(palette['--dl-on-accent'], palette['--dl-accent'])).toBeGreaterThanOrEqual(4.5);
-      expect(contrast(palette['--dl-warning'], palette['--dl-surface'])).toBeGreaterThanOrEqual(4.5);
-      expect(contrast(palette['--dl-error'], palette['--dl-surface'])).toBeGreaterThanOrEqual(4.5);
-    });
+  for (const [family, schemes] of Object.entries(familyPalettes)) {
+    for (const [mode, palette] of Object.entries(schemes)) {
+      const name = `${family} ${mode}`;
+      it(`${name} provides readable body text, secondary text, and primary-button text`, () => {
+        expect(contrast(palette['--dl-text'], palette['--dl-surface'])).toBeGreaterThanOrEqual(4.5);
+        expect(contrast(palette['--dl-muted'], palette['--dl-surface'])).toBeGreaterThanOrEqual(4.5);
+        expect(contrast(palette['--dl-on-accent'], palette['--dl-accent'])).toBeGreaterThanOrEqual(4.5);
+        expect(contrast(palette['--dl-warning'], palette['--dl-surface'])).toBeGreaterThanOrEqual(4.5);
+        expect(contrast(palette['--dl-error'], palette['--dl-surface'])).toBeGreaterThanOrEqual(4.5);
+
+        if (family === 'contrast') {
+          for (const background of ['--dl-canvas', '--dl-surface', '--dl-raised', '--dl-accent-soft'] as const) {
+            expect(contrast(palette['--dl-text'], palette[background])).toBeGreaterThanOrEqual(7);
+            expect(contrast(palette['--dl-muted'], palette[background])).toBeGreaterThanOrEqual(7);
+          }
+
+          expect(contrast(palette['--dl-on-accent'], palette['--dl-accent'])).toBeGreaterThanOrEqual(7);
+          expect(contrast(palette['--dl-border'], palette['--dl-surface'])).toBeGreaterThanOrEqual(3);
+        }
+      });
+    }
   }
 });

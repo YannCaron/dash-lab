@@ -6,6 +6,8 @@ The package currently declares version `0.1.0`. No publication or release tag is
 
 ### Added
 
+- Azure, High Contrast, Emerald and Umber themes, each in light/dark, selected in the hamburger menu and automatically persisted with preferences.
+
 - Validated npm publication script with simulation, account verification for `cyann`, public scoped publication, and prerelease tags.
 - Optional `PluginAPI.registerState` callbacks for centralized JSON export/import and layout checkpoints, including plugin rollback, legacy-file compatibility, and a stateful Hello World demo.
 - Reusable React/TypeScript library and a separate Vite Hello World demo, with watch and one-shot startup commands.

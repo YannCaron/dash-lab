@@ -12,6 +12,7 @@ describe('theme provider composition', () => {
     const html = renderToStaticMarkup(
       createElement(ThemeProvider, {
         initialMode: 'dark',
+        initialFamily: 'emerald',
         children: [
           createElement(ThemeProbe, { key: 'outer' }),
           createElement(ThemeProvider, { key: 'inner', initialMode: 'light', children: createElement(ThemeProbe) }),
@@ -23,7 +24,9 @@ describe('theme provider composition', () => {
     expect(html).toContain('<output>light</output>');
     expect(html).toContain('data-theme="dark"');
     expect(html).toContain('data-theme="light"');
-    expect(html).toContain('--dl-surface:#171c24');
+    expect(html).toContain('data-theme-family="emerald"');
+    expect(html).toContain('data-theme-family="azure"');
+    expect(html).toContain('--dl-surface:#16241d');
     expect(html).toContain('--dl-surface:#ffffff');
   });
 

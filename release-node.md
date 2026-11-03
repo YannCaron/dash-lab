@@ -96,3 +96,7 @@ Validation: all twelve publication-script tests, ESLint, formatting, and whitesp
 ### Future updates
 
 Keep this Unreleased section current with each feature/fix and its validation or limits. When a real release is made, move the relevant entries under its actual version and date, retain an Unreleased section for subsequent work, and update the package version/changelog consistently. Do not describe a release as published without evidence of publication.
+
+## Theme families (unreleased)
+
+Azure preserves the existing blue palette; High Contrast, Emerald and Umber add light/dark variants. The hamburger Theme submenu and Preferences select the family independently of the existing mode switch. Presentation styling increases typography/control sizes and strengthens borders; contrast tests cover all eight palettes and the presentation text/border targets. Application panel content remains responsible for using the shared tokens. Optional `initialFamily`, `ThemeFamily`, `family`/`setFamily` and JSON `themeFamily` are additive; legacy preferences default to Azure. Selected families persist automatically alongside existing preferences. Verification: 81 Vitest tests, strict types, lint/format, library/demo and Storybook builds, packed-consumer validation, and compiled/development Edge browser checks pass. No publication was performed.

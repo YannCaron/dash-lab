@@ -4,8 +4,8 @@ import { ConfigProvider, theme } from 'antd';
 import type { ThemeConfig } from 'antd';
 import { useStore } from 'zustand';
 import { createThemeStore } from './themeStore.js';
-import type { ThemeControls, ThemeMode } from './themeStore.js';
-import { palettes } from './palettes.js';
+import type { ThemeControls, ThemeMode, ThemeFamily } from './themeStore.js';
+import { familyPalettes } from './palettes.js';
 
 export const ThemeContext = createContext<ReturnType<typeof createThemeStore> | null>(null);
 
@@ -15,18 +15,21 @@ export interface ThemeProviderProps {
   children: ReactNode;
   /** Color scheme used on first mount. Defaults to light. */
   initialMode?: ThemeMode;
+  /** Palette used on first mount. Defaults to azure. */
+  initialFamily?: ThemeFamily;
 }
 
 /** Provides scoped CSS tokens, isolated theme state, and Ant Design configuration. */
-export function ThemeProvider({ children, initialMode = 'light' }: ThemeProviderProps) {
-  const [store] = useState(() => createThemeStore(initialMode));
+export function ThemeProvider({ children, initialMode = 'light', initialFamily = 'azure' }: ThemeProviderProps) {
+  const [store] = useState(() => createThemeStore(initialMode, initialFamily));
+  const family = useStore(store, (state) => state.family);
   const mode = useStore(store, (state) => state.mode);
   const motionPreference = useStore(store, (state) => state.motionPreference);
   const [systemReducedMotion, setReducedMotion] = useState(() => typeof matchMedia !== 'undefined' && matchMedia('(prefers-reduced-motion: reduce)').matches);
   const reducedMotion = systemReducedMotion || motionPreference === 'reduced';
   const root = useRef<HTMLDivElement>(null);
   const themeId = useId();
-  const tokens = palettes[mode];
+  const tokens = familyPalettes[family][mode];
 
   useEffect(() => {
     const media = matchMedia('(prefers-reduced-motion: reduce)');
@@ -57,22 +60,29 @@ export function ThemeProvider({ children, initialMode = 'light' }: ThemeProvider
         colorWarning: tokens['--dl-warning'],
         colorError: tokens['--dl-error'],
         fontFamily: 'Inter, ui-sans-serif, system-ui, sans-serif',
-        fontSize: 13,
+        fontSize: family === 'contrast' ? 16 : 13,
         borderRadius: 5,
-        controlHeight: 34,
+        controlHeight: family === 'contrast' ? 40 : 34,
         // Changing Ant Design's motion flag can remount its subtree.
         motionDurationFast: reducedMotion ? '0s' : '0.1s',
         motionDurationMid: reducedMotion ? '0s' : '0.2s',
         motionDurationSlow: reducedMotion ? '0s' : '0.3s',
       },
     }),
-    [mode, reducedMotion, themeId, tokens],
+    [family, mode, reducedMotion, themeId, tokens],
   );
 
   return (
     <ThemeContext.Provider value={store}>
       <ConfigProvider theme={antTheme} getPopupContainer={(trigger) => trigger?.closest<HTMLElement>('.dl-theme') ?? root.current ?? document.body}>
-        <div ref={root} className="dl-theme" data-theme={mode} data-motion={motionPreference} style={{ ...tokens, colorScheme: mode }}>
+        <div
+          ref={root}
+          className="dl-theme"
+          data-theme={mode}
+          data-theme-family={family}
+          data-motion={motionPreference}
+          style={{ ...tokens, colorScheme: mode }}
+        >
           {children}
         </div>
       </ConfigProvider>

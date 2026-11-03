@@ -1,11 +1,15 @@
 import { useI18n } from '../i18n/I18nProvider.js';
 import { useContext, useRef, useState } from 'react';
 import { Dropdown } from 'antd';
+import { useTheme } from '../theme/ThemeProvider.js';
+import { themeFamilies } from '../theme/themeStore.js';
+import type { ThemeFamily } from '../theme/themeStore.js';
 import { useCommands } from '../commands/CommandContext.js';
 import { PluginContext } from '../plugins/PluginContext.js';
 
 export function ApplicationMenu() {
   const { t } = useI18n();
+  const { family, setFamily } = useTheme();
   const [open, setOpen] = useState(false);
   const trigger = useRef<HTMLButtonElement>(null);
   const { execute, canExecute } = useCommands();
@@ -29,6 +33,8 @@ export function ApplicationMenu() {
       menu={{
         'aria-label': t('Application menu'),
         triggerSubMenuAction: 'click',
+        selectable: true,
+        selectedKeys: [`theme:${family}`],
         items: [
           {
             key: 'file',
@@ -40,6 +46,11 @@ export function ApplicationMenu() {
               { key: 'workbench.configuration.import', label: t('Import configuration…'), disabled: !canExecute('workbench.configuration.import') },
               { key: 'workbench.configuration.export', label: t('Export configuration…'), disabled: !canExecute('workbench.configuration.export') },
             ],
+          },
+          {
+            key: 'theme',
+            label: t('Theme'),
+            children: Object.entries(themeFamilies).map(([id, label]) => ({ key: `theme:${id}`, label: t(label) })),
           },
           ...(menus.length
             ? [
@@ -54,6 +65,12 @@ export function ApplicationMenu() {
         onClick: ({ key }) => {
           setOpen(false);
           trigger.current?.focus();
+
+          if (key.startsWith('theme:')) {
+            setFamily(key.slice(6) as ThemeFamily);
+
+            return;
+          }
 
           const menu = menus.find((menu) => `plugin-menu:${menu.id}` === key);
 

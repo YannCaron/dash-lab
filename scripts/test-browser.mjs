@@ -224,7 +224,13 @@ async function chooseSelect(index, value) {
   await evaluate(`document.querySelectorAll('.dl-settings-dialog select')[${index}].focus()`);
   await pressKey('Home', 'Home', 0, 36);
 
-  if (value === 'dark' || value === 'reduced') await pressKey('ArrowDown', 'ArrowDown', 0, 40);
+  const position = await evaluate(
+    `[...document.querySelectorAll('.dl-settings-dialog select')[${index}].options].findIndex(option => option.value === ${JSON.stringify(value)})`,
+  );
+
+  assert.ok(position >= 0, `Select contains ${value}`);
+
+  for (let step = 0; step < position; step++) await pressKey('ArrowDown', 'ArrowDown', 0, 40);
 
   await pressKey('Tab', 'Tab', 0, 9);
 }
@@ -289,6 +295,7 @@ try {
   await command('Page.setInterceptFileChooserDialog', { enabled: true });
   await command('Emulation.setDeviceMetricsOverride', { width: 1440, height: 1000, deviceScaleFactor: 1, mobile: false });
   await waitFor(() => evaluate('document.querySelectorAll(".dv-tab").length === 3 && !!document.querySelector("#hello-name")'), 'Hello World panels');
+  await waitFor(() => evaluate('document.querySelector(".dl-dock").getBoundingClientRect().height > 400'), 'workspace after viewport resize');
   await check('document.querySelector(".dl-dock").getBoundingClientRect().height > 400', 'Dockview has usable workspace dimensions');
   await evaluate('document.querySelector("#hello-name").focus(); document.querySelector("#hello-name").select()');
   await command('Input.insertText', { text: 'Ada' });
@@ -370,6 +377,27 @@ try {
     'document.querySelector(".hello-world") === globalThis.testPanel && document.querySelector(".hello-result").textContent === "Hello, Ada!" && document.querySelectorAll(".dv-tab").length === 3',
     'Theme switching preserves panels, layout, and component state',
   );
+
+  for (const [family, label] of [
+    ['emerald', 'Emerald'],
+    ['umber', 'Umber'],
+    ['contrast', 'High Contrast'],
+    ['azure', 'Azure'],
+  ]) {
+    await openMenuItem(label, 'Theme');
+    await waitFor(() => evaluate(`document.querySelector('.dl-theme').dataset.themeFamily === '${family}'`), `${family} palette`);
+    await check(
+      `document.querySelector('.dl-theme').dataset.theme === 'dark' && document.querySelector('.hello-world') === globalThis.testPanel && document.querySelector('#hello-name').value === 'Ada'`,
+      `${label} keeps mode and mounted panel state`,
+    );
+    await click('Switch to light theme');
+    await waitFor(() => evaluate(`document.querySelector('.dl-theme').dataset.theme === 'light'`), `${family} light`);
+    await check(`document.querySelector('.dl-theme').dataset.themeFamily === '${family}'`, `${label} has an independent light variant`);
+    await screenshot(`theme-${family}-light`);
+    await click('Switch to dark theme');
+    await waitFor(() => evaluate(`document.querySelector('.dl-theme').dataset.theme === 'dark'`), `${family} dark`);
+    await screenshot(`theme-${family}-dark`);
+  }
 
   await screenshot('demo-dark');
   await click('Switch to light theme');
@@ -786,6 +814,7 @@ try {
   await openPreferences();
   await chooseSelect(0, 'dark');
   await chooseSelect(1, 'reduced');
+  await chooseSelect(3, 'emerald');
   await evaluate('document.querySelector(".dl-settings-dialog input[type=checkbox]").click()');
 
   await evaluate(
@@ -815,6 +844,7 @@ try {
     'Preferences persist independently and do not save unsaved workspace changes',
   );
 
+  await check('document.querySelector(".dl-theme").dataset.themeFamily === "emerald"', 'Selected theme family survives reload independently of light/dark');
   await openPreferences();
 
   await check(
@@ -851,6 +881,7 @@ try {
   assert.equal(exported.version, 1);
   assert.equal(exported.workspace.headerVisible, false);
   assert.equal(exported.preferences.theme, 'dark');
+  assert.equal(exported.preferences.themeFamily, 'emerald');
   assert.equal(exported.preferences.notifications.toastDurationMs, 2000);
   assert.deepEqual(exported.plugins, { 'hello-world': { version: 1, name: 'Exported', greeting: 'Hello, Exported!' } });
   assert.equal(Object.hasOwn(exported.workspace, 'plugins'), false);

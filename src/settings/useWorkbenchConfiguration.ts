@@ -16,9 +16,9 @@ export function useWorkbenchConfiguration(
   stateHandlers: Readonly<Record<string, PluginStateHandler>>,
 ) {
   const { locale, setLocale, assertLocale, t } = useI18n();
-  const { mode, motionPreference, setMode, setMotionPreference } = useTheme();
+  const { mode, family, motionPreference, setMode, setFamily, setMotionPreference } = useTheme();
   const { preferences: notifications, setPreferences: setNotifications, notify } = useNotifications();
-  const preferences: WorkbenchPreferences = { locale, theme: mode, motion: motionPreference, notifications };
+  const preferences: WorkbenchPreferences = { locale, theme: mode, themeFamily: family, motion: motionPreference, notifications };
   const serialized = JSON.stringify(preferences);
   const previous = useRef(serialized);
   const initialized = useRef(false);
@@ -36,12 +36,13 @@ export function useWorkbenchConfiguration(
       assertLocale(next.locale ?? 'en');
       setLocale(next.locale ?? 'en');
       setMode(next.theme);
+      setFamily(next.themeFamily ?? 'azure');
       setMotionPreference(next.motion);
       setNotifications(next.notifications);
 
       return next;
     },
-    [setMode, setMotionPreference, setNotifications, setLocale, assertLocale],
+    [setMode, setFamily, setMotionPreference, setNotifications, setLocale, assertLocale],
   );
 
   const persist = useCallback(

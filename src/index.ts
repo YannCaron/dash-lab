@@ -5,7 +5,7 @@ export type { LayoutPreset } from './layout/layoutPersistence.js';
 export { ThemeProvider, useTheme } from './theme/ThemeProvider.js';
 export type { ThemeProviderProps } from './theme/ThemeProvider.js';
 export { ThemeToggle } from './theme/ThemeToggle.js';
-export type { ThemeControls, ThemeMode, MotionPreference } from './theme/themeStore.js';
+export type { ThemeControls, ThemeMode, ThemeFamily, MotionPreference } from './theme/themeStore.js';
 export { NotificationProvider } from './notifications/NotificationProvider.js';
 export type { NotificationProviderProps } from './notifications/NotificationProvider.js';
 export { useNotifications } from './notifications/NotificationContext.js';

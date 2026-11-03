@@ -326,3 +326,7 @@ Update public JSDoc and [API reference](api.md) when contracts change. Update [r
 | Preferences/layout do not survive reload | Check the configured storage keys and notification feedback; browser storage may be blocked/full.                        |
 | Port already used                        | Stop your existing server or choose another port for your separate application; framework defaults are strict.           |
 | PowerShell refuses npm                   | Use `npm.cmd`.                                                                                                           |
+
+Theme families are Azure (the original blue), High Contrast (presentation), Emerald (green), and Umber (brown). Each has independent light/dark variants. Select a family in the hamburger menu's Theme submenu or Preferences; the existing light/dark switch keeps that family. High Contrast uses stronger text/borders, larger controls and typography. Application-owned panel content should consume the shared tokens for matching readability.
+
+`ThemeProvider` accepts optional `initialFamily` (`azure` by default). `useTheme()` exposes `family` and `setFamily(ThemeFamily)` alongside the existing mode controls. Workbench automatically persists the selected family in `preferences.themeFamily` and includes it in JSON transfers. Version-1 files without this field use Azure; unknown families are rejected before import.
