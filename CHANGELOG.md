@@ -6,6 +6,7 @@ The package currently declares version `0.1.0`. No publication or release tag is
 
 ### Added
 
+- Optional `PluginAPI.registerState` callbacks for centralized JSON export/import and layout checkpoints, including plugin rollback, legacy-file compatibility, and a stateful Hello World demo.
 - Reusable React/TypeScript library and a separate Vite Hello World demo, with watch and one-shot startup commands.
 - Dockview panels, chrome slots, Focus mode, and a combined View control.
 - Light/dark CSS tokens, Ant Design integration, reduced-motion support, and blue/gray themes.

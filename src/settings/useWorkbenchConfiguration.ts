@@ -6,8 +6,15 @@ import type { useLayoutManagement } from '../layout/useLayoutManagement.js';
 import { configurationSizeLimit, decodeConfiguration, validatePreferences } from './configuration.js';
 import type { WorkbenchConfiguration, WorkbenchPreferences } from './configuration.js';
 import { useI18n } from '../i18n/I18nProvider.js';
+import { capturePluginStates, restorePluginStates } from '../plugins/pluginState.js';
+import type { PluginStateHandler } from '../plugins/pluginState.js';
 
-export function useWorkbenchConfiguration(layout: ReturnType<typeof useLayoutManagement>, panels: readonly WorkbenchPanel[], storageKey: string | false) {
+export function useWorkbenchConfiguration(
+  layout: ReturnType<typeof useLayoutManagement>,
+  panels: readonly WorkbenchPanel[],
+  storageKey: string | false,
+  stateHandlers: Readonly<Record<string, PluginStateHandler>>,
+) {
   const { locale, setLocale, assertLocale, t } = useI18n();
   const { mode, motionPreference, setMode, setMotionPreference } = useTheme();
   const { preferences: notifications, setPreferences: setNotifications, notify } = useNotifications();
@@ -118,7 +125,12 @@ export function useWorkbenchConfiguration(layout: ReturnType<typeof useLayoutMan
 
         assertLocale(configuration.preferences.locale ?? 'en');
 
-        if (configuration.workspace && !currentLayout.current.apply(configuration.workspace)) throw new Error('The workspace is not ready yet.');
+        if (configuration.workspace) {
+          if (!currentLayout.current.apply({ ...configuration.workspace, plugins: configuration.plugins ?? {} }))
+            throw new Error('The workspace is not ready yet.');
+        } else {
+          restorePluginStates(stateHandlers, configuration.plugins ?? {}, () => {});
+        }
 
         const preferencesSaved = persist(apply(configuration.preferences));
         const layoutSaved = !configuration.workspace || currentLayout.current.save(true);
@@ -139,15 +151,21 @@ export function useWorkbenchConfiguration(layout: ReturnType<typeof useLayoutMan
         setBusy(false);
       }
     },
-    [apply, panels, persist, notify, assertLocale, t],
+    [apply, panels, persist, notify, assertLocale, stateHandlers, t],
   );
 
   const exportConfiguration = useCallback(() => {
+    const workspace = currentLayout.current.capture();
+    const plugins = workspace?.plugins ?? capturePluginStates(stateHandlers);
+
+    if (workspace) delete workspace.plugins;
+
     const configuration: WorkbenchConfiguration = {
       format: 'dash-lab',
       version: 1,
-      workspace: currentLayout.current.capture(),
+      workspace,
       preferences: JSON.parse(serialized) as WorkbenchPreferences,
+      ...(Object.keys(plugins).length ? { plugins } : {}),
     };
 
     if (panels.length && !configuration.workspace) throw new Error('The workspace is not ready yet.');
@@ -167,7 +185,7 @@ export function useWorkbenchConfiguration(layout: ReturnType<typeof useLayoutMan
     anchor.remove();
     setTimeout(() => URL.revokeObjectURL(url), 1000);
     notify({ title: t('Configuration exported.'), level: 'success' });
-  }, [serialized, panels.length, notify, t]);
+  }, [serialized, panels.length, notify, stateHandlers, t]);
 
   const chooseImport = useCallback(() => input.current?.click(), []);
 

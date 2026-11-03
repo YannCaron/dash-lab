@@ -76,8 +76,8 @@ export const french: MessageCatalog = {
   'Export configuration…': 'Exporter la configuration…',
   'Import configuration file': 'Fichier de configuration à importer',
   'Reading configuration…': 'Lecture de la configuration…',
-  'Transfer the layout and preferences as a JSON file. Panel contents and notification history stay in this session.':
-    'Transférez la disposition et les préférences dans un fichier JSON. Le contenu des panneaux et l’historique restent dans cette session.',
+  'Transfer layout, preferences, and participating plugin data as a JSON file. Notification history stays in this session.':
+    'Transférez la disposition, les préférences et les données des plugins participants dans un fichier JSON. L’historique reste dans cette session.',
   LAYOUT: 'DISPOSITION',
   'Layout management': 'Gestion de la disposition',
   'Application layout': 'Disposition de l’application',

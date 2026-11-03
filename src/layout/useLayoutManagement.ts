@@ -4,6 +4,8 @@ import type { WorkbenchPanel } from './panels.js';
 import type { createLayoutStore } from './layoutStore.js';
 import { decodeLayout, presetLayout, validateLayout } from './layoutPersistence.js';
 import type { LayoutPreset, SavedLayout } from './layoutPersistence.js';
+import { capturePluginStates, restorePluginStates } from '../plugins/pluginState.js';
+import type { PluginStateHandler } from '../plugins/pluginState.js';
 
 export interface LayoutFeedback {
   message: string;
@@ -16,6 +18,7 @@ export function useLayoutManagement(
   store: ReturnType<typeof createLayoutStore>,
   storageKey: string | false,
   onReady: ((api: DockviewApi) => void) | undefined,
+  stateHandlers: Readonly<Record<string, PluginStateHandler>>,
 ) {
   const baseline = useRef<SerializedDockview | null>(null);
   const initialized = useRef<DockviewApi | null>(null);
@@ -37,19 +40,21 @@ export function useLayoutManagement(
 
       const previous = api.toJSON();
 
-      try {
-        api.fromJSON(structuredClone(snapshot.layout), { reuseExistingPanels: true });
-      } catch (error) {
-        api.fromJSON(previous, { reuseExistingPanels: true });
+      restorePluginStates(stateHandlers, snapshot.plugins ?? {}, () => {
+        try {
+          api.fromJSON(structuredClone(snapshot.layout), { reuseExistingPanels: true });
+        } catch (error) {
+          api.fromJSON(previous, { reuseExistingPanels: true });
 
-        throw error;
-      }
+          throw error;
+        }
 
-      store.getState().setVisibility(snapshot.headerVisible, snapshot.footerVisible);
+        store.getState().setVisibility(snapshot.headerVisible, snapshot.footerVisible);
+      });
 
       return true;
     },
-    [api, panels, store],
+    [api, panels, stateHandlers, store],
   );
 
   useEffect(() => {
@@ -83,11 +88,14 @@ export function useLayoutManagement(
 
     const { headerVisible, footerVisible } = store.getState();
     const snapshot: SavedLayout = { version: 1, layout: api.toJSON(), headerVisible, footerVisible };
+    const plugins = capturePluginStates(stateHandlers);
+
+    if (Object.keys(plugins).length) snapshot.plugins = plugins;
 
     validateLayout(snapshot.layout, panels);
 
     return structuredClone(snapshot);
-  }, [api, panels, store]);
+  }, [api, panels, stateHandlers, store]);
 
   const save = useCallback(
     (silent = false) => {
@@ -97,6 +105,8 @@ export function useLayoutManagement(
         if (!snapshot) return false;
 
         const text = JSON.stringify(snapshot);
+
+        if (new TextEncoder().encode(text).byteLength > 1_000_000) throw new Error('Saved layout is too large.');
 
         saved.current = JSON.parse(text) as SavedLayout;
         setHasSaved(true);

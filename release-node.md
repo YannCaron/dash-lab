@@ -32,12 +32,12 @@ Tutorial validation also updates the demo's dynamic panel count and places its a
 - Existing version-1 configurations without a language select English. Unknown languages are rejected before applying a workspace.
 - Panel/command IDs remain stable across display-title and language changes. Incompatible panel sets reject old layouts while keeping a usable default.
 - Plugins are trusted local application code compiled by Vite. Activation is synchronous; membership changes require a remount, and production changes require a rebuild.
-- Layout checkpoints are explicitly saved. Preferences persist independently. React panel contents, notification history, and recent commands are session state.
+- Layout/plugin checkpoints are explicitly saved. Preferences persist independently. Unregistered React panel contents, notification history, and recent commands are session state.
 - React/React DOM 19 are peers. Node 24 is the local validation baseline; the declared Node 22.13 compatibility target is included in CI.
 
 ### Verification and limits
 
-Sixty Vitest tests, strict TypeScript, ESLint, formatting, library/demo builds, Storybook, and packed-consumer checks pass locally. Seventy-two browser checks pass against both compiled and development demos, including plugin contributions and French persistence. The tutorial examples are checked separately as described in [validation](docs/validation.md).
+Seventy-four Vitest tests, strict TypeScript, ESLint, library/demo builds, Storybook, and packed-consumer checks pass locally. Seventy-six browser checks pass against both compiled and development demos, including plugin state restoration and French persistence. Changed files pass Prettier; the global format check currently flags the pre-existing `reviews/review-flash-2026-11-03-0938.md`, which remains untouched. Earlier tutorial verification is recorded in [validation](docs/validation.md).
 
 Runtime audit: zero findings. Fourteen moderate development-tooling findings remain documented in [dependencies](docs/dependencies.md), along with Vite chunk-size and Storybook directive warnings. Local browser verification covers Edge/Chromium, not Firefox or Safari. GitHub-hosted workflow execution and the Linux/Node 22.13 matrix require a repository push and have not been executed here.
 
@@ -46,6 +46,14 @@ Runtime audit: zero findings. Fourteen moderate development-tooling findings rem
 Library, demo, tests, Storybook examples, and scripts use blank lines to separate declarations, processing steps, and results. Consecutive declarations and related assertions stay grouped. This maintenance change only adjusts source spacing and preserves runtime behavior and public contracts.
 
 Verified locally: blank-line-only code diff, strict TypeScript, ESLint, Prettier, all 60 Vitest tests, library/demo and Storybook builds, packed-consumer compatibility, and all 72 browser checks against the compiled demo. Existing bundle-size and Storybook directive warnings remain.
+
+### Plugin state serialization
+
+Optional `api.registerState({ exportState, importState })` callbacks associate JSON data with the owning plugin ID. Save/Restore layout and startup reload use the existing checkpoint; configuration JSON stores plugin data once at its top level. The demo Hello World plugin opts in for its name and greeting, and Storybook includes an editable persistent note. Framework defaults and plugins without state handlers remain compatible.
+
+Version-1 files without plugin data retain current plugin state. Missing handlers are ignored, while malformed JSON state is rejected. Domain import failures prevent layout/preferences changes and trigger reverse-order plugin rollback; incomplete rollback is reported. Handlers must synchronously validate input and accept their own exported data. The existing 1 MB limit includes plugin data. Panel-less workbenches support JSON transfer in the current session; local checkpoints require a docking workspace.
+
+Verification includes fourteen new unit tests, state round-trips through the compiled/development demos, legacy-file import, domain-invalid import preserving live state/layout/preferences, retained panel identity, strict packed-consumer declarations, and a Storybook build. No dependencies were added.
 
 ### Future updates
 

@@ -28,6 +28,23 @@ const fixture = (): WorkbenchConfiguration => ({
 });
 
 describe('configuration files', () => {
+  it('round-trips optional plugin state independently of layout and leaves legacy files unchanged', () => {
+    const input = { ...fixture(), plugins: { notes: { version: 1, text: 'saved' }, nullable: null } };
+    const decoded = decodeConfiguration(JSON.stringify(input), panels);
+
+    expect(decoded).toEqual(input);
+    expect(decodeConfiguration(JSON.stringify(fixture()), panels)).not.toHaveProperty('plugins');
+    expect(decodeConfiguration(JSON.stringify({ ...input, workspace: null }), []).plugins).toEqual(input.plugins);
+    expect(decoded.plugins).not.toBe(input.plugins);
+    expect(decoded.workspace).not.toHaveProperty('plugins');
+
+    for (const plugins of [null, [], 'invalid', { ' ': null }]) {
+      expect(() => decodeConfiguration(JSON.stringify({ ...fixture(), plugins }), panels)).toThrow('Plugin');
+    }
+
+    expect(() => decodeConfiguration(JSON.stringify({ ...fixture(), plugins: { value: 1 } }).replace('"value":1', '"value":1e400'), panels)).toThrow('finite');
+  });
+
   it('accepts version-1 preferences without a language and validates new language values', () => {
     const legacy = fixture();
 

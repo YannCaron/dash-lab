@@ -74,3 +74,11 @@ The README's Counter plugin and the complete application's Notes plugin, discove
 Documentation links resolve locally. `release-node.md` records all fourteen features, compatibility, verification, and publication status; AGENTS.md requires agents to update it in the same work/commit as future changes. Package contents include the guide, API docs, contribution/agent instructions, changelog, and release notes. The demo monitoring count derives from actual plugin/application panels rather than a fixed number.
 
 Final visual review and the French browser regression also cover translated application-constructed header/footer/monitoring content and plugin status, with all toolbar controls remaining inside the desktop viewport.
+
+## Plugin state serialization
+
+On 2026-11-03, seventy-four Vitest tests pass. New tests cover optional/scoped registration and disposal, copied JSON snapshots, unsupported exports, missing/unknown IDs, null values, legacy configuration/checkpoints, domain failure rollback including a partially mutated failing plugin, incomplete rollback reporting, and rollback when native layout application fails. Strict TypeScript and ESLint pass.
+
+All seventy-six Edge checks pass against both the compiled demo and the development server with React StrictMode. They verify explicit plugin checkpoint restoration, startup reload, export without duplicated state, import into the existing mounted panel, imported state surviving reload, rejected plugin versions leaving state/layout/preferences intact, and legacy JSON leaving live plugin data untouched. The demo's Hello World state uses the same registration mechanism as external plugins.
+
+Library/demo and Storybook builds pass, as does the fresh packed-consumer check with the new public state handler/configuration types. Existing bundle-size and Storybook directive warnings remain. Modified files pass Prettier and `git diff --check`; the global format command flags the unrelated pre-existing `reviews/review-flash-2026-11-03-0938.md`, which is left unchanged. No dependency was added.

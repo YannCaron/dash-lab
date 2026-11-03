@@ -117,7 +117,7 @@ Built-in IDs reserve `workbench.*`. Mod+Alt combinations are T for theme, V for 
 
 `WorkbenchPlugin` is `{ id, activate(api): void | PluginDisposer }`. `PluginRegistry.registerPlugin` calls synchronous activation and rolls back its registrations on failure. Its returned disposer removes contributions and calls optional cleanup; use it only before mounting. `PluginRegistry.seal()` returns one immutable `PluginContributions` snapshot; mounting calls it automatically. Registrations and disposal are rejected after sealing. Remount with a new registry to change membership.
 
-`PluginAPI` exposes five contribution methods, each returning an idempotent `PluginDisposer`:
+`PluginAPI` exposes six contribution methods, each returning an idempotent `PluginDisposer`:
 
 | Method                   | Value                                                            |
 | ------------------------ | ---------------------------------------------------------------- |
@@ -126,12 +126,25 @@ Built-in IDs reserve `workbench.*`. Mod+Alt combinations are T for theme, V for 
 | `registerMenu`           | `PluginMenu: { id, title, commandId }`; shown under Plugins.     |
 | `registerStatusItem`     | `PluginItem: { id, component }`; shown in the footer.            |
 | `registerMonitoringItem` | `PluginItem`; shown in monitoring.                               |
+| `registerState`          | `PluginStateHandler`; one optional handler per plugin ID.        |
 
 `PluginCommandContext` supplies `notify` and `executeCommand`. Commands use the workbench's existing providers, error handling, and availability. IDs must be unique within each contribution kind. `workbench.*` command IDs are reserved. Commands conflicting with the live command registry report a notification and roll back the attempted plugin-command batch; other panel contributions remain usable. Unknown menu commands display as unavailable.
 
-`PluginContributions` exposes readonly `pluginIds`, `panels`, `commands`, `menus`, `statusItems`, and `monitoringItems`. Definitions are shallow copied/frozen; application components and handler functions remain application-owned. Registries do not sandbox or remotely load code.
+`PluginContributions` exposes readonly `pluginIds`, `panels`, `commands`, `menus`, `statusItems`, `monitoringItems`, and `stateHandlers`. The latter is an immutable record keyed by plugin ID. Definitions are shallow copied/frozen; application components and handler functions remain application-owned. Registries do not sandbox or remotely load code.
 
 `registerLocalPlugins(modules)` accepts Vite's eager glob result `{ [path]: { default: WorkbenchPlugin } }`, registers modules in sorted path order, and rolls back prior plugins if startup fails. Use the standard application entry `src/plugins/<name>/index.ts`. Plugins are compiled into the application. Development membership changes restart the mounted workbench; production changes require rebuilding.
+
+### Plugin state
+
+Register during activation with `api.registerState({ exportState, importState })`. The registry supplies the owning plugin ID automatically. Registration is optional and uses the same startup rollback, disposal, and sealing rules as other contributions. Callbacks remain live after sealing.
+
+`PluginStateHandler.exportState(): unknown` must return JSON data: null, strings, booleans, finite numbers, arrays, and plain objects. Undefined, functions, class instances, promises, and cycles are rejected rather than silently lost. `PluginStateValue` describes accepted JSON values; `PluginStateSnapshot` maps plugin IDs to these values. Snapshots are independent copies of live data.
+
+`PluginStateHandler.importState(value: unknown): void` must synchronously validate its plugin-specific shape/version and update its observable application store. Components subscribe to that store normally; restoring does not remount panels. Both callbacks must be synchronous. Include a version in returned data when your format evolves. An importer must also accept its own exported snapshot so rollback can restore it. External side effects are outside this state contract.
+
+Save layout captures all registered handlers in the same local checkpoint as the layout. Restore and startup reload apply saved plugin data before restoring Dockview. Reset and presets only change layout/visibility. Legacy checkpoints without plugin data leave live plugin state untouched. A panel-less workbench can transfer plugin state through JSON import/export; local layout checkpoints require a docking workspace.
+
+Only handlers whose IDs occur in the snapshot are imported. Missing entries leave current state intact; entries for unavailable/nonparticipating plugins are ignored and are not retained on subsequent export. Before importing, the framework captures the participants' previous states. If a handler or layout restoration fails, attempted handlers are restored in reverse order, including the failing handler. Rollback failures are reported explicitly; arbitrary plugin callbacks cannot be guaranteed recoverable.
 
 ## Languages
 
@@ -141,8 +154,8 @@ Built-in IDs reserve `workbench.*`. Mod+Alt combinations are T for theme, V for 
 
 ## Configuration
 
-`WorkbenchPreferences` contains `theme`, `motion`, `notifications`, and optional `locale` for backward compatibility. `WorkbenchConfiguration` is `{ format: 'dash-lab', version: 1, workspace, preferences }`. `workspace` is the native Dockview checkpoint plus header/footer visibility, or null for a workbench without panels. `LayoutPreset` is default, columns, or rows.
+`WorkbenchPreferences` contains `theme`, `motion`, `notifications`, and optional `locale` for backward compatibility. `WorkbenchConfiguration` is `{ format: 'dash-lab', version: 1, workspace, preferences, plugins? }`. `workspace` is the native Dockview checkpoint plus header/footer visibility, or null for a workbench without panels. `plugins` contains opted-in JSON data keyed by plugin ID, stored once at the configuration's top level. `LayoutPreset` is default, columns, or rows.
 
-`decodeConfiguration(text, panels)` is a pure validator with a 1 MB UTF-8 byte limit. It checks format/version, preferences, workspace shape, and panel compatibility before returning data. Registered-language availability is application-specific and checked by Workbench before applying a workspace. Legacy files without a locale select English. React panel state, notification history, and recent commands are excluded.
+`decodeConfiguration(text, panels)` is a pure validator with a 1 MB UTF-8 byte limit, including plugin data. It checks format/version, preferences, workspace shape, panel compatibility, and plugin JSON structure before returning data. Registered-language availability and plugin-specific validation are checked by Workbench before applying a workspace. Legacy files without a locale select English; files without `plugins` leave live plugin data intact. Unregistered React panel state, notification history, and recent commands are excluded.
 
-Export captures current choices without changing an existing checkpoint. Import applies a compatible configuration and updates the explicit layout checkpoint. Disk writes to layout/preferences keys are independent; if either fails, session state remains usable and feedback reports incomplete persistence. Reset preserves the existing saved checkpoint. Popout browser windows are not restored.
+Export captures current choices and opted-in plugin state without changing an existing checkpoint. Import applies a compatible configuration and updates the explicit layout/plugin checkpoint. Plugin import failure leaves layout and preferences unchanged and attempts plugin rollback. Writes to layout/preferences keys are independent; if either fails, session state remains usable and feedback reports incomplete persistence. Reset preserves the existing saved checkpoint. Popout browser windows are not restored.

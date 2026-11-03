@@ -371,6 +371,16 @@ try {
     'Presets and saved layout restoration preserve the live panel state',
   );
 
+  await evaluate('document.querySelector("#hello-name").focus(); document.querySelector("#hello-name").select()');
+  await command('Input.insertText', { text: 'Unsaved plugin edit' });
+  await evaluate('document.querySelector(".hello-form button").click()');
+  await click('Restore saved layout');
+  await waitFor(() => evaluate('document.querySelector("#hello-name").value === "Ada"'), 'plugin checkpoint restoration');
+  await check(
+    'document.querySelector(".hello-world") === globalThis.testPanel && document.querySelector(".hello-result").textContent === "Hello, Ada!"',
+    'Restore layout also restores registered plugin state without replacing its panel',
+  );
+
   await click('Reset layout');
 
   await waitFor(
@@ -388,6 +398,7 @@ try {
 
   await reload();
   await waitFor(() => evaluate('!document.querySelector(".dl-header")'), 'restore persisted header preference');
+  await check('document.querySelector("#hello-name").value === "Ada"', 'Registered plugin state survives a full reload with its saved layout');
 
   await check(
     'Math.abs(document.querySelector(".hello-world").getBoundingClientRect().top - document.querySelector(".demo-guide").getBoundingClientRect().top) < 3',
@@ -771,6 +782,9 @@ try {
   const downloads = await mkdtemp(`${output}/downloads-`);
 
   await command('Browser.setDownloadBehavior', { behavior: 'allow', downloadPath: resolve(downloads) });
+  await evaluate('document.querySelector("#hello-name").focus(); document.querySelector("#hello-name").select()');
+  await command('Input.insertText', { text: 'Exported' });
+  await evaluate('document.querySelector(".hello-form button").click()');
   await openMenuItem('Export configuration…');
 
   const exportedPath = `${downloads}/dash-lab-configuration.json`;
@@ -792,16 +806,18 @@ try {
   assert.equal(exported.workspace.headerVisible, false);
   assert.equal(exported.preferences.theme, 'dark');
   assert.equal(exported.preferences.notifications.toastDurationMs, 2000);
-  assert.equal(JSON.stringify(exported).includes('Hello, Ada!'), false);
-  assert.deepEqual(Object.keys(exported).sort(), ['format', 'preferences', 'version', 'workspace']);
+  assert.deepEqual(exported.plugins, { 'hello-world': { version: 1, name: 'Exported', greeting: 'Hello, Exported!' } });
+  assert.equal(Object.hasOwn(exported.workspace, 'plugins'), false);
+  assert.deepEqual(Object.keys(exported).sort(), ['format', 'plugins', 'preferences', 'version', 'workspace']);
 
-  console.log('PASS Export downloads a versioned JSON configuration without greeting content or history');
+  console.log('PASS Export downloads opted-in plugin data once alongside layout and preferences, excluding notification history');
 
   const imported = globalThis.structuredClone(exported);
 
   imported.workspace.headerVisible = true;
   imported.workspace.footerVisible = false;
   imported.preferences = { theme: 'light', motion: 'system', notifications: { toastsEnabled: true, toastDurationMs: 1000 } };
+  imported.plugins['hello-world'] = { version: 1, name: 'Restored', greeting: 'Hello, restored plugin!' };
 
   const importedPath = `${downloads}/import.json`;
 
@@ -823,8 +839,8 @@ try {
   );
 
   await check(
-    'document.querySelector(".hello-world") === globalThis.configurationPanel && document.querySelector(".hello-result").textContent === "Hello, Ada!"',
-    'Import from Settings applies configuration without remounting panels or clearing their content',
+    'document.querySelector(".hello-world") === globalThis.configurationPanel && document.querySelector("#hello-name").value === "Restored" && document.querySelector(".hello-result").textContent === "Hello, restored plugin!"',
+    'Import from Settings applies plugin state without remounting panels',
   );
 
   await pressKey('Escape', 'Escape', 0, 27);
@@ -833,13 +849,14 @@ try {
   await waitFor(() => evaluate('!!document.querySelector(".dl-header") && !document.querySelector(".dl-footer")'), 'imported checkpoint after reload');
 
   await check(
-    'document.querySelector(".dl-theme").dataset.theme === "light" && document.querySelector(".dl-theme").dataset.motion === "system"',
-    'Imported workspace and preferences are restored together on reload',
+    'document.querySelector(".dl-theme").dataset.theme === "light" && document.querySelector(".dl-theme").dataset.motion === "system" && document.querySelector("#hello-name").value === "Restored" && document.querySelector(".hello-result").textContent === "Hello, restored plugin!"',
+    'Imported plugin state, workspace and preferences are restored together on reload',
   );
 
   for (const [name, invalid] of [
     ['future', { ...imported, version: 2 }],
     ['foreign', { ...imported, workspace: { ...imported.workspace, layout: { ...imported.workspace.layout, panels: {} } } }],
+    ['plugin', { ...imported, workspace: { ...imported.workspace, headerVisible: false }, plugins: { 'hello-world': { version: 99 } } }],
   ]) {
     const path = `${downloads}/${name}.json`;
 
@@ -852,8 +869,8 @@ try {
     );
 
     await check(
-      'document.querySelector(".dl-theme").dataset.theme === "light" && !!document.querySelector(".dl-header") && !document.querySelector(".dl-footer")',
-      `Invalid ${name} configuration leaves current workspace and preferences unchanged`,
+      'document.querySelector(".dl-theme").dataset.theme === "light" && !!document.querySelector(".dl-header") && !document.querySelector(".dl-footer") && document.querySelector("#hello-name").value === "Restored" && document.querySelector(".hello-result").textContent === "Hello, restored plugin!"',
+      `Invalid ${name} configuration leaves plugin state, workspace and preferences unchanged`,
     );
 
     await click('Dismiss notification: Configuration could not be imported');
@@ -862,6 +879,18 @@ try {
   await importConfiguration(importedPath);
   await waitFor(() => evaluate('document.querySelector(".dl-notification-toast strong")?.textContent === "Configuration imported."'), 'repeat import');
   await check('document.querySelector("input[type=file]").value === ""', 'The same configuration file can be selected again');
+
+  const legacy = globalThis.structuredClone(imported);
+  const legacyPath = `${downloads}/legacy.json`;
+
+  delete legacy.plugins;
+  await writeFile(legacyPath, JSON.stringify(legacy));
+  await evaluate('document.querySelector("#hello-name").focus(); document.querySelector("#hello-name").select()');
+  await command('Input.insertText', { text: 'Legacy preserved' });
+  await importConfiguration(legacyPath);
+  await waitFor(() => evaluate('document.querySelector(".dl-notification-toast strong")?.textContent === "Configuration imported."'), 'legacy import');
+  await check('document.querySelector("#hello-name").value === "Legacy preserved"', 'Legacy configuration files leave current plugin state unchanged');
+
   await evaluate('globalThis.preferenceWrite = Storage.prototype.setItem; Storage.prototype.setItem = function() { throw new Error("Blocked test storage"); }');
   await openPreferences();
   await chooseSelect(0, 'dark');

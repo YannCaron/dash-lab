@@ -1,11 +1,13 @@
 import { Orientation } from 'dockview-react';
 import type { SerializedDockview } from 'dockview-react';
 import type { WorkbenchPanel } from './panels.js';
+import { copyPluginStates } from '../plugins/pluginState.js';
+import type { PluginStateSnapshot } from '../plugins/pluginState.js';
 
 /** Built-in arrangements for the application's initial panels. */
 export type LayoutPreset = 'default' | 'columns' | 'rows';
 
-/** Versioned native workspace checkpoint, excluding React panel state. */
+/** Versioned native workspace checkpoint, including explicitly registered plugin state. */
 export interface SavedLayout {
   /** Checkpoint schema version. */
   version: 1;
@@ -15,6 +17,8 @@ export interface SavedLayout {
   headerVisible: boolean;
   /** Footer visibility outside Focus mode. */
   footerVisible: boolean;
+  /** Opted-in plugin state; absent in legacy layout checkpoints. */
+  plugins?: PluginStateSnapshot;
 }
 
 function record(value: unknown): value is Record<string, unknown> {
@@ -96,7 +100,7 @@ export function validateLayout(value: unknown, panels: readonly WorkbenchPanel[]
 }
 
 export function decodeLayout(text: string, panels: readonly WorkbenchPanel[]): SavedLayout {
-  if (text.length > 1_000_000) throw new Error('Saved layout is too large.');
+  if (new TextEncoder().encode(text).byteLength > 1_000_000) throw new Error('Saved layout is too large.');
 
   const value: unknown = JSON.parse(text);
 
@@ -106,7 +110,13 @@ export function decodeLayout(text: string, panels: readonly WorkbenchPanel[]): S
 
   validateLayout(value.layout, panels);
 
-  return value as unknown as SavedLayout;
+  return {
+    version: 1,
+    layout: value.layout,
+    headerVisible: value.headerVisible,
+    footerVisible: value.footerVisible,
+    ...(value.plugins === undefined ? {} : { plugins: copyPluginStates(value.plugins) }),
+  };
 }
 
 export function presetLayout(baseline: SerializedDockview, preset: LayoutPreset, panels: readonly WorkbenchPanel[]): SerializedDockview {

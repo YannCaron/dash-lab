@@ -1,6 +1,7 @@
 import type { WorkbenchPlugin } from 'dash-lab';
 import { useI18n } from 'dash-lab';
 import { HelloWorld } from './HelloWorld';
+import { helloStateHandler } from './state';
 
 function StatusItem() {
   return useI18n().t('Hello World ready');
@@ -13,6 +14,7 @@ function MonitoringItem() {
 const plugin: WorkbenchPlugin = {
   id: 'hello-world',
   activate(api) {
+    api.registerState(helloStateHandler);
     api.registerPanel({ id: 'hello', title: 'Hello World', component: HelloWorld });
 
     api.registerCommand({

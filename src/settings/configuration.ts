@@ -4,6 +4,8 @@ import { validateNotificationPreferences } from '../notifications/preferences.js
 import { decodeLayout } from '../layout/layoutPersistence.js';
 import type { SavedLayout } from '../layout/layoutPersistence.js';
 import type { WorkbenchPanel } from '../layout/panels.js';
+import { copyPluginStates } from '../plugins/pluginState.js';
+import type { PluginStateSnapshot } from '../plugins/pluginState.js';
 
 /** Preferences persisted independently from explicit layout checkpoints. */
 export interface WorkbenchPreferences {
@@ -17,7 +19,7 @@ export interface WorkbenchPreferences {
   notifications: NotificationPreferences;
 }
 
-/** Portable configuration; excludes panel content and notification history. */
+/** Portable configuration; includes opted-in plugin data and excludes notification history. */
 export interface WorkbenchConfiguration {
   /** Identifies a dash-lab configuration file. */
   format: 'dash-lab';
@@ -27,6 +29,8 @@ export interface WorkbenchConfiguration {
   workspace: SavedLayout | null;
   /** Application preferences. */
   preferences: WorkbenchPreferences;
+  /** JSON state keyed by plugin ID; absent in legacy version-1 files. */
+  plugins?: PluginStateSnapshot;
 }
 
 export const configurationSizeLimit = 1_000_000;
@@ -67,5 +71,7 @@ export function decodeConfiguration(text: string, panels: readonly WorkbenchPane
 
   if (workspace === null && panels.length) throw new Error('Configuration is missing this application’s workspace.');
 
-  return { format: 'dash-lab', version: 1, workspace, preferences };
+  if (workspace) delete workspace.plugins;
+
+  return { format: 'dash-lab', version: 1, workspace, preferences, ...(value.plugins === undefined ? {} : { plugins: copyPluginStates(value.plugins) }) };
 }

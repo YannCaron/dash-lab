@@ -1,12 +1,12 @@
 import { useI18n } from 'dash-lab';
-import { useState } from 'react';
+import { useStore } from 'zustand';
 import { Button, Input } from 'antd';
 import { useNotifications } from 'dash-lab';
+import { helloState } from './state';
 
 export function HelloWorld() {
   const { t } = useI18n();
-  const [name, setName] = useState('World');
-  const [greeting, setGreeting] = useState<string | null>(null);
+  const { name, greeting } = useStore(helloState);
   const { notify } = useNotifications();
 
   return (
@@ -28,13 +28,13 @@ export function HelloWorld() {
 
           const message = t('Hello, {name}!', { name: name.trim() || 'World' });
 
-          setGreeting(message);
+          helloState.setState({ greeting: message });
           notify({ title: message, description: t('Your Hello World plugin sent this notification.'), level: 'success' });
         }}
       >
         <label htmlFor="hello-name">{t("LET'S MAKE IT PERSONAL")}</label>
         <div className="hello-input-row">
-          <Input id="hello-name" value={name} onChange={(event) => setName(event.target.value)} placeholder={t('Your name')} />
+          <Input id="hello-name" value={name} onChange={(event) => helloState.setState({ name: event.target.value })} placeholder={t('Your name')} />
           <Button type="primary" htmlType="submit">
             {t('Say hello')}
             <span aria-hidden="true">↗</span>

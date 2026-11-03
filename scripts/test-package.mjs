@@ -48,11 +48,13 @@ await writeFile(
 run([npm, 'install', '--offline', '--no-audit', '--no-fund', '--cache', cache], directory);
 
 const consumer = `import { I18nProvider, Workbench, registerLocalPlugins, useI18n, useNotifications } from 'dash-lab';
-import type { WorkbenchPlugin, WorkbenchPreferences, PluginAPI } from 'dash-lab';
+import type { WorkbenchPlugin, WorkbenchPreferences, PluginAPI, PluginStateHandler, WorkbenchConfiguration } from 'dash-lab';
 function Panel() { const {t}=useI18n(); const {notify}=useNotifications(); return <button onClick={()=>notify({title:t('Hello')})}>{t('Hello')}</button>; }
-const plugin: WorkbenchPlugin = {id:'consumer',activate(api:PluginAPI){api.registerPanel({id:'panel',title:'Panel',component:Panel});}};
+const handler: PluginStateHandler = { exportState: () => ({version:1,note:'saved'}), importState(value) { if(!value || typeof value !== 'object') throw new Error('Invalid state'); } };
+const plugin: WorkbenchPlugin = {id:'consumer',activate(api:PluginAPI){api.registerState(handler);api.registerPanel({id:'panel',title:'Panel',component:Panel});}};
 const plugins=registerLocalPlugins({'./plugins/consumer/index.ts':{default:plugin}});
 export const preferences: WorkbenchPreferences={theme:'dark',motion:'system',notifications:{toastsEnabled:true,toastDurationMs:5000}};
+export const configuration: WorkbenchConfiguration={format:'dash-lab',version:1,workspace:null,preferences,plugins:{consumer:{version:1,note:'saved'}}};
 export const application=<I18nProvider initialLocale="fr"><Workbench title="Consumer" plugins={plugins} preferencesStorageKey={false}/></I18nProvider>;
 `;
 

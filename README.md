@@ -92,7 +92,7 @@ npm test
 npm run build
 ```
 
-Save a layout, change Preferences → Language, and try JSON export/import from File. For a fresh consuming application, all six plugin contributions, language catalogs, and troubleshooting, follow the [application and plugin guide](docs/application-guide.md). The [API reference](docs/api.md) covers individual contracts.
+Save a layout, change Preferences → Language, and try JSON export/import from File. Plugins can opt in with `api.registerState({ exportState, importState })`; the Hello World demo saves its name and greeting with the layout and configuration. For a fresh consuming application, all six plugin contributions, state handlers, language catalogs, and troubleshooting, follow the [application and plugin guide](docs/application-guide.md). The [API reference](docs/api.md) covers individual contracts.
 
 ## Use the library
 

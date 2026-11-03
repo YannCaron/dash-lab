@@ -6,6 +6,77 @@ import type { PluginAPI, WorkbenchPlugin } from './PluginRegistry.js';
 const component = () => null;
 
 describe('local plugin registration', () => {
+  it('scopes optional state handlers to plugin IDs and freezes their copied registrations', () => {
+    const registry = new PluginRegistry();
+    const handler = { exportState: () => ({ note: 'saved' }), importState: vi.fn() };
+
+    registry.registerPlugin({
+      id: 'notes',
+      activate(api) {
+        api.registerState(handler);
+      },
+    });
+    registry.registerPlugin({ id: 'stateless', activate() {} });
+
+    handler.exportState = () => ({ note: 'changed callback' });
+
+    const result = registry.seal();
+
+    expect(Object.keys(result.stateHandlers)).toEqual(['notes']);
+    expect(result.stateHandlers.notes?.exportState()).toEqual({ note: 'saved' });
+    expect(Object.isFrozen(result.stateHandlers)).toBe(true);
+    expect(Object.isFrozen(result.stateHandlers.notes)).toBe(true);
+  });
+
+  it('disposes and rolls back state registrations with normal startup contributions', () => {
+    const registry = new PluginRegistry();
+    const handler = { exportState: () => null, importState() {} };
+
+    const dispose = registry.registerPlugin({
+      id: 'removed',
+      activate(api) {
+        const remove = api.registerState(handler);
+
+        remove();
+        remove();
+        api.registerState(handler);
+      },
+    });
+
+    dispose();
+
+    expect(() =>
+      registry.registerPlugin({
+        id: 'duplicate',
+        activate(api) {
+          api.registerState(handler);
+          api.registerState(handler);
+        },
+      }),
+    ).toThrow('Duplicate');
+
+    expect(() =>
+      registry.registerPlugin({
+        id: 'invalid',
+        activate(api) {
+          api.registerState({ exportState: () => null } as Parameters<PluginAPI['registerState']>[0]);
+        },
+      }),
+    ).toThrow('callbacks');
+
+    let api: PluginAPI | undefined;
+
+    registry.registerPlugin({
+      id: 'sealed',
+      activate(value) {
+        api = value;
+      },
+    });
+
+    expect(registry.seal().stateHandlers).toEqual({});
+    expect(() => api!.registerState(handler)).toThrow('registration is closed');
+  });
+
   it('collects all contribution kinds and freezes copied startup definitions', () => {
     const registry = new PluginRegistry();
     const panel = { id: 'panel', title: 'Original', component: memo(component) };

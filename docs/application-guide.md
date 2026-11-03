@@ -275,9 +275,34 @@ Each panel scrolls when its content exceeds the tab height. An editor/canvas may
 
 Use explicit Save layout, Settings, or Mod+Alt+S for a checkpoint. Unsaved rearrangements are not automatically persisted. Preferences persist independently, including theme, language, motion, popup visibility, and default popup duration.
 
-Choose stable application-specific `layoutStorageKey` and `preferencesStorageKey` values, or false for session-only behavior. Default keys derive from the workbench title; keep the title/keys stable when language changes. JSON export captures current layout and preferences; import validates the whole file, version, panel identities, and registered language before applying it. History and React panel content are excluded. A storage failure retains usable session state and reports incomplete persistence.
+Choose stable application-specific `layoutStorageKey` and `preferencesStorageKey` values, or false for session-only behavior. Default keys derive from the workbench title; keep the title/keys stable when language changes. JSON export captures current layout, preferences, and opted-in plugin data; import validates the whole file, version, panel identities, and registered language before applying it. History and unregistered React panel content are excluded. A storage failure retains usable session state and reports incomplete persistence.
 
 Adding/removing or renaming panel IDs makes old checkpoints incompatible. Keep IDs stable when only renaming a tab. An incompatible checkpoint is rejected and the default workspace remains usable. Version-1 configurations without a locale remain valid and select English. Files are limited to 1 MB, and popout windows are not restored.
+
+### Persist a plugin's data
+
+Register one optional handler from `activate(api)`. It is automatically keyed by your plugin's stable ID:
+
+```ts
+api.registerState({
+  exportState: () => ({ version: 1, ...notesStore.getState() }),
+  importState(value) {
+    if (!value || typeof value !== 'object' || !('version' in value) || value.version !== 1 || !('text' in value) || typeof value.text !== 'string') {
+      throw new Error('Unsupported notes state.');
+    }
+
+    notesStore.setState({ text: value.text });
+  },
+});
+```
+
+Here `notesStore` is your application's observable store; components must subscribe to it for restored data to appear. The existing Notes example uses component-local `useState`, which remains session-only until you move that data into such a store. See the complete, working implementation in [`demo/src/plugins/hello-world/state.ts`](../demo/src/plugins/hello-world/state.ts), its registration in `index.ts`, and its subscribed `HelloWorld` component. No additional persistence layer is needed inside a plugin.
+
+Both callbacks are synchronous. Export only plain JSON values; import receives untrusted data and must validate its shape and plugin-specific version before mutation. The framework copies snapshots. A handler must be able to import its own exported data for rollback. Do not use these callbacks for asynchronous requests or external side effects.
+
+Save layout now captures participating plugin data too; Restore layout and the next startup load that same checkpoint. Preferences continue to save independently, and Reset/presets leave current plugin data alone. JSON export uses a top-level `plugins` object, for example `"plugins": { "notes": { "version": 1, "text": "Draft" } }`, without duplicating it inside `workspace`. JSON import also updates the local checkpoint when there is a docking workspace. Without panels, JSON transfer applies plugin data for the current session.
+
+Old files without `plugins` leave plugin data untouched. Missing plugin entries do the same; unknown/nonparticipating plugin IDs are ignored and not retained on the next export. A failed importer triggers rollback of attempted plugins and prevents layout/preferences changes. A failed rollback is reported rather than treated as a successful import. The existing 1 MB file/checkpoint limits include plugin data.
 
 ## Validate and maintain
 

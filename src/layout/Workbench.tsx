@@ -147,9 +147,9 @@ function WorkbenchShell({
   const [store] = useState(() => createLayoutStore(initialHeaderVisible, initialFooterVisible));
   const [api, setApi] = useState<DockviewApi | null>(null);
   const [storageKey] = useState(() => layoutStorageKey ?? `dash-lab:${encodeURIComponent(title)}:layout:v1`);
-  const layout = useLayoutManagement(api, panels, store, storageKey, onWorkspaceReady);
+  const layout = useLayoutManagement(api, panels, store, storageKey, onWorkspaceReady, contributions.stateHandlers);
   const [preferenceKey] = useState(() => preferencesStorageKey ?? `dash-lab:${encodeURIComponent(title)}:preferences:v1`);
-  const configuration = useWorkbenchConfiguration(layout, panels, preferenceKey);
+  const configuration = useWorkbenchConfiguration(layout, panels, preferenceKey, contributions.stateHandlers);
   const [settingsPage, setSettingsPage] = useState<SettingsPage | null>(null);
   const closeSettings = useCallback(() => setSettingsPage(null), []);
   const [paletteOpen, setPaletteOpen] = useState(false);

@@ -24,6 +24,7 @@ export type { NotificationPreferences } from './notifications/preferences.js';
 export type { WorkbenchConfiguration, WorkbenchPreferences } from './settings/configuration.js';
 export { decodeConfiguration } from './settings/configuration.js';
 export { PluginRegistry, registerLocalPlugins } from './plugins/PluginRegistry.js';
+export type { PluginStateValue, PluginStateSnapshot, PluginStateHandler } from './plugins/pluginState.js';
 export { I18nProvider, useI18n } from './i18n/I18nProvider.js';
 export type { I18nProviderProps } from './i18n/I18nProvider.js';
 export type { I18nControls, LanguageDefinition, MessageCatalog, MessageParameters } from './i18n/i18nStore.js';

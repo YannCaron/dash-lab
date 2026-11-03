@@ -163,7 +163,7 @@ export function SettingsDialog({
           </fieldset>
           <fieldset>
             <legend>{t('Configuration')}</legend>
-            <p>{t('Transfer the layout and preferences as a JSON file. Panel contents and notification history stay in this session.')}</p>
+            <p>{t('Transfer layout, preferences, and participating plugin data as a JSON file. Notification history stays in this session.')}</p>
             <div className="dl-settings-actions">
               <button
                 type="button"

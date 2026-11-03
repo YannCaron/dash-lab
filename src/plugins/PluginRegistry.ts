@@ -3,6 +3,7 @@ import { CommandRegistry } from '../commands/CommandRegistry.js';
 import type { CommandDefinition } from '../commands/CommandRegistry.js';
 import type { WorkbenchPanel } from '../layout/panels.js';
 import type { NotificationInput } from '../notifications/notificationStore.js';
+import type { PluginStateHandler } from './pluginState.js';
 
 /** Removes a startup registration or plugin. Unloading after mounting is unsupported. */
 export type PluginDisposer = () => void;
@@ -51,6 +52,8 @@ export interface PluginAPI {
   registerStatusItem: (item: PluginItem) => PluginDisposer;
   /** Add a monitoring-bar component. */
   registerMonitoringItem: (item: PluginItem) => PluginDisposer;
+  /** Register one synchronous JSON state handler for this plugin; participates in layout checkpoints and configuration files. */
+  registerState: (handler: PluginStateHandler) => PluginDisposer;
 }
 
 /** A trusted plugin bundled from a local application directory. */
@@ -75,6 +78,8 @@ export interface PluginContributions {
   readonly statusItems: readonly PluginItem[];
   /** Monitoring components. */
   readonly monitoringItems: readonly PluginItem[];
+  /** Optional state participants keyed by plugin ID; callbacks remain live after sealing. */
+  readonly stateHandlers: Readonly<Record<string, PluginStateHandler>>;
 }
 
 function isComponent(value: unknown) {
@@ -92,6 +97,7 @@ export class PluginRegistry {
   private readonly menus = new Map<string, PluginMenu>();
   private readonly statusItems = new Map<string, PluginItem>();
   private readonly monitoringItems = new Map<string, PluginItem>();
+  private readonly stateHandlers = new Map<string, PluginStateHandler & { id: string }>();
   private readonly commandValidator = new CommandRegistry();
   private snapshot: PluginContributions | undefined;
   private activating = 0;
@@ -175,6 +181,12 @@ export class PluginRegistry {
       }),
       registerStatusItem: scoped((value) => item(this.statusItems, value)),
       registerMonitoringItem: scoped((value) => item(this.monitoringItems, value)),
+      registerState: scoped((handler) => {
+        if (typeof handler?.exportState !== 'function' || typeof handler.importState !== 'function')
+          throw new Error('Plugin state requires exportState and importState callbacks.');
+
+        return this.add(this.stateHandlers, { id, exportState: handler.exportState, importState: handler.importState }, undo);
+      }),
     };
 
     this.plugins.add(id);
@@ -218,6 +230,7 @@ export class PluginRegistry {
         menus: Object.freeze([...this.menus.values()]),
         statusItems: Object.freeze([...this.statusItems.values()]),
         monitoringItems: Object.freeze([...this.monitoringItems.values()]),
+        stateHandlers: Object.freeze(Object.fromEntries(this.stateHandlers)),
       });
     }
 

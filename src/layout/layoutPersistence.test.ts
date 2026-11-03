@@ -20,6 +20,15 @@ const baseline: SerializedDockview = {
 const snapshot = () => ({ version: 1, layout: structuredClone(baseline), headerVisible: false, footerVisible: true });
 
 describe('saved layout compatibility', () => {
+  it('retains optional plugin state and validates it before a checkpoint can be applied', () => {
+    const saved = { ...snapshot(), plugins: { notes: { version: 1, text: 'checkpoint' } } };
+
+    expect(decodeLayout(JSON.stringify(saved), panels)).toEqual(saved);
+    expect(decodeLayout(JSON.stringify(snapshot()), panels)).not.toHaveProperty('plugins');
+    expect(() => decodeLayout(JSON.stringify({ ...snapshot(), plugins: [] }), panels)).toThrow('Plugin');
+    expect(() => decodeLayout(JSON.stringify({ ...saved, plugins: { notes: 'é'.repeat(500_001) } }), panels)).toThrow('too large');
+  });
+
   it('round-trips a versioned layout with its visibility preferences', () => {
     expect(decodeLayout(JSON.stringify(snapshot()), panels)).toEqual(snapshot());
   });
