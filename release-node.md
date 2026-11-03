@@ -37,7 +37,7 @@ Tutorial validation also updates the demo's dynamic panel count and places its a
 
 ### Verification and limits
 
-Seventy-four Vitest tests, seven publication-script tests, strict TypeScript, ESLint, Prettier, library/demo builds, Storybook, and packed-consumer checks pass locally. Seventy-six browser checks pass against both compiled and development demos, including plugin state restoration and French persistence. Earlier tutorial verification is recorded in [validation](docs/validation.md).
+Seventy-four Vitest tests, twelve publication-script tests, strict TypeScript, ESLint, Prettier, library/demo builds, Storybook, and packed-consumer checks pass locally. Seventy-six browser checks pass against both compiled and development demos, including plugin state restoration and French persistence. Earlier tutorial verification is recorded in [validation](docs/validation.md).
 
 Runtime audit: zero findings. Fourteen moderate development-tooling findings remain documented in [dependencies](docs/dependencies.md), along with Vite chunk-size and Storybook directive warnings. Local browser verification covers Edge/Chromium, not Firefox or Safari. GitHub-hosted workflow execution and the Linux/Node 22.13 matrix require a repository push and have not been executed here.
 
@@ -59,9 +59,17 @@ Verification includes fourteen new unit tests, state round-trips through the com
 
 The npm package is named `@cyann/dash-lab`, matching the owner's existing library scopes. Demo imports, TypeScript/Vite resolution, packed-consumer checks, and documentation use this package name. The product/repository name, CSS export filename, JSON format identifier, and browser-storage keys remain unchanged.
 
-`npm run publish:npm -- --dry-run` validates and simulates the current version. Real `npm run publish:npm` requires a clean Git checkout and the npm account `cyann`, then publishes the exact validated tarball publicly to npmjs. Stable versions use `latest`; prereleases default to `next`. The script never automatically bumps versions, tags, commits, or pushes. Version/release-note preparation remains explicit, and npm manages login/two-factor authentication.
+`npm run publish:npm -- --dry-run` validates and simulates the current version. Real `npm run publish:npm` requires a clean Git checkout and the npm account `cyann`, then publishes the exact validated tarball publicly to npmjs. Stable versions use `latest`; prereleases default to `next`. After successful publication, the script creates an annotated local `v<version>` Git tag on the validated commit. It never automatically bumps versions, commits, or pushes. Version/release-note preparation remains explicit, and npm manages login/two-factor authentication.
 
-Publication-script tests use isolated local Git fixtures and a fake npm CLI; no tests upload a package. The complete real-CLI dry run succeeds for `@cyann/dash-lab@0.1.0`, including seven script tests, seventy-four Vitest tests, formatting/lint/type checks, and installation of the scoped tarball into a fresh consumer. Live authentication and actual publication have not been exercised. Further validation is recorded in [validation](docs/validation.md). No package has been published by this implementation task.
+Publication-script tests use isolated local Git fixtures and a fake npm CLI; no tests upload a package. The complete real-CLI dry run succeeds for `@cyann/dash-lab@0.1.0`, including twelve script tests, seventy-four Vitest tests, formatting/lint/type checks, and installation of the scoped tarball into a fresh consumer. Live authentication and actual publication have not been exercised. Further validation is recorded in [validation](docs/validation.md). No package has been published by this implementation task.
+
+### Git release tags
+
+Publication records HEAD, checks tag compatibility and committer identity before contacting npm, and verifies that validation did not change the release commit. A successful npm publish is followed by annotated tag creation on that recorded commit. Existing tags on the same commit are reused; conflicting tags are never overwritten. Dry runs and failed npm publication create no Git tag. No tag is pushed automatically.
+
+If Git tagging fails after npm success, the script reports that publication succeeded and asks for manual tag repair rather than another publish. Version preparation now recommends `npm version patch --no-git-tag-version` followed by a release commit, allowing the publication script to create the tag at the correct time. Actual npm publication is not performed by this development task; tag behavior is tested in isolated local repositories with a fake npm CLI.
+
+Twelve script integration tests cover tag timing, annotated tag identity, prerelease tags, preservation of an existing tag, conflicting targets, npm failure, Git signing failure after npm success, and a concurrent HEAD change. Simulation leaves the repository's release tags untouched.
 
 ### Future updates
 

@@ -56,7 +56,7 @@ First simulate publication; no npm login is required for this mode:
 npm run publish:npm -- --dry-run
 ```
 
-The script runs strict TypeScript, lint, formatting, Vitest, publication-script tests, and the packed-consumer check (which builds the library). It packs the resulting library into an ignored `test-results/npm-publish/` directory, then invokes [`npm publish --dry-run`](https://docs.npmjs.com/cli/v11/commands/npm-publish/). The current version stays unchanged, and uncommitted work is allowed for simulation.
+The script runs strict TypeScript, lint, formatting, Vitest, publication-script tests, and the packed-consumer check (which builds the library). It packs the resulting library into an ignored `test-results/npm-publish/` directory, then invokes [`npm publish --dry-run`](https://docs.npmjs.com/cli/v11/commands/npm-publish/). The current version stays unchanged, no Git tag is created, and uncommitted work is allowed for simulation.
 
 For a real publication, commit the prepared release notes/version and sign in as `cyann`:
 
@@ -65,17 +65,21 @@ npm login --registry=https://registry.npmjs.org/
 npm run publish:npm
 ```
 
-Real publication requires a clean Git checkout and verifies the logged-in account using [`npm whoami`](https://docs.npmjs.com/cli/v11/commands/npm-whoami/). It runs the same checks, checks Git cleanliness again, and publishes the exact packed tarball publicly to `https://registry.npmjs.org/`. npm handles any required interactive two-factor authentication. Credentials stay in npm's normal authentication setup; the script does not embed tokens or log in on your behalf.
+Real publication requires a clean Git checkout and verifies the logged-in account using [`npm whoami`](https://docs.npmjs.com/cli/v11/commands/npm-whoami/). It records the release commit, runs the same checks, and verifies that Git stays clean and HEAD unchanged before packing. It publishes the exact packed tarball publicly to `https://registry.npmjs.org/`, then creates an annotated local Git tag `v<version>` on the recorded commit only after npm succeeds. npm handles any required interactive two-factor authentication. Credentials stay in npm's normal authentication setup; the script does not embed tokens or log in on your behalf.
+
+An existing tag on the release commit is reused unchanged. A tag pointing to another commit blocks publication before contacting npm; it is never overwritten. Git committer identity is checked before publishing. If npm succeeds but Git tagging fails (for example, signing fails), the command reports partial success and exits with an error: repair the local tag on the reported commit manually, without republishing that npm version. Tags and commits are never pushed automatically.
 
 The script publishes the version already declared in `package.json`. For subsequent releases, update `CHANGELOG.md` and `release-node.md`, then explicitly select a new version, for example:
 
 ```sh
-npm version patch -m "chore(release): %s"
+npm version patch --no-git-tag-version
+git add package.json package-lock.json CHANGELOG.md release-node.md
+git commit -m "chore(release): prepare next version"
 npm run publish:npm -- --dry-run
 npm run publish:npm
 ```
 
-`npm version` updates the manifest/lockfile and normally creates a local commit and tag; commit release-note changes first. The publication script itself never changes versions, creates tags, or pushes Git commits. Stable versions use the `latest` npm tag; prerelease versions default to `next` and cannot target `latest`. Override with `npm run publish:npm -- --tag next`. npm rejects an already published name/version; choose a new version rather than overwriting it.
+`npm version --no-git-tag-version` updates the manifest/lockfile without creating a premature release tag. Commit those files with the release notes before publishing; the publication script creates the tag after success. It never changes versions or creates commits. Stable versions use the `latest` npm distribution tag; prerelease versions default to `next` and cannot target `latest`. Override with `npm run publish:npm -- --tag next`. This npm tag is separate from the Git version tag, such as `v0.2.0-rc.1`. npm rejects an already published name/version; choose a new version rather than overwriting it.
 
 The script does not run browser or Storybook builds; run the existing browser/Storybook checks separately for interface changes. Use `npm.cmd` in these examples if PowerShell blocks `npm.ps1`.
 

@@ -92,3 +92,9 @@ The package is named `@cyann/dash-lab`, consistent with the adjacent libraries' 
 The seven script tests use temporary local Git repositories and a fake npm executable. They cover dirty-checkout rejection, account mismatch, early stop on failed validation, simulation without authentication, selection of the exact tarball, prerelease tags, invalid arguments, and package identity restrictions. Live account authentication and real publication remain untested; no account credentials are requested by these tests. No dependency was added.
 
 Library/demo and Storybook builds also pass after the package rename. All seventy-six Edge checks pass against both compiled and development demos, confirming public package resolution, plugin state, configuration compatibility, and localization with the scoped imports.
+
+## Git tags after npm publication
+
+Twelve publication-script integration tests pass using real temporary Git repositories and a fake npm CLI. They verify annotated `v<version>` tags on the validated commit, no tag before npm success or after npm failure, no Git tag during dry runs, unchanged reuse of existing tags, rejection of conflicting tags before npm contact, prerelease tag names, refusal when HEAD moves during checks, and explicit partial-success reporting when Git signing fails after publication.
+
+The full real-npm dry-run pipeline passes with all seventy-four Vitest tests, the twelve script tests, strict TypeScript, ESLint, Prettier, library build, and packed-consumer validation. No actual npm publication or tag creation in the project repository is performed. Browser/Storybook checks are unchanged from the preceding package-scope verification; this change affects publication tooling only.
