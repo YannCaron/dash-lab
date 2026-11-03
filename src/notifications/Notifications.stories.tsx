@@ -12,6 +12,9 @@ function Examples() {
     <div style={{ display: 'flex', gap: 12, padding: 24 }}>
       <NotificationButton />
       <Button onClick={() => notify({ title: 'Your work is saved', level: 'success' })}>Send success</Button>
+      <Button onClick={() => notify({ title: 'A brief notification', description: 'Watch it slide and fade out, or dismiss it early.', durationMs: 1500 })}>
+        Send brief notification
+      </Button>
       <Button danger onClick={() => notify({ title: 'A sample error', description: 'Dismiss the toast and find it again in history.', level: 'error' })}>
         Send error
       </Button>

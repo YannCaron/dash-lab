@@ -119,6 +119,57 @@ try {
   console.log('Browser capabilities: ' + JSON.stringify(preferences));
   assert.equal(preferences.systemReduced, false, 'This animation regression needs system motion enabled.');
 
+  async function checkToastExit(title, dismiss) {
+    await waitFor(
+      () =>
+        evaluate(
+          `return [...document.querySelectorAll('.dl-notification-toast')].some(node => node.querySelector('strong').textContent === ${JSON.stringify(title)});`,
+        ),
+      'toast appears',
+    );
+    await waitFor(
+      () =>
+        evaluate(
+          `return [...document.querySelectorAll('.dl-notification-toast')].find(node => node.querySelector('strong').textContent === ${JSON.stringify(title)}).getAnimations().every(animation => animation.playState !== 'running');`,
+        ),
+      'toast entry completes',
+    );
+    await evaluate(`
+      globalThis.toastSample = null;
+      globalThis.exitToast = [...document.querySelectorAll('.dl-notification-toast')].find(node => node.querySelector('strong').textContent === ${JSON.stringify(title)});
+    globalThis.toastStartLeft = exitToast.getBoundingClientRect().left;
+      exitToast.addEventListener('animationstart', event => {
+        if (event.animationName !== 'dl-toast-exit') return;
+
+        requestAnimationFrame(() => requestAnimationFrame(() => {
+          const style = getComputedStyle(exitToast);
+          globalThis.toastSample = {opacity:Number(style.opacity),translate:style.translate,left:exitToast.getBoundingClientRect().left,startLeft:globalThis.toastStartLeft,inert:exitToast.inert,hidden:exitToast.getAttribute('aria-hidden'),role:exitToast.getAttribute('role')};
+        }));
+      });
+      return true;
+    `);
+
+    if (dismiss) await evaluate('exitToast.querySelector("button").click(); return true;');
+
+    await waitFor(() => evaluate('return globalThis.toastSample !== null;'), 'natural toast exit');
+
+    const sample = await evaluate('return globalThis.toastSample;');
+
+    assert.ok(sample.opacity > 0 && sample.opacity < 1);
+    assert.ok(sample.left > sample.startLeft);
+    assert.equal(sample.inert, true);
+    assert.equal(sample.hidden, 'true');
+    assert.equal(sample.role, null);
+    await waitFor(() => evaluate('return !exitToast.isConnected;'), 'toast removal');
+  }
+
+  await evaluate(`document.querySelector('.hello-form button').click(); return true;`);
+  await checkToastExit('Hello, World!', true);
+  console.log('PASS Firefox dismissed notifications fade and slide out naturally without deleting history');
+  await evaluate(`document.querySelector('.hello-form button').click(); return true;`);
+  await checkToastExit('Hello, World!', false);
+  console.log('PASS Firefox timed notifications animate before removal');
+
   await evaluate(`const trigger = document.querySelector('button[aria-label="Open notifications"]'); trigger.focus(); trigger.click(); return true;`);
   await waitFor(
     () =>
@@ -278,6 +329,11 @@ try {
     'none',
   );
   console.log('PASS Firefox reduced motion closes notification history immediately');
+  await evaluate(`document.querySelector('.hello-form button').click(); return true;`);
+  await waitFor(() => evaluate('return !!document.querySelector(".dl-notification-toast");'), 'reduced-motion toast');
+  await evaluate('document.querySelectorAll(".dl-notification-toast button").forEach(button => button.click()); return true;');
+  assert.equal(await evaluate('await new Promise(requestAnimationFrame); return document.querySelectorAll(".dl-notification-toast").length;'), 0);
+  console.log('PASS Firefox reduced motion removes dismissed notifications immediately');
 } catch (error) {
   if (context) {
     console.error(

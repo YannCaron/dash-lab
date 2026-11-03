@@ -1,38 +1,13 @@
 import { useI18n } from '../i18n/I18nProvider.js';
 import { useEffect, useId, useRef } from 'react';
 import { useNotifications } from './NotificationContext.js';
-import type { NotificationItem } from './notificationStore.js';
+import { NotificationToasts } from './NotificationToasts.js';
 import { useDialogDismiss } from '../overlays/useDialogDismiss.js';
 import { closeDialog, openDialog } from '../overlays/dialogMotion.js';
 
-function Toast({ item }: { item: NotificationItem }) {
-  const { t } = useI18n();
-  const { dismiss } = useNotifications();
-
-  useEffect(() => {
-    if (item.durationMs === 0) return;
-
-    const timer = setTimeout(() => dismiss(item.id), item.durationMs);
-
-    return () => clearTimeout(timer);
-  }, [dismiss, item.id, item.durationMs]);
-
-  return (
-    <article className="dl-notification-toast" data-level={item.level} role={item.level === 'error' ? 'alert' : 'status'}>
-      <div>
-        <strong>{item.title}</strong>
-        {item.description && <p>{item.description}</p>}
-      </div>
-      <button type="button" className="dl-icon-button" aria-label={t('Dismiss notification: {title}', { title: item.title })} onClick={() => dismiss(item.id)}>
-        ×
-      </button>
-    </article>
-  );
-}
-
 export function NotificationViewport() {
   const { t, locale } = useI18n();
-  const { items, toasts, open, setOpen, markRead, markAllRead, remove, clearHistory } = useNotifications();
+  const { items, open, setOpen, markRead, markAllRead, remove, clearHistory } = useNotifications();
   const dialog = useRef<HTMLDialogElement>(null);
   const dismissal = useDialogDismiss(() => setOpen(false));
   const closeButton = useRef<HTMLButtonElement>(null);
@@ -48,13 +23,7 @@ export function NotificationViewport() {
 
   return (
     <>
-      <div className="dl-notification-toasts" aria-label={t('Recent notifications')}>
-        {toasts.map((id) => {
-          const item = items.find((entry) => entry.id === id);
-
-          return item ? <Toast key={id} item={item} /> : null;
-        })}
-      </div>
+      <NotificationToasts />
       <dialog {...dismissal} ref={dialog} className="dl-notification-center dl-modal" aria-labelledby={titleId}>
         <header className="dl-notification-heading">
           <div>

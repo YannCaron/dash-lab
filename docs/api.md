@@ -84,6 +84,8 @@ Theme changes update CSS tokens, Ant Design, and Dockview without resetting cont
 
 `NotificationInput` requires a nonempty `title`, accepts a plain-text `description`, optional level info/success/warning/error, and `durationMs`. Zero means sticky; errors default to zero and other levels initially to 5000 ms. An explicit duration overrides the preference. `NotificationItem` adds readonly ID, creation timestamp, read flag, resolved level, and duration. Disabling popups clears active toasts while retaining history; re-enabling does not replay entries. `NotificationPreferences` is `{ toastsEnabled, toastDurationMs }`, with default duration restricted to 1–30 whole seconds. `NotificationButton` is exported for custom chrome.
 
+Toast dismissal, expiry, history removal/clearing, popup disabling and overflow replacement slide/fade the popup out before removing its visual snapshot. Store updates remain immediate. Closing popups are inert and hidden from assistive technology; reduced motion removes them immediately. Dismissal/expiry do not alter history or unread flags.
+
 Notification history is session state. Application text stays in the language used when delivered. React server rendering reads initial store snapshots; live notification/timer behavior is a browser concern.
 
 ### Commands

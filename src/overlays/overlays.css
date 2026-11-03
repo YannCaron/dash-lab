@@ -27,6 +27,10 @@
 .dl-notification-toast {
   animation: dl-toast-enter calc(var(--dl-theme-duration, 180ms) * 1.5) ease-out backwards;
 }
+.dl-notification-toast[data-exiting] {
+  animation: dl-toast-exit calc(var(--dl-theme-duration, 180ms) * 1.5) ease-in forwards;
+  pointer-events: none;
+}
 @starting-style {
   .dl-modal[open]:not([data-closing]) {
     opacity: 0;
@@ -46,6 +50,16 @@
     translate: 0 0;
   }
 }
+@keyframes dl-toast-exit {
+  from {
+    opacity: 1;
+    translate: 0 0;
+  }
+  to {
+    opacity: 0;
+    translate: calc(100% + 32px) 0;
+  }
+}
 .dl-theme[data-motion='reduced'] .dl-modal,
 .dl-theme[data-motion='reduced'] .dl-modal::backdrop,
 .dl-theme[data-motion='reduced'] .dl-notification-toast {
@@ -55,7 +69,8 @@
 @media (prefers-reduced-motion: reduce) {
   .dl-modal,
   .dl-modal::backdrop,
-  .dl-notification-toast {
+  .dl-notification-toast,
+  .dl-notification-toast[data-exiting] {
     animation: none;
     transition: none;
   }

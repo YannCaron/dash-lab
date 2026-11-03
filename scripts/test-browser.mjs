@@ -147,6 +147,58 @@ async function checkModalExit(selector, close, description, horizontal = false, 
   console.log('PASS ' + description);
 }
 
+async function checkToastExit(title, action, description) {
+  const literal = JSON.stringify(title);
+  const reduced = await evaluate('matchMedia("(prefers-reduced-motion: reduce)").matches');
+
+  if (reduced) await command('Emulation.setEmulatedMedia', { features: [{ name: 'prefers-reduced-motion', value: 'no-preference' }] });
+
+  await waitFor(
+    () =>
+      evaluate(
+        `([...document.querySelectorAll('.dl-notification-toast')].find(node => node.querySelector('strong').textContent === ${literal})?.getAnimations() ?? []).every(animation => animation.playState !== 'running')`,
+      ),
+    'settled toast entry',
+  );
+  await evaluate(`(() => {
+    globalThis.toastExitSample = null;
+    globalThis.exitingToast = [...document.querySelectorAll('.dl-notification-toast')].find(node => node.querySelector('strong').textContent === ${literal});
+    globalThis.toastStartLeft = exitingToast.getBoundingClientRect().left;
+    globalThis.toastStartTop = exitingToast.getBoundingClientRect().top;
+    exitingToast.addEventListener('animationstart', event => {
+      if (event.animationName !== 'dl-toast-exit') return;
+
+      for (const animation of exitingToast.getAnimations()) {
+        animation.pause();
+        animation.currentTime = Number(animation.effect.getTiming().duration) / 2;
+      }
+
+      const style = getComputedStyle(exitingToast);
+      globalThis.toastExitSample = {opacity:Number(style.opacity),translate:style.translate,left:exitingToast.getBoundingClientRect().left,startLeft:globalThis.toastStartLeft,top:exitingToast.getBoundingClientRect().top,startTop:globalThis.toastStartTop,inert:exitingToast.inert,hidden:exitingToast.getAttribute('aria-hidden'),role:exitingToast.getAttribute('role')};
+    });
+  })()`);
+
+  if (action) await action();
+
+  await waitFor(() => evaluate('globalThis.toastExitSample !== null'), 'toast exit animation');
+
+  const sample = await evaluate('globalThis.toastExitSample');
+
+  assert.ok(sample.opacity > 0 && sample.opacity < 1, 'Toast visibly fades out');
+  assert.ok(sample.left > sample.startLeft, 'Toast slides right');
+  assert.ok(Math.abs(sample.top - sample.startTop) < 1, 'Closing toast keeps its stack position');
+  assert.equal(sample.inert, true, 'Closing toast cannot be interacted with');
+  assert.equal(sample.hidden, 'true', 'Closing toast is hidden from assistive technology');
+  assert.equal(sample.role, null, 'Closing toast no longer announces');
+
+  await evaluate('exitingToast.getAnimations().forEach(animation => animation.finish())');
+  await waitFor(() => evaluate('!exitingToast.isConnected'), 'toast removed after exit');
+
+  if (reduced) await command('Emulation.setEmulatedMedia', { features: [{ name: 'prefers-reduced-motion', value: 'reduce' }] });
+
+  console.log('PASS ' + description);
+}
+
 async function pressKey(key, code, modifiers = 0, windowsVirtualKeyCode = key.length === 1 ? key.toUpperCase().charCodeAt(0) : 13) {
   await command('Input.dispatchKeyEvent', { type: 'keyDown', key, code, modifiers, windowsVirtualKeyCode });
   await command('Input.dispatchKeyEvent', { type: 'keyUp', key, code, modifiers, windowsVirtualKeyCode });
@@ -559,7 +611,7 @@ try {
   await command('Input.insertText', { text: 'Ada' });
   await evaluate('document.querySelector(".hello-form button").click()');
   await waitFor(() => evaluate('document.querySelector(".dl-notification-toast strong")?.textContent === "Hello, Ada!"'), 'greeting notification');
-  await click('Dismiss notification: Hello, Ada!');
+  await checkToastExit('Hello, Ada!', () => click('Dismiss notification: Hello, Ada!'), 'Manual dismissal fades and slides out before removing the toast');
 
   await check(
     '!document.querySelector(".dl-notification-toast") && document.querySelector(".dl-notification-count")?.textContent === "1"',
@@ -584,7 +636,7 @@ try {
   );
 
   await waitFor(() => evaluate('!!document.querySelector(".dl-notification-toast[role=alert]")'), 'error notification');
-  await waitFor(() => evaluate('!document.querySelector(".dl-notification-toast[data-level=info]")'), 'informational toast timeout');
+  await checkToastExit('A workspace update', undefined, 'Expired toasts animate out before removal');
 
   await check(
     '!!document.querySelector(".dl-notification-toast[data-level=error]") && document.querySelector(".dl-notification-count")?.textContent === "2"',
@@ -603,7 +655,11 @@ try {
     'History supports marking all read and individual removal',
   );
 
-  await evaluate('[...document.querySelectorAll(".dl-notification-actions button")].find(button => button.textContent === "Clear history").click()');
+  await checkToastExit(
+    'Example error',
+    () => evaluate('[...document.querySelectorAll(".dl-notification-actions button")].find(button => button.textContent === "Clear history").click()'),
+    'Clearing history animates its removed popup snapshot without retaining history',
+  );
 
   await check(
     '!!document.querySelector(".dl-notification-empty") && !document.querySelector(".dl-notification-toast")',
@@ -613,6 +669,30 @@ try {
   await command('Input.dispatchKeyEvent', { type: 'keyDown', key: 'Escape', code: 'Escape', windowsVirtualKeyCode: 27 });
   await command('Input.dispatchKeyEvent', { type: 'keyUp', key: 'Escape', code: 'Escape', windowsVirtualKeyCode: 27 });
   await waitFor(() => evaluate('!document.querySelector(".dl-notification-center").open'), 'close notification history with Escape');
+  await evaluate(
+    `['Send info','Send warning','Send error'].forEach(text => [...document.querySelectorAll('.demo-notification-controls button')].find(button => button.textContent === text).click())`,
+  );
+  await waitFor(() => evaluate('document.querySelectorAll(".dl-notification-toast:not([data-exiting])").length === 3'), 'full toast stack');
+  await click('Open notifications');
+  await waitFor(() => evaluate('document.querySelector(".dl-notification-center").open'), 'remove a live notification');
+  await checkToastExit(
+    'Check your workspace',
+    () => click('Remove notification: Check your workspace'),
+    'Removing a middle entry animates its popup without moving it in the stack',
+  );
+  await click('Close notifications');
+  await evaluate(`[...document.querySelectorAll('.demo-notification-controls button')].find(button => button.textContent === 'Send warning').click()`);
+  await checkToastExit(
+    'A workspace update',
+    () => evaluate(`[...document.querySelectorAll('.demo-notification-controls button')].find(button => button.textContent === 'Send error').click()`),
+    'Overflow replacement animates the oldest popup without deleting its history',
+  );
+  await click('Open notifications');
+  await waitFor(() => evaluate('document.querySelector(".dl-notification-center").open'), 'clear exit test history');
+  await evaluate(`[...document.querySelectorAll('.dl-notification-actions button')].find(button => button.textContent === 'Clear history').click()`);
+  await waitFor(() => evaluate('!document.querySelector(".dl-notification-toast")'), 'all exiting toasts removed');
+  await click('Close notifications');
+  await waitFor(() => evaluate('!document.querySelector(".dl-notification-center").open'), 'return to command tests');
   await evaluate('document.querySelector(".dl-workbench").focus()');
   await pressKey('Enter', 'Enter', 2);
   await waitFor(() => evaluate('document.querySelector(".dl-notification-toast strong")?.textContent === "Command executed"'), 'custom keyboard command');
@@ -872,6 +952,7 @@ try {
     'Applying theme and motion preferences preserves mounted panels and their state',
   );
 
+  await waitFor(() => evaluate('document.querySelectorAll(".dl-notification-toast").length === 0'), 'popups removed after disabling');
   await check('document.querySelectorAll(".dl-notification-toast").length === 0', 'Disabling popups dismisses active toasts');
   await reload();
   await waitFor(() => evaluate('document.querySelector(".dl-theme").dataset.theme === "dark"'), 'restore preferences on reload');
@@ -1148,6 +1229,10 @@ try {
   );
 
   await command('Emulation.setEmulatedMedia', { features: [{ name: 'prefers-reduced-motion', value: 'reduce' }] });
+  await evaluate(
+    'document.querySelectorAll(".dl-notification-toast button").forEach(button => button.click()); new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)))',
+  );
+  await check('!document.querySelector(".dl-notification-toast")', 'System reduced motion removes dismissed toasts immediately');
   await click('Open command palette');
   await waitFor(() => evaluate('document.querySelector(".dl-command-palette").open'), 'reduced-motion palette');
 
