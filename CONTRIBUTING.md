@@ -38,6 +38,14 @@ For an interface or effect-lifecycle change, start the demo and run `npm run tes
 
 Use focused commits such as `feat(plugin): add an application contribution`, `fix(layout): preserve a saved checkpoint`, or `docs: clarify plugin startup`. Make one coherent feature or fix per commit. Do not publish or push automatically. Update the affected documentation and [CHANGELOG.md](CHANGELOG.md), including verification and any remaining limits.
 
+## Git hooks and CI
+
+Development installation runs `prepare` to install Husky for this repository. Pre-commit runs lint-staged (ESLint/Prettier on staged code; Prettier on staged documents), and commit-msg checks Conventional Commits with a 100-character header limit. CI and production installs skip hook installation. Consumers installing the published-format tarball do not need Husky.
+
+GitHub Actions defines Linux/Windows Node 24 checks and a Linux Node 22.13 compatibility job, plus Windows Edge interactions against compiled and development servers. Pull-request commits are checked over the base/head range. The workflows have read-only repository permissions and do not publish packages or deploy.
+
+For the same browser orchestration locally, run `npm run build`, then `npm run test:browser:ci` and `npm run test:browser:ci -- --dev`. These commands own and close their temporary servers on ports 4383 and 5383. The full script still accepts `BROWSER_PATH` when Edge is unavailable.
+
 ## Dependencies and reports
 
 Use the current stack and platform APIs first. Obtain approval before adding a dependency not explicitly requested by the owner. Record versions, authoritative license texts, transitive implications, Node requirements, and relevant security findings in [dependency notes](docs/dependencies.md). Do not apply forced audit downgrades or hide failures.

@@ -60,3 +60,9 @@ Sixty Vitest tests pass, including public hook/provider contracts, nearest-provi
 ## Feature 12
 
 The API reference documents every public export group and its contracts. Contribution instructions, a changelog, project-specific agent guidance, and the plugin/language architecture decision accompany it. Storybook builds with plugin and language examples as well as the existing layout/theme/notification/command examples. The MIT license and third-party notices remain included in the package.
+
+## Feature 13
+
+CI and issue-form YAML structures are parsed locally; Conventional Commits validation accepts a valid message and rejects an invalid one. Husky is installed locally, with staged checks and commit-message validation enabled. The browser CI runner starts/closes its own server and passes all seventy-two checks against both compiled and development demos. Packed-consumer verification also passes with normal install lifecycle handling after hook setup.
+
+GitHub-hosted workflow execution and the Linux/Node 22.13 matrix have not been run locally. They require pushing the repository; no push, deployment, package publication, or GitHub-side mutation is performed here.

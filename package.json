@@ -12,7 +12,9 @@
     "README.md",
     "LICENSE",
     "THIRD_PARTY_NOTICES.md",
-    "docs"
+    "docs",
+    "CHANGELOG.md",
+    "scripts/install-hooks.mjs"
   ],
   "sideEffects": [
     "**/*.css"
@@ -42,7 +44,11 @@
     "format:check": "prettier --check .",
     "storybook": "storybook dev --port 6006 --host 127.0.0.1 --disable-telemetry",
     "build:storybook": "storybook build --disable-telemetry",
-    "prepack": "npm run check && npm run build:lib"
+    "prepack": "npm run check && npm run build:lib",
+    "prepare": "node scripts/install-hooks.mjs",
+    "lint-staged": "lint-staged",
+    "commitlint": "commitlint",
+    "test:browser:ci": "node scripts/test-browser-ci.mjs"
   },
   "peerDependencies": {
     "react": "^19.0.0",
@@ -54,6 +60,8 @@
     "zustand": "5.0.16"
   },
   "devDependencies": {
+    "@commitlint/cli": "21.2.4",
+    "@commitlint/config-conventional": "21.2.4",
     "@eslint/js": "10.0.1",
     "@storybook/react-vite": "10.6.5",
     "@types/node": "24.19.2",
@@ -61,6 +69,8 @@
     "@types/react-dom": "19.3.0",
     "@vitejs/plugin-react": "6.2.1",
     "eslint": "10.14.0",
+    "husky": "9.1.7",
+    "lint-staged": "16.4.0",
     "prettier": "3.9.10",
     "react": "19.3.1",
     "react-dom": "19.3.1",

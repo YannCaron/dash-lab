@@ -18,6 +18,7 @@ The package currently declares version `0.1.0`. No publication or release tag is
 - English/French interfaces, language persistence, extensible catalogs, and translated command search.
 - Vitest service/store/provider contracts, real-browser interactions, Storybook, and a packed-consumer compatibility check.
 - API, architecture, contribution, dependency/license, and validation documentation under MIT.
+- GitHub Actions quality/browser workflows, Husky, staged lint/format checks, Conventional Commits, and issue/PR templates.
 
 ### Compatibility
 
