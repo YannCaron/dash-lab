@@ -10,6 +10,7 @@ export const defaultNotificationPreferences: NotificationPreferences = { toastsE
 
 export function validateNotificationPreferences(value: unknown): asserts value is NotificationPreferences {
   const preferences = value as Partial<NotificationPreferences> | null;
+
   if (
     !preferences ||
     typeof preferences.toastsEnabled !== 'boolean' ||

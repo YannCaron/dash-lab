@@ -18,6 +18,7 @@ describe('initial panel definitions', () => {
   it('rejects blank identifiers, blank titles, and invalid dimensions', () => {
     expect(() => validatePanels([{ ...first, id: ' ' }])).toThrow('must not be empty');
     expect(() => validatePanels([{ ...first, title: '' }])).toThrow('must not be empty');
+
     for (const initialWidth of [0, -1, NaN, Infinity]) expect(() => validatePanels([{ ...first, initialWidth }])).toThrow('positive finite');
   });
 });

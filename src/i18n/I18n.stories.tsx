@@ -5,8 +5,10 @@ import { I18nProvider, useI18n } from './I18nProvider.js';
 
 function LanguageButton() {
   const { locale, setLocale } = useI18n();
+
   return <Button onClick={() => setLocale(locale === 'en' ? 'fr' : 'en')}>English / Français</Button>;
 }
+
 const meta = {
   title: 'Workbench/Languages',
   component: Workbench,
@@ -21,5 +23,6 @@ const meta = {
     ),
   ],
 } satisfies Meta<typeof Workbench>;
+
 export default meta;
 export const Default: StoryObj<typeof meta> = {};

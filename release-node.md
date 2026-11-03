@@ -41,6 +41,12 @@ Sixty Vitest tests, strict TypeScript, ESLint, formatting, library/demo builds, 
 
 Runtime audit: zero findings. Fourteen moderate development-tooling findings remain documented in [dependencies](docs/dependencies.md), along with Vite chunk-size and Storybook directive warnings. Local browser verification covers Edge/Chromium, not Firefox or Safari. GitHub-hosted workflow execution and the Linux/Node 22.13 matrix require a repository push and have not been executed here.
 
+### Source readability
+
+Library, demo, tests, Storybook examples, and scripts use blank lines to separate declarations, processing steps, and results. Consecutive declarations and related assertions stay grouped. This maintenance change only adjusts source spacing and preserves runtime behavior and public contracts.
+
+Verified locally: blank-line-only code diff, strict TypeScript, ESLint, Prettier, all 60 Vitest tests, library/demo and Storybook builds, packed-consumer compatibility, and all 72 browser checks against the compiled demo. Existing bundle-size and Storybook directive warnings remain.
+
 ### Future updates
 
 Keep this Unreleased section current with each feature/fix and its validation or limits. When a real release is made, move the relevant entries under its actual version and date, retain an Unreleased section for subsequent work, and update the package version/changelog consistently. Do not describe a release as published without evidence of publication.

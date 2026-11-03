@@ -29,6 +29,7 @@ For decisions requiring approval, explain the need, realistic alternatives, trad
 
 ## 3. Write code humans can read
 
+- **Keep code visually airy**, Spacing out code blocks vertically (separating variable declarations, processing, and return statements with blank lines) would make it even easier for humans to review the code.
 - Avoid excessive line wrapping. Keep method signatures, expressions, and short statements on a single line whenever reasonably readable, as the output will be viewed on a wide screen.
 - Give classes, functions, parameters, and variables **precise, intention-revealing names**.
 - Prefer short, cohesive functions and classes with one clear reason to change; do not impose arbitrary line limits.

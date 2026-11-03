@@ -15,6 +15,7 @@ export interface NotificationProviderProps {
 /** Provides an isolated center, toast stack, and accessible history dialog. */
 export function NotificationProvider({ children, historyLimit = 100 }: NotificationProviderProps) {
   const [store] = useState(() => createNotificationStore(historyLimit));
+
   return (
     <NotificationContext.Provider value={store}>
       {children}

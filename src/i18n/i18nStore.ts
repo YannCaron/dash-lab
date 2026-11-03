@@ -33,27 +33,37 @@ export function createI18nStore(initialLocale = 'en', additions: readonly Langua
     ['en', { id: 'en', label: 'English', messages: {} }],
     ['fr', { id: 'fr', label: 'Français', messages: french }],
   ]);
+
   for (const definition of additions) {
     if (!definition.id.trim() || !definition.label.trim()) throw new Error('Languages require an ID and display name.');
+
     new Intl.DateTimeFormat(definition.id);
+
     if (Object.values(definition.messages).some((value) => typeof value !== 'string')) throw new Error('Translation values must be strings.');
+
     languages.set(definition.id, { ...definition, messages: Object.freeze({ ...languages.get(definition.id)?.messages, ...definition.messages }) });
   }
+
   const assertLocale = (locale: string) => {
     if (!languages.has(locale)) throw new Error(`Language is not registered: ${locale}`);
   };
+
   const translator =
     (locale: string): I18nControls['t'] =>
     (message, parameters = {}) => {
       const catalog = languages.get(locale)!.messages;
+
       const template = Object.hasOwn(catalog, message)
         ? catalog[message]!
         : Object.hasOwn(languages.get('en')!.messages, message)
           ? languages.get('en')!.messages[message]!
           : message;
+
       return template.replace(/\{(\w+)\}/g, (token: string, name: string) => (Object.hasOwn(parameters, name) ? String(parameters[name]) : token));
     };
+
   assertLocale(initialLocale);
+
   return createStore<I18nControls>((set, get) => ({
     locale: initialLocale,
     locales: Object.freeze([...languages.values()].map(({ id, label }) => Object.freeze({ id, label }))),
@@ -61,6 +71,7 @@ export function createI18nStore(initialLocale = 'en', additions: readonly Langua
     t: translator(initialLocale),
     setLocale: (locale) => {
       assertLocale(locale);
+
       if (get().locale !== locale) set({ locale, t: translator(locale) });
     },
   }));

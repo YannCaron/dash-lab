@@ -7,6 +7,7 @@ export type ShortcutEvent = Pick<
 >;
 
 const aliases: Record<string, string> = { esc: 'escape', space: ' ', spacebar: ' ', plus: '+', return: 'enter' };
+
 const modifierNames = new Map([
   ['ctrl', 'ctrl'],
   ['control', 'ctrl'],
@@ -20,6 +21,7 @@ const modifierNames = new Map([
 
 function keyName(key: string) {
   const lower = key.toLowerCase();
+
   return aliases[lower] ?? lower;
 }
 
@@ -30,6 +32,7 @@ export function eventSignature(event: Pick<ShortcutEvent, 'key' | 'ctrlKey' | 'm
 export function parseShortcut(shortcut: string, platform: ShortcutPlatform) {
   const parts = shortcut.split('+').map((part) => part.trim().toLowerCase());
   const rawKey = parts.pop();
+
   if (
     !rawKey ||
     !(
@@ -41,13 +44,18 @@ export function parseShortcut(shortcut: string, platform: ShortcutPlatform) {
   ) {
     throw new Error(`Invalid shortcut key: ${shortcut}`);
   }
+
   const modifiers = new Set<string>();
   const portableModifier = platform === 'mac' ? 'meta' : 'ctrl';
+
   for (const part of parts) {
     const modifier = part === 'mod' ? portableModifier : modifierNames.get(part);
+
     if (!modifier || modifiers.has(modifier)) throw new Error(`Invalid or repeated shortcut modifier: ${shortcut}`);
+
     modifiers.add(modifier);
   }
+
   return eventSignature({
     key: keyName(rawKey),
     ctrlKey: modifiers.has('ctrl'),

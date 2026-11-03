@@ -3,14 +3,19 @@ import { useEffect, useId, useRef } from 'react';
 import { useNotifications } from './NotificationContext.js';
 import type { NotificationItem } from './notificationStore.js';
 import { useBackdropDismiss } from '../overlays/useBackdropDismiss.js';
+
 function Toast({ item }: { item: NotificationItem }) {
   const { t } = useI18n();
   const { dismiss } = useNotifications();
+
   useEffect(() => {
     if (item.durationMs === 0) return;
+
     const timer = setTimeout(() => dismiss(item.id), item.durationMs);
+
     return () => clearTimeout(timer);
   }, [dismiss, item.id, item.durationMs]);
+
   return (
     <article className="dl-notification-toast" data-level={item.level} role={item.level === 'error' ? 'alert' : 'status'}>
       <div>
@@ -23,6 +28,7 @@ function Toast({ item }: { item: NotificationItem }) {
     </article>
   );
 }
+
 export function NotificationViewport() {
   const { t, locale } = useI18n();
   const { items, toasts, open, setOpen, markRead, markAllRead, remove, clearHistory } = useNotifications();
@@ -31,17 +37,20 @@ export function NotificationViewport() {
   const closeButton = useRef<HTMLButtonElement>(null);
   const titleId = useId();
   const unread = items.filter((item) => !item.read).length;
+
   useEffect(() => {
     if (open && !dialog.current?.open) {
       dialog.current?.showModal();
       closeButton.current?.focus();
     } else if (!open && dialog.current?.open) dialog.current.close();
   }, [open]);
+
   return (
     <>
       <div className="dl-notification-toasts" aria-label={t('Recent notifications')}>
         {toasts.map((id) => {
           const item = items.find((entry) => entry.id === id);
+
           return item ? <Toast key={id} item={item} /> : null;
         })}
       </div>

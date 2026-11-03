@@ -23,6 +23,7 @@ import type { SettingsPage } from '../settings/SettingsDialog.js';
 import { useWorkbenchConfiguration } from '../settings/useWorkbenchConfiguration.js';
 import { emptyContributions, PluginContext, usePluginCommands } from '../plugins/PluginContext.js';
 import type { PluginRegistry } from '../plugins/PluginRegistry.js';
+
 /** Properties of the reusable application workbench. */
 export interface WorkbenchProps {
   /** Accessible name of this application. */
@@ -56,7 +57,9 @@ export interface WorkbenchProps {
   /** Fallback content displayed when no panels are supplied. */
   children?: ReactNode;
 }
+
 const emptyPanels: readonly WorkbenchPanel[] = [];
+
 function ChromeIcon({ name }: { name: 'view' | 'focus' }) {
   return (
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true">
@@ -71,9 +74,11 @@ function ChromeIcon({ name }: { name: 'view' | 'focus' }) {
     </svg>
   );
 }
+
 /** Composes application chrome and a dockable workspace without owning application content. */
 export function Workbench(props: WorkbenchProps) {
   const language = useContext(I18nContext);
+
   return language ? (
     <WorkbenchTheme {...props} />
   ) : (
@@ -85,6 +90,7 @@ export function Workbench(props: WorkbenchProps) {
 
 function WorkbenchTheme(props: WorkbenchProps) {
   const theme = useContext(ThemeContext);
+
   return theme ? (
     <WorkbenchNotifications {...props} />
   ) : (
@@ -93,8 +99,10 @@ function WorkbenchTheme(props: WorkbenchProps) {
     </ThemeProvider>
   );
 }
+
 function WorkbenchNotifications(props: WorkbenchProps) {
   const notifications = useContext(NotificationContext);
+
   return notifications ? (
     <WorkbenchCommands {...props} />
   ) : (
@@ -103,8 +111,10 @@ function WorkbenchNotifications(props: WorkbenchProps) {
     </NotificationProvider>
   );
 }
+
 function WorkbenchCommands(props: WorkbenchProps) {
   const commands = useContext(CommandContext);
+
   return commands ? (
     <WorkbenchShell {...props} />
   ) : (
@@ -113,6 +123,7 @@ function WorkbenchCommands(props: WorkbenchProps) {
     </CommandProvider>
   );
 }
+
 function WorkbenchShell({
   title,
   subtitle,
@@ -144,6 +155,7 @@ function WorkbenchShell({
   const [paletteOpen, setPaletteOpen] = useState(false);
   const openPalette = useCallback(() => setPaletteOpen(true), []);
   const closePalette = useCallback(() => setPaletteOpen(false), []);
+
   const handleKeyDown = useWorkbenchCommands(store, layout, openPalette, {
     openSettings: () => setSettingsPage('settings'),
     openPreferences: () => setSettingsPage('preferences'),
@@ -152,7 +164,9 @@ function WorkbenchShell({
     ready: configuration.ready,
     busy: configuration.busy,
   });
+
   usePluginCommands(contributions);
+
   const root = useRef<HTMLElement>(null);
   const { notify } = useNotifications();
   const reportedFeedback = useRef(layout.feedback);
@@ -160,20 +174,25 @@ function WorkbenchShell({
   const exitFocus = useRef<HTMLButtonElement>(null);
   const enterFocus = useRef<HTMLButtonElement>(null);
   const wasFocused = useRef(false);
+
   useEffect(() => {
     if (document.activeElement === document.body) root.current?.focus({ preventScroll: true });
   }, []);
+
   useEffect(() => {
     if (layout.feedback && reportedFeedback.current !== layout.feedback) {
       reportedFeedback.current = layout.feedback;
       notify({ title: t(layout.feedback.message), level: layout.feedback.error ? 'error' : 'info' });
     }
   }, [layout.feedback, notify, t]);
+
   useEffect(() => {
     if (state.focusMode) exitFocus.current?.focus();
     else if (wasFocused.current) enterFocus.current?.focus();
+
     wasFocused.current = state.focusMode;
   }, [state.focusMode]);
+
   return (
     <PluginContext.Provider value={contributions}>
       <section className="dl-workbench" ref={root} tabIndex={-1} aria-label={t(title ?? '')} data-focus-mode={state.focusMode} onKeyDown={handleKeyDown}>
@@ -281,7 +300,9 @@ function WorkbenchShell({
           aria-label={t('Import configuration file')}
           onChange={(event) => {
             const file = event.target.files?.[0];
+
             event.target.value = '';
+
             if (file) void configuration.importFile(file);
           }}
         />

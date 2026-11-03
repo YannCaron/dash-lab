@@ -2,11 +2,13 @@ import { useI18n } from 'dash-lab';
 import { useState } from 'react';
 import { Button, Input } from 'antd';
 import { useNotifications } from 'dash-lab';
+
 export function HelloWorld() {
   const { t } = useI18n();
   const [name, setName] = useState('World');
   const [greeting, setGreeting] = useState<string | null>(null);
   const { notify } = useNotifications();
+
   return (
     <div className="hello-world">
       <p className="eyebrow">{t('YOUR FIRST WORKSPACE')}</p>
@@ -23,7 +25,9 @@ export function HelloWorld() {
         className="hello-form"
         onSubmit={(event) => {
           event.preventDefault();
+
           const message = t('Hello, {name}!', { name: name.trim() || 'World' });
+
           setGreeting(message);
           notify({ title: message, description: t('Your Hello World plugin sent this notification.'), level: 'success' });
         }}

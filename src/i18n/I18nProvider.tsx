@@ -9,7 +9,9 @@ import { createI18nStore } from './i18nStore.js';
 import type { I18nControls, LanguageDefinition } from './i18nStore.js';
 
 export const I18nContext = createContext<ReturnType<typeof createI18nStore> | null>(null);
+
 const english = createI18nStore();
+
 const readOnlyEnglish: I18nControls = Object.freeze({
   ...english.getInitialState(),
   setLocale: () => {
@@ -35,6 +37,7 @@ export function I18nProvider({ children, initialLocale = 'en', languages = [], a
   const locale = useStore(store, (state) => state.locale);
   const importedLocale = antdLocales[locale] ?? (locale === 'fr' ? frFR : enUS);
   const antLocale = ('default' in importedLocale ? importedLocale.default : importedLocale) as typeof enUS;
+
   return (
     <I18nContext.Provider value={store}>
       <ConfigProvider locale={antLocale}>
@@ -50,5 +53,6 @@ export function I18nProvider({ children, initialLocale = 'en', languages = [], a
 export function useI18n(): I18nControls {
   const store = useContext(I18nContext);
   const state = useStore(store ?? english);
+
   return store ? state : readOnlyEnglish;
 }

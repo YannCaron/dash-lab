@@ -31,8 +31,10 @@ export function ThemeProvider({ children, initialMode = 'light' }: ThemeProvider
   useEffect(() => {
     const media = matchMedia('(prefers-reduced-motion: reduce)');
     const update = () => setReducedMotion(media.matches);
+
     update();
     media.addEventListener('change', update);
+
     return () => media.removeEventListener('change', update);
   }, []);
 
@@ -81,6 +83,8 @@ export function ThemeProvider({ children, initialMode = 'light' }: ThemeProvider
 /** Reads and changes the nearest provider's theme; requires a ThemeProvider ancestor. */
 export function useTheme(): ThemeControls {
   const store = useContext(ThemeContext);
+
   if (!store) throw new Error('useTheme must be used inside ThemeProvider or Workbench.');
+
   return useStore(store);
 }

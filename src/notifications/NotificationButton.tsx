@@ -1,10 +1,12 @@
 import { useI18n } from '../i18n/I18nProvider.js';
 import { useNotifications } from './NotificationContext.js';
+
 /** Opens the nearest notification history and displays its unread count. */
 export function NotificationButton() {
   const { t } = useI18n();
   const { items, setOpen } = useNotifications();
   const unread = items.filter((item) => !item.read).length;
+
   return (
     <button
       type="button"

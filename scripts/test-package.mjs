@@ -6,21 +6,30 @@ import { fileURLToPath, URL } from 'node:url';
 
 const root = fileURLToPath(new URL('..', import.meta.url));
 const npm = process.env.npm_execpath;
+
 if (!npm) throw new Error('Run this check with npm run test:package.');
+
 function run(args, cwd = root) {
   const result = spawnSync(process.execPath, args, { cwd, encoding: 'utf8', windowsHide: true });
+
   if (result.error) throw result.error;
   if (result.status !== 0) throw new Error(`${args.join(' ')} failed:\n${result.stdout}\n${result.stderr}`);
+
   return result.stdout;
 }
+
 const manifest = JSON.parse(await readFile(join(root, 'package.json'), 'utf8'));
 const cache = run([npm, 'config', 'get', 'cache']).trim();
+
 await mkdir(join(root, 'test-results'), { recursive: true });
+
 const directory = await mkdtemp(join(root, 'test-results', 'package-'));
 const [packed] = JSON.parse(run([npm, 'pack', '--ignore-scripts', '--json', '--pack-destination', directory]));
+
 assert.ok(packed.files.some((file) => file.path === 'LICENSE'));
 assert.ok(packed.files.some((file) => file.path === 'dist/index.d.ts'));
 assert.ok(!packed.files.some((file) => /^(src|demo|test-results|node_modules)\//.test(file.path) || /\.test\.[cm]?[jt]sx?$/.test(file.path)));
+
 await writeFile(
   join(directory, 'package.json'),
   JSON.stringify(
@@ -35,7 +44,9 @@ await writeFile(
     2,
   ),
 );
+
 run([npm, 'install', '--offline', '--no-audit', '--no-fund', '--cache', cache], directory);
+
 const consumer = `import { I18nProvider, Workbench, registerLocalPlugins, useI18n, useNotifications } from 'dash-lab';
 import type { WorkbenchPlugin, WorkbenchPreferences, PluginAPI } from 'dash-lab';
 function Panel() { const {t}=useI18n(); const {notify}=useNotifications(); return <button onClick={()=>notify({title:t('Hello')})}>{t('Hello')}</button>; }
@@ -44,7 +55,9 @@ const plugins=registerLocalPlugins({'./plugins/consumer/index.ts':{default:plugi
 export const preferences: WorkbenchPreferences={theme:'dark',motion:'system',notifications:{toastsEnabled:true,toastDurationMs:5000}};
 export const application=<I18nProvider initialLocale="fr"><Workbench title="Consumer" plugins={plugins} preferencesStorageKey={false}/></I18nProvider>;
 `;
+
 await writeFile(join(directory, 'consumer.tsx'), consumer);
+
 run(
   [
     join(root, 'node_modules', 'typescript', 'bin', 'tsc'),
@@ -65,6 +78,7 @@ run(
   ],
   directory,
 );
+
 await writeFile(
   join(directory, 'runtime.mjs'),
   `import assert from 'node:assert/strict';
@@ -87,5 +101,6 @@ assert.equal(configuration.preferences.theme,'light');
 console.log('PASS packed ESM, strict NodeNext declarations, legacy configuration, providers, plugin status, French, and CSS export');
 `,
 );
+
 process.stdout.write(run([join(directory, 'runtime.mjs')], directory));
 console.log(`Consumer artifacts: ${dirname(join(directory, 'runtime.mjs'))}`);

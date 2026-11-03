@@ -8,6 +8,7 @@ import { useCommands } from './CommandContext.js';
 function ExampleAction() {
   const { register, execute } = useCommands();
   const { notify } = useNotifications();
+
   useEffect(
     () =>
       register({
@@ -20,6 +21,7 @@ function ExampleAction() {
       }),
     [register, notify],
   );
+
   return (
     <Button
       onClick={() => {
@@ -49,5 +51,6 @@ const meta = {
     ),
   ],
 } satisfies Meta<typeof Workbench>;
+
 export default meta;
 export const Default: StoryObj<typeof meta> = {};

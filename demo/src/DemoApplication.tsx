@@ -4,8 +4,10 @@ import { Workbench, useNotifications } from 'dash-lab';
 import type { WorkbenchPanel } from 'dash-lab';
 import { plugins } from './plugins';
 import { CommandExamples } from './CommandExamples';
+
 function WorkspaceGuide() {
   const { t } = useI18n();
+
   return (
     <div className="demo-guide">
       <p className="eyebrow">{t('MAKE YOURSELF AT HOME')}</p>
@@ -64,9 +66,11 @@ function WorkspaceGuide() {
     </div>
   );
 }
+
 function Playground() {
   const { t } = useI18n();
   const { notify } = useNotifications();
+
   return (
     <div className="demo-playground">
       <p className="eyebrow">{t('A LITTLE ROOM TO EXPERIMENT')}</p>
@@ -96,12 +100,15 @@ function Playground() {
     </div>
   );
 }
+
 const panels: readonly WorkbenchPanel[] = [
   { id: 'guide', title: 'Getting started', component: WorkspaceGuide, position: { referencePanel: 'hello', direction: 'right' }, initialWidth: 360 },
   { id: 'playground', title: 'Playground', component: Playground, position: { referencePanel: 'guide', direction: 'below' }, initialHeight: 280 },
 ];
+
 export function DemoApplication() {
   const { t } = useI18n();
+
   return (
     <Workbench
       title={t('dash.lab')}

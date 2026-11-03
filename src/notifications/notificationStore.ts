@@ -61,6 +61,7 @@ export interface NotificationCenterState {
 
 export function createNotificationStore(historyLimit = 100) {
   if (!Number.isInteger(historyLimit) || historyLimit < 1) throw new Error('Notification historyLimit must be a positive integer.');
+
   let sequence = 0;
 
   return createStore<NotificationCenterState>((set, get) => ({
@@ -74,16 +75,22 @@ export function createNotificationStore(historyLimit = 100) {
     open: false,
     notify: (input) => {
       if (!input.title.trim()) throw new Error('A notification title must not be empty.');
+
       const level = input.level ?? 'info';
       const durationMs = input.durationMs ?? (level === 'error' ? 0 : get().preferences.toastDurationMs);
+
       if (!Number.isFinite(durationMs) || durationMs < 0) throw new Error('Notification duration must be a nonnegative finite number.');
+
       const createdAt = Date.now();
       const item: NotificationItem = { ...input, title: input.title.trim(), id: `${createdAt}-${++sequence}`, createdAt, read: false, level, durationMs };
+
       set((state) => {
         const items = [item, ...state.items].slice(0, historyLimit);
         const retained = new Set(items.map((entry) => entry.id));
+
         return { items, toasts: state.preferences.toastsEnabled ? [item.id, ...state.toasts].filter((id) => retained.has(id)).slice(0, 3) : [] };
       });
+
       return item.id;
     },
     dismiss: (id) => set((state) => ({ toasts: state.toasts.filter((toast) => toast !== id) })),

@@ -13,13 +13,17 @@ function PanelTab(props: IDockviewPanelHeaderProps) {
 export function DockWorkspace({ panels, onReady }: { panels: readonly WorkbenchPanel[]; onReady?: ((api: DockviewApi) => void) | undefined }) {
   const { t } = useI18n();
   const currentApi = useRef<DockviewApi | null>(null);
+
   useEffect(() => {
     for (const panel of panels) currentApi.current?.getPanel(panel.id)?.api.setTitle(t(panel.title));
   }, [panels, t]);
+
   const { mode } = useTheme();
   const dockTheme = useMemo(() => ({ ...(mode === 'dark' ? themeDark : themeLight), name: `dash-lab-${mode}`, gap: 8 }), [mode]);
+
   const components = useMemo(() => {
     validatePanels(panels);
+
     return Object.fromEntries(
       panels.map(({ id, component: Component }) => [
         id,
@@ -35,6 +39,7 @@ export function DockWorkspace({ panels, onReady }: { panels: readonly WorkbenchP
   const ready = useCallback(
     ({ api }: DockviewReadyEvent) => {
       currentApi.current = api;
+
       for (const { id, title, position, initialWidth, initialHeight } of panels) {
         api.addPanel({
           id,
@@ -47,6 +52,7 @@ export function DockWorkspace({ panels, onReady }: { panels: readonly WorkbenchP
       }
 
       if (panels[0]) api.getPanel(panels[0].id)?.api.setActive();
+
       onReady?.(api);
     },
     [panels, onReady, t],

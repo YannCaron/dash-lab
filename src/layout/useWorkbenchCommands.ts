@@ -7,6 +7,7 @@ import { useTheme } from '../theme/ThemeProvider.js';
 import { useNotifications } from '../notifications/NotificationContext.js';
 import type { createLayoutStore } from './layoutStore.js';
 import type { useLayoutManagement } from './useLayoutManagement.js';
+
 interface ConfigurationActions {
   openSettings: () => void;
   openPreferences: () => void;
@@ -23,14 +24,20 @@ export function useWorkbenchCommands(
 ) {
   const { t } = useI18n();
   const context = useContext(CommandContext);
+
   if (!context) throw new Error('Workbench command provider is missing.');
+
   const { registry, execute } = context;
   const { toggleTheme } = useTheme();
   const { setOpen, notify } = useNotifications();
   const currentLayout = useRef(layout);
+
   currentLayout.current = layout;
+
   const currentConfiguration = useRef(configuration);
+
   currentConfiguration.current = configuration;
+
   useEffect(() => {
     const commands: CommandDefinition[] = [
       { id: 'workbench.commands.open', title: 'Open command palette', shortcut: 'Mod+Shift+P', execute: openPalette },
@@ -98,24 +105,34 @@ export function useWorkbenchCommands(
         },
       })),
     ];
+
     const cleanup: (() => void)[] = [];
+
     try {
       for (const command of commands) cleanup.push(registry.register({ ...command, allowInEditable: true }));
     } catch (error) {
       cleanup.forEach((remove) => remove());
+
       throw error;
     }
+
     return () => cleanup.forEach((remove) => remove());
   }, [registry, store, toggleTheme, setOpen, openPalette]);
+
   return useCallback(
     (event: ReactKeyboardEvent<HTMLElement>) => {
       const target = event.target;
+
       if (!(target instanceof Element) || target.closest('dialog[open]')) return;
+
       const editable = !!target.closest('input, textarea, select, [role="textbox"]') || (target instanceof HTMLElement && target.isContentEditable);
+
       try {
         const command = registry.matchShortcut(event.nativeEvent, editable);
+
         if (command) {
           event.preventDefault();
+
           void execute(command.id).catch((error: unknown) =>
             notify({ title: t('Command could not run'), description: t(error instanceof Error ? error.message : 'The action failed.'), level: 'error' }),
           );

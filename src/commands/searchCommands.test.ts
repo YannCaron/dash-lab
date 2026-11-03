@@ -14,12 +14,14 @@ describe('command search', () => {
     expect(searchCommands(commands, 'save', []).map((command) => command.id)).toEqual(['layout.save', 'layout.restore']);
     expect(searchCommands(commands, 'layout save', []).map((command) => command.id)).toEqual(['layout.save', 'layout.restore']);
   });
+
   it('supports case folding, accents, identifier search and fuzzy abbreviations', () => {
     expect(searchCommands(commands, 'ECRIRE', [])[0]?.id).toBe('demo.greet');
     expect(searchCommands(commands, 'workspace.focus', [])[0]?.id).toBe('workspace.focus');
     expect(searchCommands(commands, 'rstsvd', [])[0]?.id).toBe('layout.restore');
     expect(searchCommands(commands, 'not-a-command', [])).toEqual([]);
   });
+
   it('shows recent existing commands first only for an empty query, preserving registration order otherwise', () => {
     expect(searchCommands(commands, ' ', ['removed', 'workspace.focus', 'layout.save']).map((command) => command.id)).toEqual([
       'workspace.focus',
@@ -27,6 +29,7 @@ describe('command search', () => {
       'layout.restore',
       'demo.greet',
     ]);
+
     expect(searchCommands(commands, 'save', ['layout.restore'])[0]?.id).toBe('layout.save');
   });
 });

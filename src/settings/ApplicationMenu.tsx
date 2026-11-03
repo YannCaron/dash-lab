@@ -3,12 +3,14 @@ import { useContext, useRef, useState } from 'react';
 import { Dropdown } from 'antd';
 import { useCommands } from '../commands/CommandContext.js';
 import { PluginContext } from '../plugins/PluginContext.js';
+
 export function ApplicationMenu() {
   const { t } = useI18n();
   const [open, setOpen] = useState(false);
   const trigger = useRef<HTMLButtonElement>(null);
   const { execute, canExecute } = useCommands();
   const { menus } = useContext(PluginContext);
+
   const available = (id: string) => {
     try {
       return canExecute(id);
@@ -16,6 +18,7 @@ export function ApplicationMenu() {
       return false;
     }
   };
+
   return (
     <Dropdown
       open={open}
@@ -51,7 +54,9 @@ export function ApplicationMenu() {
         onClick: ({ key }) => {
           setOpen(false);
           trigger.current?.focus();
+
           const menu = menus.find((menu) => `plugin-menu:${menu.id}` === key);
+
           void execute(menu?.commandId ?? key);
         },
         onKeyDown: (event) => {

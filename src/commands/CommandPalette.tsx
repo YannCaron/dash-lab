@@ -4,6 +4,7 @@ import { useCommands } from './CommandContext.js';
 import { useNotifications } from '../notifications/NotificationContext.js';
 import { searchCommands } from './searchCommands.js';
 import { useBackdropDismiss } from '../overlays/useBackdropDismiss.js';
+
 /** Options for the controlled command palette. */
 export interface CommandPaletteProps {
   /** Whether the palette should be open. */
@@ -24,6 +25,7 @@ export function CommandPalette({ open, onClose }: CommandPaletteProps) {
   const input = useRef<HTMLInputElement>(null);
   const prefix = useId();
   const listId = `${prefix}-commands`;
+
   const results = useMemo(
     () =>
       searchCommands(
@@ -33,6 +35,7 @@ export function CommandPalette({ open, onClose }: CommandPaletteProps) {
       ),
     [commands, query, recent, t],
   );
+
   const entries = results.map((command, index) => {
     try {
       return { command, index, enabled: canExecute(command.id), error: '' };
@@ -40,30 +43,39 @@ export function CommandPalette({ open, onClose }: CommandPaletteProps) {
       return { command, index, enabled: false, error: error instanceof Error ? error.message : 'Availability check failed.' };
     }
   });
+
   const enabled = entries.filter((entry) => entry.enabled);
   const active = enabled.find((entry) => entry.command.id === selected) ?? enabled[0];
   const activeId = active ? `${prefix}-command-${active.index}` : undefined;
+
   useEffect(() => {
     if (open) {
       setQuery('');
       setSelected(null);
+
       if (!dialog.current?.open) dialog.current?.showModal();
+
       input.current?.focus();
     } else if (dialog.current?.open) dialog.current.close();
   }, [open]);
+
   useEffect(() => {
     if (open && activeId) document.getElementById(activeId)?.scrollIntoView({ block: 'nearest' });
   }, [open, activeId]);
+
   const run = async (id: string) => {
     try {
       if (!canExecute(id)) return;
+
       dialog.current?.close();
       onClose();
+
       if (await execute(id)) setRecent((previous) => [id, ...previous.filter((entry) => entry !== id)].slice(0, 6));
     } catch (error) {
       notify({ title: t('Command could not run'), description: t(error instanceof Error ? error.message : 'The action failed.'), level: 'error' });
     }
   };
+
   return (
     <dialog
       {...backdrop}
@@ -96,12 +108,16 @@ export function CommandPalette({ open, onClose }: CommandPaletteProps) {
             if (event.nativeEvent.isComposing || event.repeat) return;
             if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
               event.preventDefault();
+
               if (!enabled.length) return;
+
               const index = enabled.findIndex((entry) => entry.command.id === active?.command.id);
               const next = (index + (event.key === 'ArrowDown' ? 1 : -1) + enabled.length) % enabled.length;
+
               setSelected(enabled[next]!.command.id);
             } else if (event.key === 'Enter') {
               event.preventDefault();
+
               if (active) void run(active.command.id);
             }
           }}

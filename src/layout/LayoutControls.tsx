@@ -1,5 +1,6 @@
 import { useI18n } from '../i18n/I18nProvider.js';
 import type { useLayoutManagement } from './useLayoutManagement.js';
+
 function LayoutIcon({ kind }: { kind: 'default' | 'columns' | 'rows' | 'save' | 'restore' | 'reset' }) {
   return (
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true">
@@ -25,13 +26,16 @@ function LayoutIcon({ kind }: { kind: 'default' | 'columns' | 'rows' | 'save' | 
     </svg>
   );
 }
+
 export function LayoutControls({ layout }: { layout: ReturnType<typeof useLayoutManagement> }) {
   const { t } = useI18n();
+
   return (
     <div className="dl-layout-controls" role="group" aria-label={t('Layout management')}>
       <span className="dl-toolbar-label">{t('LAYOUT')}</span>
       {(['default', 'columns', 'rows'] as const).map((preset) => {
         const title = preset === 'default' ? 'Application layout' : preset === 'columns' ? 'Columns layout' : 'Rows layout';
+
         return (
           <button
             key={preset}

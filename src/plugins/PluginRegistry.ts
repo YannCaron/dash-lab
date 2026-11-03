@@ -80,6 +80,7 @@ export interface PluginContributions {
 function isComponent(value: unknown) {
   if (typeof value === 'function') return true;
   if (!value || typeof value !== 'object' || !('$$typeof' in value)) return false;
+
   return ['react.memo', 'react.forward_ref', 'react.lazy'].some((name) => value.$$typeof === Symbol.for(name));
 }
 
@@ -101,48 +102,67 @@ export class PluginRegistry {
 
   private add<T extends { id: string }>(collection: Map<string, T>, value: T, undo: PluginDisposer[]): PluginDisposer {
     this.assertMutable();
+
     if (!value || typeof value.id !== 'string' || !value.id.trim()) throw new Error('A contribution requires a nonempty ID.');
     if (collection.has(value.id)) throw new Error(`Duplicate plugin contribution: ${value.id}`);
+
     const entry = Object.freeze({ ...value });
+
     collection.set(entry.id, entry);
+
     const remove = () => {
       this.assertMutable();
+
       if (collection.get(entry.id) === entry) collection.delete(entry.id);
     };
+
     undo.push(remove);
+
     return remove;
   }
 
   /** Activate a local plugin; failures roll back every contribution from that activation. */
   registerPlugin(plugin: WorkbenchPlugin): PluginDisposer {
     this.assertMutable();
+
     if (!plugin || typeof plugin.id !== 'string' || !plugin.id.trim() || typeof plugin.activate !== 'function') throw new Error('Invalid plugin definition.');
     if (this.plugins.has(plugin.id)) throw new Error(`Duplicate plugin: ${plugin.id}`);
+
     const id = plugin.id;
     const undo: PluginDisposer[] = [];
     let active = true;
     let cleanup: void | PluginDisposer;
+
     const scoped =
       <T>(register: (value: T) => PluginDisposer) =>
       (value: T) => {
         if (!active) throw new Error(`Plugin ${id} is no longer active.`);
+
         return register(value);
       };
+
     const item = (collection: Map<string, PluginItem>, value: PluginItem) => {
       if (!isComponent(value?.component)) throw new Error('A plugin item requires a React component.');
+
       return this.add(collection, value, undo);
     };
+
     const api: PluginAPI = {
       registerPanel: scoped((panel) => {
         if (!panel?.title?.trim() || !isComponent(panel.component)) throw new Error('A plugin panel requires a title and React component.');
+
         return this.add(this.panels, { ...panel, ...(panel.position ? { position: Object.freeze({ ...panel.position }) } : {}) }, undo);
       }),
       registerCommand: scoped((command) => {
         if (typeof command?.execute !== 'function') throw new Error('A plugin command requires an execute function.');
         if (command?.id?.startsWith('workbench.')) throw new Error('The workbench.* command namespace is reserved.');
+
         const unregister = this.commandValidator.register({ ...command, execute: () => {} });
+
         undo.push(unregister);
+
         const remove = this.add(this.commands, command, undo);
+
         return () => {
           remove();
           unregister();
@@ -150,28 +170,36 @@ export class PluginRegistry {
       }),
       registerMenu: scoped((menu) => {
         if (!menu?.title?.trim() || !menu.commandId?.trim()) throw new Error('A plugin menu requires a title and command ID.');
+
         return this.add(this.menus, menu, undo);
       }),
       registerStatusItem: scoped((value) => item(this.statusItems, value)),
       registerMonitoringItem: scoped((value) => item(this.monitoringItems, value)),
     };
+
     this.plugins.add(id);
     this.activating++;
+
     try {
       cleanup = plugin.activate(Object.freeze(api));
+
       if (cleanup !== undefined && typeof cleanup !== 'function')
         throw new Error('Plugin activation must be synchronous and return void or a cleanup function.');
     } catch (error) {
       active = false;
       undo.reverse().forEach((remove) => remove());
       this.plugins.delete(id);
+
       throw new Error(`Plugin ${id} could not start: ${error instanceof Error ? error.message : 'Activation failed.'}`, { cause: error });
     } finally {
       this.activating--;
     }
+
     return () => {
       this.assertMutable();
+
       if (!active) return;
+
       active = false;
       undo.reverse().forEach((remove) => remove());
       this.plugins.delete(id);
@@ -192,6 +220,7 @@ export class PluginRegistry {
         monitoringItems: Object.freeze([...this.monitoringItems.values()]),
       });
     }
+
     return this.snapshot;
   }
 }
@@ -200,11 +229,14 @@ export class PluginRegistry {
 export function registerLocalPlugins(modules: Record<string, { default: WorkbenchPlugin }>): PluginRegistry {
   const registry = new PluginRegistry();
   const cleanup: PluginDisposer[] = [];
+
   try {
     for (const path of Object.keys(modules).sort()) cleanup.push(registry.registerPlugin(modules[path]!.default));
+
     return registry;
   } catch (error) {
     cleanup.reverse().forEach((remove) => remove());
+
     throw error;
   }
 }

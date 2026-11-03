@@ -7,6 +7,7 @@ import { useNotifications } from './NotificationContext.js';
 
 function Examples() {
   const { notify } = useNotifications();
+
   return (
     <div style={{ display: 'flex', gap: 12, padding: 24 }}>
       <NotificationButton />
@@ -31,5 +32,6 @@ const meta = {
     ),
   ],
 } satisfies Meta<typeof Examples>;
+
 export default meta;
 export const Default: StoryObj<typeof meta> = {};

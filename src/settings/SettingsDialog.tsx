@@ -8,6 +8,7 @@ import type { createLayoutStore } from '../layout/layoutStore.js';
 import { useStore } from 'zustand';
 import { useCommands } from '../commands/CommandContext.js';
 import { useBackdropDismiss } from '../overlays/useBackdropDismiss.js';
+
 export type SettingsPage = 'settings' | 'preferences';
 export function SettingsDialog({
   page,
@@ -32,17 +33,23 @@ export function SettingsDialog({
   const state = useStore(store);
   const { execute } = useCommands();
   const preferences = useRef(configuration.preferences);
+
   preferences.current = configuration.preferences;
+
   useEffect(() => {
     if (page) {
       setDraft(structuredClone(preferences.current));
       setError('');
+
       if (!dialog.current?.open) dialog.current?.showModal();
+
       close.current?.focus();
     } else dialog.current?.close();
   }, [page]);
+
   const submit = (event: FormEvent) => {
     event.preventDefault();
+
     try {
       configuration.savePreferences(draft);
       onClose();
@@ -50,6 +57,7 @@ export function SettingsDialog({
       setError(error instanceof Error ? error.message : 'Preferences could not be applied.');
     }
   };
+
   return (
     <dialog
       {...backdrop}

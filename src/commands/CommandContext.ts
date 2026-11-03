@@ -18,8 +18,11 @@ export interface CommandControls {
 /** Access the nearest registry through React; requires CommandProvider or a Workbench ancestor. */
 export function useCommands(): CommandControls {
   const context = useContext(CommandContext);
+
   if (!context) throw new Error('useCommands must be used inside CommandProvider or Workbench.');
+
   const commands = useSyncExternalStore(context.registry.subscribe, context.registry.getCommands, context.registry.getCommands);
+
   return useMemo(
     () => ({ commands, register: context.registry.register, execute: context.execute, canExecute: context.registry.canExecute }),
     [commands, context],

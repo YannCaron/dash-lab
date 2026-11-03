@@ -22,6 +22,10 @@ The package currently declares version `0.1.0`. No publication or release tag is
 - Ten-minute plugin tutorial, complete application/plugin guide, detailed [release notes](release-node.md), and agent instructions to maintain release records with future work.
 - Demo panel counts derived from discovered plugin contributions, with application chrome and plugin status following the selected language.
 
+### Changed
+
+- Airier vertical spacing across library, demo, tests, Storybook examples, and scripts, separating declarations, processing steps, and results.
+
 ### Compatibility
 
 - Version-1 configuration files without a language continue to import as English.

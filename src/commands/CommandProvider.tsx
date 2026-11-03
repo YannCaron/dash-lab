@@ -18,25 +18,32 @@ export function CommandProvider({ children, registry: supplied }: CommandProvide
   const [registry] = useState(
     () => supplied ?? new CommandRegistry(typeof navigator !== 'undefined' && /Mac|iPhone|iPad/.test(navigator.platform) ? 'mac' : 'other'),
   );
+
   const { t } = useI18n();
   const notifications = useContext(NotificationContext);
+
   const execute = useCallback(
     async (id: string) => {
       try {
         return await registry.execute(id);
       } catch (error) {
         if (!notifications) throw error;
+
         const command = registry.getCommands().find((entry) => entry.id === id);
+
         notifications.getState().notify({
           title: t('Command failed: {title}', { title: t(command?.title ?? id) }),
           description: t(error instanceof Error ? error.message : 'The action could not be completed.'),
           level: 'error',
         });
+
         return false;
       }
     },
     [registry, notifications, t],
   );
+
   const context = useMemo(() => ({ registry, execute }), [registry, execute]);
+
   return <CommandContext.Provider value={context}>{children}</CommandContext.Provider>;
 }

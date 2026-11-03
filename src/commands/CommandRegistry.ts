@@ -34,23 +34,30 @@ export class CommandRegistry {
 
   private publish() {
     this.snapshot = Object.freeze([...this.entries.values()].map((entry) => entry.definition));
+
     for (const listener of this.listeners) listener();
   }
 
   /** Register an action. Duplicate IDs and equivalent shortcuts throw before changing the registry. Returns an idempotent unregister function. */
   readonly register = (command: CommandDefinition): (() => void) => {
     const definition = Object.freeze({ ...command });
+
     if (!definition.id.trim() || !definition.title.trim()) throw new Error('Command IDs and titles must not be empty.');
     if (this.entries.has(definition.id)) throw new Error(`Command already registered: ${definition.id}`);
+
     const signature = definition.shortcut ? parseShortcut(definition.shortcut, this.platform) : undefined;
+
     if (signature && [...this.entries.values()].some((entry) => entry.signature === signature))
       throw new Error(`Shortcut already registered: ${definition.shortcut}`);
+
     const entry: RegisteredCommand = { definition, signature };
+
     this.entries.set(definition.id, entry);
     this.publish();
 
     return () => {
       if (this.entries.get(definition.id) !== entry) return;
+
       this.entries.delete(definition.id);
       this.publish();
     };
@@ -62,6 +69,7 @@ export class CommandRegistry {
   /** Subscribe to registration and execution-state changes; returns an unsubscribe function. */
   readonly subscribe = (listener: () => void): (() => void) => {
     this.listeners.add(listener);
+
     return () => {
       this.listeners.delete(listener);
     };
@@ -70,17 +78,22 @@ export class CommandRegistry {
   /** Whether the command exists, is enabled, and is not already running. Predicate errors propagate. */
   readonly canExecute = (id: string): boolean => {
     const entry = this.entries.get(id);
+
     return !!entry && !this.running.has(entry) && (entry.definition.isEnabled?.() ?? true);
   };
 
   /** Execute by ID. Resolves false for unknown, disabled, or running actions; handler and predicate errors reject. */
   readonly execute = async (id: string): Promise<boolean> => {
     const entry = this.entries.get(id);
+
     if (!entry || !this.canExecute(id)) return false;
+
     this.running.add(entry);
     this.publish();
+
     try {
       await entry.definition.execute();
+
       return true;
     } finally {
       this.running.delete(entry);
@@ -91,7 +104,9 @@ export class CommandRegistry {
   /** Find an enabled keyboard action, respecting composition, repeats, prior handlers, AltGraph, and text-entry policy. */
   readonly matchShortcut = (event: ShortcutEvent, inEditable = false): CommandDefinition | undefined => {
     if (event.defaultPrevented || event.repeat || event.isComposing || event.getModifierState('AltGraph')) return;
+
     const signature = eventSignature(event);
+
     for (const { definition, signature: candidate } of this.entries.values()) {
       if (signature === candidate && (!inEditable || definition.allowInEditable) && this.canExecute(definition.id)) return definition;
     }

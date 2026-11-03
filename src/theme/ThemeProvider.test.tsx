@@ -18,6 +18,7 @@ describe('theme provider composition', () => {
         ],
       }),
     );
+
     expect(html).toContain('<output>dark</output>');
     expect(html).toContain('<output>light</output>');
     expect(html).toContain('data-theme="dark"');

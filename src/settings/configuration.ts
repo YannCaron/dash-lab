@@ -33,12 +33,16 @@ export const configurationSizeLimit = 1_000_000;
 
 export function validatePreferences(value: unknown): WorkbenchPreferences {
   const preferences = value as Partial<WorkbenchPreferences> | null;
+
   if (!preferences || !['light', 'dark'].includes(preferences.theme ?? '') || !['system', 'reduced'].includes(preferences.motion ?? '')) {
     throw new Error('Preferences have an invalid theme or animation choice.');
   }
+
   validateNotificationPreferences(preferences.notifications);
+
   if (preferences.locale !== undefined && (typeof preferences.locale !== 'string' || !/^[a-z]{2,8}(-[a-z0-9]{1,8})*$/i.test(preferences.locale)))
     throw new Error('Preferences have an invalid language identifier.');
+
   return {
     ...(preferences.locale === undefined ? {} : { locale: preferences.locale }),
     theme: preferences.theme!,
@@ -50,11 +54,18 @@ export function validatePreferences(value: unknown): WorkbenchPreferences {
 /** Validate a JSON configuration against the current application's panels before applying any changes. */
 export function decodeConfiguration(text: string, panels: readonly WorkbenchPanel[]): WorkbenchConfiguration {
   if (new TextEncoder().encode(text).byteLength > configurationSizeLimit) throw new Error('Configuration exceeds the 1 MB limit.');
+
   const value = JSON.parse(text) as Partial<WorkbenchConfiguration> | null;
+
   if (!value || value.format !== 'dash-lab' || value.version !== 1) throw new Error('Configuration has an unsupported format or version.');
+
   const preferences = validatePreferences(value.preferences);
+
   if (value.workspace === undefined) throw new Error('Configuration is missing a workspace.');
+
   const workspace = value.workspace === null ? null : decodeLayout(JSON.stringify(value.workspace), panels);
+
   if (workspace === null && panels.length) throw new Error('Configuration is missing this application’s workspace.');
+
   return { format: 'dash-lab', version: 1, workspace, preferences };
 }
