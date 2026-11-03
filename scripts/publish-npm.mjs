@@ -61,7 +61,7 @@ try {
 
   if (manifest.version.includes('-') && npmTag === 'latest') throw new Error('Use a prerelease tag such as --tag next for a prerelease version.');
 
-  const gitTag = `v${manifest.version}`;
+  const gitTag = `version-${manifest.version}`;
   const releaseCommit = dryRun ? undefined : run('git', ['rev-parse', 'HEAD'], true);
 
   if (!dryRun) {

@@ -31,7 +31,7 @@ The package currently declares version `0.1.0`. No publication or release tag is
 ### Changed
 
 - Modal dialogs and backdrops animate on closure as well as opening, preserving native focus handoff, rapid reopening, Preferences content, and reduced-motion choices.
-- Successful npm publication creates an annotated local `v<version>` Git tag on the validated release commit. Simulation and failed publication create no tag; conflicting tags block publication and existing tags on the same commit are retained.
+- Successful npm publication creates an annotated local `version-<version>` Git tag on the validated release commit. Simulation and failed publication create no tag; conflicting tags block publication and existing tags on the same commit are retained.
 - Package name and consumer imports now use `@cyann/dash-lab`, following the existing `@cyann/js-parsec` and `@cyann/js-commons` convention. JSON configuration identifiers and browser-storage keys remain compatible.
 - Airier vertical spacing across library, demo, tests, Storybook examples, and scripts, separating declarations, processing steps, and results.
 

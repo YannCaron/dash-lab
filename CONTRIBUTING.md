@@ -67,7 +67,7 @@ npm login --registry=https://registry.npmjs.org/
 npm run publish:npm
 ```
 
-Real publication requires a clean Git checkout and verifies the logged-in account using [`npm whoami`](https://docs.npmjs.com/cli/v11/commands/npm-whoami/). It records the release commit, runs the same checks, and verifies that Git stays clean and HEAD unchanged before packing. It publishes the exact packed tarball publicly to `https://registry.npmjs.org/`, then creates an annotated local Git tag `v<version>` on the recorded commit only after npm succeeds. npm handles any required interactive two-factor authentication. Credentials stay in npm's normal authentication setup; the script does not embed tokens or log in on your behalf.
+Real publication requires a clean Git checkout and verifies the logged-in account using [`npm whoami`](https://docs.npmjs.com/cli/v11/commands/npm-whoami/). It records the release commit, runs the same checks, and verifies that Git stays clean and HEAD unchanged before packing. It publishes the exact packed tarball publicly to `https://registry.npmjs.org/`, then creates an annotated local Git tag `version-<version>` on the recorded commit only after npm succeeds. npm handles any required interactive two-factor authentication. Credentials stay in npm's normal authentication setup; the script does not embed tokens or log in on your behalf.
 
 An existing tag on the release commit is reused unchanged. A tag pointing to another commit blocks publication before contacting npm; it is never overwritten. Git committer identity is checked before publishing. If npm succeeds but Git tagging fails (for example, signing fails), the command reports partial success and exits with an error: repair the local tag on the reported commit manually, without republishing that npm version. Tags and commits are never pushed automatically.
 
@@ -81,7 +81,7 @@ npm run publish:npm -- --dry-run
 npm run publish:npm
 ```
 
-`npm version --no-git-tag-version` updates the manifest/lockfile without creating a premature release tag. Commit those files with the release notes before publishing; the publication script creates the tag after success. It never changes versions or creates commits. Stable versions use the `latest` npm distribution tag; prerelease versions default to `next` and cannot target `latest`. Override with `npm run publish:npm -- --tag next`. This npm tag is separate from the Git version tag, such as `v0.2.0-rc.1`. npm rejects an already published name/version; choose a new version rather than overwriting it.
+`npm version --no-git-tag-version` updates the manifest/lockfile without creating a premature release tag. Commit those files with the release notes before publishing; the publication script creates the tag after success. It never changes versions or creates commits. Stable versions use the `latest` npm distribution tag; prerelease versions default to `next` and cannot target `latest`. Override with `npm run publish:npm -- --tag next`. This npm tag is separate from the Git version tag, such as `version-0.2.0-rc.1`. npm rejects an already published name/version; choose a new version rather than overwriting it.
 
 The script does not run browser or Storybook builds; run the existing browser/Storybook checks separately for interface changes. Use `npm.cmd` in these examples if PowerShell blocks `npm.ps1`.
 

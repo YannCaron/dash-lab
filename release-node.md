@@ -59,7 +59,7 @@ Verification includes fourteen new unit tests, state round-trips through the com
 
 The npm package is named `@cyann/dash-lab`, matching the owner's existing library scopes. Demo imports, TypeScript/Vite resolution, packed-consumer checks, and documentation use this package name. The product/repository name, CSS export filename, JSON format identifier, and browser-storage keys remain unchanged.
 
-`npm run publish:npm -- --dry-run` validates and simulates the current version. Real `npm run publish:npm` requires a clean Git checkout and the npm account `cyann`, then publishes the exact validated tarball publicly to npmjs. Stable versions use `latest`; prereleases default to `next`. After successful publication, the script creates an annotated local `v<version>` Git tag on the validated commit. It never automatically bumps versions, commits, or pushes. Version/release-note preparation remains explicit, and npm manages login/two-factor authentication.
+`npm run publish:npm -- --dry-run` validates and simulates the current version. Real `npm run publish:npm` requires a clean Git checkout and the npm account `cyann`, then publishes the exact validated tarball publicly to npmjs. Stable versions use `latest`; prereleases default to `next`. After successful publication, the script creates an annotated local `version-<version>` Git tag on the validated commit. It never automatically bumps versions, commits, or pushes. Version/release-note preparation remains explicit, and npm manages login/two-factor authentication.
 
 Publication-script tests use isolated local Git fixtures and a fake npm CLI; no tests upload a package. The complete real-CLI dry run succeeds for `@cyann/dash-lab@0.1.0`, including twelve script tests, seventy-four Vitest tests, formatting/lint/type checks, and installation of the scoped tarball into a fresh consumer. Live authentication and actual publication have not been exercised. Further validation is recorded in [validation](docs/validation.md). No package has been published by this implementation task.
 
@@ -86,6 +86,12 @@ Reproduced on Firefox 159: notification history became `display: none` immediate
 The targeted `npm run test:firefox` regression uses the installed browser through WebDriver BiDi and an isolated temporary profile, with no new dependency. It covers real notification button/Escape/backdrop closure, natural animation completion and focus, rapid reopening, palette-to-Settings handoff, and reduced motion. No publication or version change is performed by this fix.
 
 Verification: all six Firefox 159 checks pass in compiled and development modes, as do the eighty-seven existing Edge checks in both modes, seventy-four unit tests, strict types, lint/format, library/demo and Storybook builds, and the packed-consumer check. The Firefox regression first failed against the previous implementation before passing with the correction. Safari was not tested.
+
+### Version-prefixed Git tags
+
+Successful npm publication now creates the annotated local tag `version-<version>`, for example `version-0.1.0` or `version-0.2.0-rc.1`. Existing-tag reuse and conflict checks use that same format. Dry runs and failed publication still create no tag, and no tag is pushed automatically. Existing historical tags are left unchanged.
+
+Validation: all twelve publication-script tests, ESLint, formatting, and whitespace checks pass. Tests verify the exact version-prefixed tag in isolated Git repositories with a fake npm CLI; no actual publication or release tag is created in this project during validation.
 
 ### Future updates
 

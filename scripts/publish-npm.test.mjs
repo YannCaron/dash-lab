@@ -172,8 +172,9 @@ test('the release path publishes exactly the packed file after validation and ac
   assert.equal(publish[publish.indexOf('--tag') + 1], 'stable');
   assert.match(publish[1], /test-results[/\\]npm-publish[/\\]release-[^/\\]+[/\\]cyann-dash-lab-0\.1\.0\.tgz$/);
   assert.equal(readFileSync(join(project.directory, 'tag-at-publish.txt'), 'utf8').trim(), '');
-  assert.equal(project.git('rev-parse', 'v0.1.0^{commit}'), project.git('rev-parse', 'HEAD'));
-  assert.equal(project.git('cat-file', '-t', 'refs/tags/v0.1.0'), 'tag');
+  assert.equal(project.git('rev-parse', 'version-0.1.0^{commit}'), project.git('rev-parse', 'HEAD'));
+  assert.equal(project.git('cat-file', '-t', 'refs/tags/version-0.1.0'), 'tag');
+  assert.equal(project.git('tag', '--list'), 'version-0.1.0');
 });
 
 test('failed npm publication leaves no Git release tag', () => {
@@ -187,19 +188,19 @@ test('failed npm publication leaves no Git release tag', () => {
 test('an existing tag on the release commit is reused unchanged', () => {
   const project = fixture();
 
-  project.git('tag', '--annotate', 'v0.1.0', '--message', 'Prepared release');
+  project.git('tag', '--annotate', 'version-0.1.0', '--message', 'Prepared release');
 
-  const original = project.git('rev-parse', 'refs/tags/v0.1.0');
+  const original = project.git('rev-parse', 'refs/tags/version-0.1.0');
   const result = project.run([], true);
 
   assert.equal(result.status, 0, result.stderr);
-  assert.equal(project.git('rev-parse', 'refs/tags/v0.1.0'), original);
+  assert.equal(project.git('rev-parse', 'refs/tags/version-0.1.0'), original);
 });
 
 test('a tag on another commit blocks publication before contacting npm', () => {
   const project = fixture();
 
-  project.git('tag', '--annotate', 'v0.1.0', '--message', 'Older commit');
+  project.git('tag', '--annotate', 'version-0.1.0', '--message', 'Older commit');
   project.git('commit', '--allow-empty', '--message', 'New release commit');
 
   const result = project.run([], true);
@@ -218,7 +219,7 @@ test('a Git tag failure clearly reports that npm publication already succeeded',
   const result = project.run([], true);
 
   assert.notEqual(result.status, 0);
-  assert.match(result.stderr, /npm publication succeeded, but Git tag v0.1.0 could not be recorded/);
+  assert.match(result.stderr, /npm publication succeeded, but Git tag version-0.1.0 could not be recorded/);
   assert.match(result.stderr, /do not republish/);
   assert.equal(project.calls().at(-1)[0], 'publish');
   assert.equal(project.git('tag', '--list'), '');
@@ -244,7 +245,7 @@ test('prereleases default to next and cannot overwrite latest', () => {
 
   assert.equal(result.status, 0, result.stderr);
   assert.equal(publish[publish.indexOf('--tag') + 1], 'next');
-  assert.equal(project.git('rev-parse', 'v0.2.0-rc.1^{commit}'), project.git('rev-parse', 'HEAD'));
+  assert.equal(project.git('rev-parse', 'version-0.2.0-rc.1^{commit}'), project.git('rev-parse', 'HEAD'));
 
   const invalid = fixture({ version: '0.2.0-rc.1' });
 
