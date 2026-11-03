@@ -3,7 +3,8 @@ import { useEffect, useId, useMemo, useRef, useState } from 'react';
 import { useCommands } from './CommandContext.js';
 import { useNotifications } from '../notifications/NotificationContext.js';
 import { searchCommands } from './searchCommands.js';
-import { useBackdropDismiss } from '../overlays/useBackdropDismiss.js';
+import { useDialogDismiss } from '../overlays/useDialogDismiss.js';
+import { closeDialog, openDialog } from '../overlays/dialogMotion.js';
 
 /** Options for the controlled command palette. */
 export interface CommandPaletteProps {
@@ -15,7 +16,7 @@ export interface CommandPaletteProps {
 /** Searches and executes the nearest registry's commands; requires command and notification providers. */
 export function CommandPalette({ open, onClose }: CommandPaletteProps) {
   const { t } = useI18n();
-  const backdrop = useBackdropDismiss(onClose);
+  const dismissal = useDialogDismiss(onClose);
   const { commands, canExecute, execute } = useCommands();
   const { notify } = useNotifications();
   const [query, setQuery] = useState('');
@@ -53,10 +54,10 @@ export function CommandPalette({ open, onClose }: CommandPaletteProps) {
       setQuery('');
       setSelected(null);
 
-      if (!dialog.current?.open) dialog.current?.showModal();
+      openDialog(dialog.current);
 
       input.current?.focus();
-    } else if (dialog.current?.open) dialog.current.close();
+    } else void closeDialog(dialog.current);
   }, [open]);
 
   useEffect(() => {
@@ -67,8 +68,10 @@ export function CommandPalette({ open, onClose }: CommandPaletteProps) {
     try {
       if (!canExecute(id)) return;
 
-      dialog.current?.close();
       onClose();
+      await closeDialog(dialog.current);
+
+      if (dialog.current?.open) return;
 
       if (await execute(id)) setRecent((previous) => [id, ...previous.filter((entry) => entry !== id)].slice(0, 6));
     } catch (error) {
@@ -77,16 +80,7 @@ export function CommandPalette({ open, onClose }: CommandPaletteProps) {
   };
 
   return (
-    <dialog
-      {...backdrop}
-      ref={dialog}
-      className="dl-command-palette dl-modal"
-      aria-label={t('Command palette')}
-      onCancel={(event) => {
-        event.preventDefault();
-        onClose();
-      }}
-    >
+    <dialog {...dismissal} ref={dialog} className="dl-command-palette dl-modal" aria-label={t('Command palette')}>
       <div className="dl-palette-search">
         <span aria-hidden="true">&gt;</span>
         <input

@@ -113,7 +113,7 @@ Built-in IDs reserve `workbench.*`. Mod+Alt combinations are T for theme, V for 
 
 `CommandPaletteProps` is `{ open, onClose }`. The controlled `CommandPalette` needs command and notification providers. It searches translated titles and stable IDs, supports arrows/Enter/Escape, shows unavailable actions, and keeps six recent successful choices in memory. It closes before executing an action that may open another modal.
 
-Workbench dialogs (Commands, Settings/Preferences, and notification history) slide and fade on opening and closing, including their backdrops. Closing releases native modal state and restores focus immediately while CSS finishes the visual transition. System or explicit reduced-motion preferences disable both directions. Browsers without discrete display/overlay transition support keep instant native closure. Storybook's `Workbench/Commands/AnimatedDialogs` example exercises these controls.
+Workbench dialogs (Commands, Settings/Preferences, and notification history) slide and fade on opening and closing, including their backdrops. Browsers with native discrete display/overlay transitions restore focus immediately while CSS finishes the exit. Other browsers, including Firefox, keep the native dialog open during the exit and restore focus when it finishes. Reopening cancels pending closure; palette actions wait for closure before opening another modal. System or explicit reduced-motion preferences disable both directions and close immediately. Storybook's `Workbench/Commands/AnimatedDialogs` example exercises these controls.
 
 ## Plugin SDK
 

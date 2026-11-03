@@ -73,11 +73,19 @@ Twelve script integration tests cover tag timing, annotated tag identity, prerel
 
 ### Modal exit animations
 
-Commands, Settings/Preferences, and notification history now slide and fade when closed; their backdrops fade out too. The same native CSS transitions handle both directions while preserving `close()` semantics, focus restoration, and command-palette handoff. Escape, backdrop dismissal, close buttons, Cancel, and Apply share this behavior. Reopening during exit interrupts the transition without a delayed callback closing the reopened dialog.
+Commands, Settings/Preferences, and notification history now slide and fade when closed; their backdrops fade out too. CSS transitions handle both directions, with a shared closure helper for browsers lacking native exit support. Escape, backdrop dismissal, close buttons, Cancel, and Apply share this behavior. Reopening cancels pending closure, and command-palette actions wait until native closure before opening another modal.
 
-Preferences retains its title/form during exit and notification history keeps its column layout. System and explicit reduced-motion choices disable all modal entry/exit motion. Browsers without discrete display/overlay support retain immediate native closure. No dependency or public API was added. Storybook includes an interactive dialog-motion example.
+Preferences retains its title/form during exit and notification history keeps its column layout. System and explicit reduced-motion choices disable all modal entry/exit motion. Browsers without discrete display/overlay support wait for the visual exit before native closure and focus restoration. No dependency or public API was added. Storybook includes an interactive dialog-motion example.
 
-Verification: seventy-four Vitest tests, strict TypeScript, lint/format, library/demo and Storybook builds, packed-consumer checks, and eighty-seven Edge checks against both compiled and development demos pass. Exit checks pause real transitions halfway to inspect dialog/backdrop opacity, slide direction, retained top-layer rendering/content, then finish them and verify hiding. Screenshots were visually inspected. Native focus handoff, rapid reopening, and both reduced-motion preferences are covered; Firefox and Safari were not tested.
+Initial verification: seventy-four Vitest tests, strict TypeScript, lint/format, library/demo and Storybook builds, packed-consumer checks, and eighty-seven Edge checks against both compiled and development demos passed. Exit checks paused real transitions halfway to inspect dialog/backdrop opacity, slide direction, retained top-layer rendering/content, then finished them and verified hiding. Screenshots were visually inspected. Firefox coverage was subsequently added after the reported compatibility failure, as described below; Safari remains untested.
+
+### Firefox modal closure correction
+
+Reproduced on Firefox 159: notification history became `display: none` immediately after closure because Firefox lacks the native overlay transition used by the previous implementation. Shared capability detection now selects a transition-waiting fallback. It keeps the dialog in the top layer until its own fade/slide finishes, then closes and restores focus. Reopening cancels pending work; reduced-motion closure is immediate. Escape is handled before the browser default, including non-cancelable native cancel requests after programmatic opening.
+
+The targeted `npm run test:firefox` regression uses the installed browser through WebDriver BiDi and an isolated temporary profile, with no new dependency. It covers real notification button/Escape/backdrop closure, natural animation completion and focus, rapid reopening, palette-to-Settings handoff, and reduced motion. No publication or version change is performed by this fix.
+
+Verification: all six Firefox 159 checks pass in compiled and development modes, as do the eighty-seven existing Edge checks in both modes, seventy-four unit tests, strict types, lint/format, library/demo and Storybook builds, and the packed-consumer check. The Firefox regression first failed against the previous implementation before passing with the correction. Safari was not tested.
 
 ### Future updates
 

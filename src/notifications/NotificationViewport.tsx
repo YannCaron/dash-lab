@@ -2,7 +2,8 @@ import { useI18n } from '../i18n/I18nProvider.js';
 import { useEffect, useId, useRef } from 'react';
 import { useNotifications } from './NotificationContext.js';
 import type { NotificationItem } from './notificationStore.js';
-import { useBackdropDismiss } from '../overlays/useBackdropDismiss.js';
+import { useDialogDismiss } from '../overlays/useDialogDismiss.js';
+import { closeDialog, openDialog } from '../overlays/dialogMotion.js';
 
 function Toast({ item }: { item: NotificationItem }) {
   const { t } = useI18n();
@@ -33,16 +34,16 @@ export function NotificationViewport() {
   const { t, locale } = useI18n();
   const { items, toasts, open, setOpen, markRead, markAllRead, remove, clearHistory } = useNotifications();
   const dialog = useRef<HTMLDialogElement>(null);
-  const backdrop = useBackdropDismiss(() => setOpen(false));
+  const dismissal = useDialogDismiss(() => setOpen(false));
   const closeButton = useRef<HTMLButtonElement>(null);
   const titleId = useId();
   const unread = items.filter((item) => !item.read).length;
 
   useEffect(() => {
-    if (open && !dialog.current?.open) {
-      dialog.current?.showModal();
+    if (open) {
+      openDialog(dialog.current);
       closeButton.current?.focus();
-    } else if (!open && dialog.current?.open) dialog.current.close();
+    } else void closeDialog(dialog.current);
   }, [open]);
 
   return (
@@ -54,16 +55,7 @@ export function NotificationViewport() {
           return item ? <Toast key={id} item={item} /> : null;
         })}
       </div>
-      <dialog
-        {...backdrop}
-        ref={dialog}
-        className="dl-notification-center dl-modal"
-        aria-labelledby={titleId}
-        onCancel={(event) => {
-          event.preventDefault();
-          setOpen(false);
-        }}
-      >
+      <dialog {...dismissal} ref={dialog} className="dl-notification-center dl-modal" aria-labelledby={titleId}>
         <header className="dl-notification-heading">
           <div>
             <h2 id={titleId}>{t('Notifications')}</h2>

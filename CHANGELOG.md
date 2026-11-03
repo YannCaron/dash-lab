@@ -24,6 +24,10 @@ The package currently declares version `0.1.0`. No publication or release tag is
 - Ten-minute plugin tutorial, complete application/plugin guide, detailed [release notes](release-node.md), and agent instructions to maintain release records with future work.
 - Demo panel counts derived from discovered plugin contributions, with application chrome and plugin status following the selected language.
 
+### Fixed
+
+- Firefox notification dialogs now animate before native closure, with the same fallback shared by Settings and Commands. Reopening cancels pending closure, Escape follows the animated path, and reduced motion stays immediate.
+
 ### Changed
 
 - Modal dialogs and backdrops animate on closure as well as opening, preserving native focus handoff, rapid reopening, Preferences content, and reduced-motion choices.

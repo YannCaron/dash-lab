@@ -9,7 +9,7 @@
   transition-timing-function: ease-in;
   transition-behavior: allow-discrete;
 }
-.dl-modal[open] {
+.dl-modal[open]:not([data-closing]) {
   opacity: 1;
   translate: 0 0;
   transition-timing-function: cubic-bezier(0.2, 0.8, 0.2, 1);
@@ -20,7 +20,7 @@
 .dl-modal::backdrop {
   opacity: 0;
 }
-.dl-modal[open]::backdrop {
+.dl-modal[open]:not([data-closing])::backdrop {
   opacity: 1;
   transition-timing-function: ease-out;
 }
@@ -28,11 +28,11 @@
   animation: dl-toast-enter calc(var(--dl-theme-duration, 180ms) * 1.5) ease-out backwards;
 }
 @starting-style {
-  .dl-modal[open] {
+  .dl-modal[open]:not([data-closing]) {
     opacity: 0;
     translate: var(--dl-dialog-entry, 0 -100vh);
   }
-  .dl-modal[open]::backdrop {
+  .dl-modal[open]:not([data-closing])::backdrop {
     opacity: 0;
   }
 }

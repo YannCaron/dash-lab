@@ -7,7 +7,8 @@ import type { useLayoutManagement } from '../layout/useLayoutManagement.js';
 import type { createLayoutStore } from '../layout/layoutStore.js';
 import { useStore } from 'zustand';
 import { useCommands } from '../commands/CommandContext.js';
-import { useBackdropDismiss } from '../overlays/useBackdropDismiss.js';
+import { useDialogDismiss } from '../overlays/useDialogDismiss.js';
+import { closeDialog, openDialog } from '../overlays/dialogMotion.js';
 
 export type SettingsPage = 'settings' | 'preferences';
 export function SettingsDialog({
@@ -25,7 +26,7 @@ export function SettingsDialog({
 }) {
   const { t, locales } = useI18n();
   const dialog = useRef<HTMLDialogElement>(null);
-  const backdrop = useBackdropDismiss(onClose);
+  const dismissal = useDialogDismiss(onClose);
   const close = useRef<HTMLButtonElement>(null);
   const [draft, setDraft] = useState<WorkbenchPreferences>(configuration.preferences);
   const [error, setError] = useState('');
@@ -43,10 +44,10 @@ export function SettingsDialog({
       setDraft(structuredClone(preferences.current));
       setError('');
 
-      if (!dialog.current?.open) dialog.current?.showModal();
+      openDialog(dialog.current);
 
       close.current?.focus();
-    } else dialog.current?.close();
+    } else void closeDialog(dialog.current);
   }, [page]);
 
   const submit = (event: FormEvent) => {
@@ -61,16 +62,7 @@ export function SettingsDialog({
   };
 
   return (
-    <dialog
-      {...backdrop}
-      ref={dialog}
-      className="dl-settings-dialog dl-modal"
-      aria-labelledby={titleId}
-      onCancel={(event) => {
-        event.preventDefault();
-        onClose();
-      }}
-    >
+    <dialog {...dismissal} ref={dialog} className="dl-settings-dialog dl-modal" aria-labelledby={titleId}>
       <header>
         <h2 id={titleId}>{t(visiblePage === 'preferences' ? 'Preferences' : 'Settings')}</h2>
         <button ref={close} type="button" className="dl-icon-button dl-dialog-close" aria-label={t('Close settings')} onClick={onClose}>

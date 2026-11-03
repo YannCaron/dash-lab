@@ -36,6 +36,8 @@ npm run build:storybook
 
 For an interface or effect-lifecycle change, start the demo and run `npm run test:browser` in another terminal. It uses an installed Chromium browser, with Microsoft Edge as the Windows default. Set `BROWSER_PATH` for another executable. To test development directly, use `npm run test:browser -- http://127.0.0.1:5173`. Screenshots and isolated profiles stay in `test-results/`. Tests must preserve actual panel instances, focus behavior, and meaningful assertions.
 
+For modal changes, also run `npm run test:firefox` after a build and `npm run test:firefox -- --dev`. This targeted WebDriver BiDi regression starts/closes its own server and an isolated headless Firefox profile. Windows defaults to `C:/Program Files/Mozilla Firefox/firefox.exe`; set `FIREFOX_PATH` for another installation. It checks notification exit on button/Escape/backdrop dismissal, focus restoration, rapid reopening, command handoff, and reduced motion without adding a browser automation dependency.
+
 Use focused commits such as `feat(plugin): add an application contribution`, `fix(layout): preserve a saved checkpoint`, or `docs: clarify plugin startup`. Make one coherent feature or fix per commit. Do not publish or push automatically. Update the affected documentation and [CHANGELOG.md](CHANGELOG.md), including verification and any remaining limits.
 
 ## Git hooks and CI
