@@ -418,9 +418,30 @@ try {
     'columns preset',
   );
 
+  const sash = await evaluate(`(() => {
+    const node = [...document.querySelectorAll('.dv-horizontal > .dv-sash-container > .dv-sash')].find(node => node.getBoundingClientRect().height > 100);
+    const rect = node.getBoundingClientRect();
+    return {x:rect.x + rect.width/2,y:rect.y + rect.height/2};
+  })()`);
+  const beforeResize = await evaluate('document.querySelector(".hello-world").getBoundingClientRect().width');
+
+  await command('Input.dispatchMouseEvent', { type: 'mouseMoved', ...sash });
+  await command('Input.dispatchMouseEvent', { type: 'mousePressed', button: 'left', clickCount: 1, ...sash });
+  await command('Input.dispatchMouseEvent', { type: 'mouseMoved', buttons: 1, x: sash.x + 75, y: sash.y });
+  await command('Input.dispatchMouseEvent', { type: 'mouseReleased', button: 'left', clickCount: 1, x: sash.x + 75, y: sash.y });
+  await waitFor(() => evaluate(`Math.abs(document.querySelector('.hello-world').getBoundingClientRect().width - ${beforeResize}) > 40`), 'manual panel resize');
   await toggleChromePart('header');
-  await click('Save layout');
-  await waitFor(() => evaluate('document.querySelector(".dl-notification-toast strong")?.textContent === "Layout saved."'), 'save layout');
+  await waitFor(
+    () => evaluate(`JSON.parse(localStorage.getItem('dash-lab:dash.lab:layout:v1')).headerVisible === false`),
+    'automatic custom layout and settings save',
+  );
+  await evaluate(
+    `globalThis.customLayout = localStorage.getItem('dash-lab:dash.lab:layout:v1'); globalThis.customWidth = document.querySelector('.hello-world').getBoundingClientRect().width; true`,
+  );
+  await check(
+    `!document.querySelector('button[aria-label="Save layout"]') && !document.querySelector('button[aria-label="Restore saved layout"]') && !document.querySelector('button[aria-label="Reset layout"]')`,
+    'Toolbar offers a custom preset instead of manual save/restore/reset',
+  );
   await click('Rows layout');
 
   await waitFor(
@@ -428,8 +449,18 @@ try {
     'rows preset',
   );
 
-  await toggleChromePart('header');
-  await click('Restore saved layout');
+  await openMenuItem('High Contrast', 'Theme');
+  await command('Emulation.setDeviceMetricsOverride', { width: 1500, height: 1000, deviceScaleFactor: 1, mobile: false });
+  await evaluate('new Promise(resolve => setTimeout(resolve, 350))');
+  await check(
+    `localStorage.getItem('dash-lab:dash.lab:layout:v1') === globalThis.customLayout`,
+    'Theme and host-window resizing preserve the saved custom layout',
+  );
+  await openMenuItem('Azure', 'Theme');
+  await command('Emulation.setDeviceMetricsOverride', { width: 1440, height: 1000, deviceScaleFactor: 1, mobile: false });
+  await evaluate('new Promise(resolve => setTimeout(resolve, 350))');
+  await check(`localStorage.getItem('dash-lab:dash.lab:layout:v1') === globalThis.customLayout`, 'Selecting a preset preserves the saved custom arrangement');
+  await click('Custom layout');
   await waitFor(() => evaluate('!document.querySelector(".dl-header")'), 'restore saved chrome');
 
   await waitFor(
@@ -445,29 +476,33 @@ try {
     'Presets and saved layout restoration preserve the live panel state',
   );
 
+  await check(
+    'Math.abs(document.querySelector(".hello-world").getBoundingClientRect().width - globalThis.customWidth) < 3',
+    'Custom layout restores manually resized panel dimensions',
+  );
   await evaluate('document.querySelector("#hello-name").focus(); document.querySelector("#hello-name").select()');
   await command('Input.insertText', { text: 'Unsaved plugin edit' });
   await evaluate('document.querySelector(".hello-form button").click()');
-  await click('Restore saved layout');
+  await click('Custom layout');
   await waitFor(() => evaluate('document.querySelector("#hello-name").value === "Ada"'), 'plugin checkpoint restoration');
   await check(
     'document.querySelector(".hello-world") === globalThis.testPanel && document.querySelector(".hello-result").textContent === "Hello, Ada!"',
     'Restore layout also restores registered plugin state without replacing its panel',
   );
 
-  await click('Reset layout');
+  await click('Application layout');
 
   await waitFor(
     () =>
       evaluate(
-        '!!document.querySelector(".dl-header") && document.querySelector(".demo-playground").getBoundingClientRect().top > document.querySelector(".demo-guide").getBoundingClientRect().top',
+        '!document.querySelector(".dl-header") && document.querySelector(".demo-playground").getBoundingClientRect().top > document.querySelector(".demo-guide").getBoundingClientRect().top',
       ),
     'reset layout',
   );
 
   await check(
-    'document.querySelector(".hello-world") === globalThis.testPanel && !Array.from(document.querySelectorAll("button")).find(button => button.getAttribute("aria-label") === "Restore saved layout").disabled',
-    'Reset restores the application layout without deleting the saved checkpoint',
+    'document.querySelector(".hello-world") === globalThis.testPanel && !Array.from(document.querySelectorAll("button")).find(button => button.getAttribute("aria-label") === "Custom layout").disabled',
+    'Application preset preserves the custom layout and chrome settings',
   );
 
   await reload();
@@ -492,7 +527,7 @@ try {
     'globalThis.originalStorageWrite = Storage.prototype.setItem; Storage.prototype.setItem = () => { throw new Error("Storage blocked"); }; true',
   );
 
-  await click('Save layout');
+  await toggleChromePart('header');
 
   await waitFor(
     () => evaluate('document.querySelector(".dl-notification-toast strong")?.textContent.includes("Browser storage is unavailable")'),
@@ -500,12 +535,14 @@ try {
   );
 
   await check(
-    '!Array.from(document.querySelectorAll("button")).find(button => button.getAttribute("aria-label") === "Restore saved layout").disabled && document.querySelectorAll(".dv-tab").length === 3',
+    '!Array.from(document.querySelectorAll("button")).find(button => button.getAttribute("aria-label") === "Custom layout").disabled && document.querySelectorAll(".dv-tab").length === 3',
     'Unavailable storage leaves a usable in-memory checkpoint',
   );
 
   await evaluate('Storage.prototype.setItem = globalThis.originalStorageWrite; true');
-  await click('Save layout');
+  if (!(await evaluate('!!document.querySelector(".dl-header")'))) await toggleChromePart('header');
+  await evaluate('document.querySelector(".dl-workbench").focus()');
+  await pressKey('s', 'KeyS', 3);
   await screenshot('demo-layout-management');
   await click('Open notifications');
   await waitFor(() => evaluate('document.querySelector(".dl-notification-center").open'), 'open notification history');
@@ -790,7 +827,7 @@ try {
 
   await evaluate('document.querySelectorAll(".dl-settings-dialog input[type=checkbox]")[0].click()');
   await waitFor(() => evaluate('!document.querySelector(".dl-header")'), 'settings header choice');
-  await clickText('.dl-settings-dialog button', 'Save workspace layout');
+  await waitFor(() => evaluate(`JSON.parse(localStorage.getItem('dash-lab:dash.lab:layout:v1')).headerVisible === false`), 'settings saved automatically');
   await pressKey('Escape', 'Escape', 0, 27);
   await waitFor(() => evaluate('!document.querySelector(".dl-settings-dialog").open'), 'close settings');
 
@@ -840,8 +877,8 @@ try {
   await waitFor(() => evaluate('document.querySelector(".dl-theme").dataset.theme === "dark"'), 'restore preferences on reload');
 
   await check(
-    '!document.querySelector(".dl-header") && document.querySelector(".dl-theme").dataset.motion === "reduced"',
-    'Preferences persist independently and do not save unsaved workspace changes',
+    '!!document.querySelector(".dl-header") && document.querySelector(".dl-theme").dataset.motion === "reduced"',
+    'Preferences and chrome settings both persist automatically',
   );
 
   await check('document.querySelector(".dl-theme").dataset.themeFamily === "emerald"', 'Selected theme family survives reload independently of light/dark');
@@ -879,7 +916,7 @@ try {
 
   assert.equal(exported.format, 'dash-lab');
   assert.equal(exported.version, 1);
-  assert.equal(exported.workspace.headerVisible, false);
+  assert.equal(exported.workspace.headerVisible, true);
   assert.equal(exported.preferences.theme, 'dark');
   assert.equal(exported.preferences.themeFamily, 'emerald');
   assert.equal(exported.preferences.notifications.toastDurationMs, 2000);
@@ -1234,7 +1271,8 @@ try {
 
   await pressKey('Enter', 'Enter');
   await waitFor(() => evaluate('!document.querySelector(".dl-command-palette").open'), 'translated command execution');
-  await click('Enregistrer la disposition');
+  await evaluate('document.querySelector(".dl-workbench").focus()');
+  await pressKey('s', 'KeyS', 3);
 
   await waitFor(
     () => evaluate('document.querySelector(".dl-notification-toast strong")?.textContent === "Disposition enregistrée."'),

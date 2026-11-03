@@ -8,7 +8,7 @@ import type { WorkbenchPanel } from '../layout/panels.js';
 import { copyPluginStates } from '../plugins/pluginState.js';
 import type { PluginStateSnapshot } from '../plugins/pluginState.js';
 
-/** Preferences persisted independently from explicit layout checkpoints. */
+/** Preferences persisted independently from custom layout checkpoints. */
 export interface WorkbenchPreferences {
   /** Registered language ID; absent in older version-1 files, which default to English. */
   locale?: string;

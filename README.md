@@ -78,7 +78,7 @@ const plugin: WorkbenchPlugin = {
 export default plugin;
 ```
 
-The demo already discovers `src/plugins/*/index.ts` with Vite. Its plugin boundary reloads when membership changes. If the old saved layout has a different panel set, it is rejected and the default layout stays usable; save a new checkpoint after arranging your panels.
+The demo already discovers `src/plugins/*/index.ts` with Vite. Its plugin boundary reloads when membership changes. If the old saved layout has a different panel set, it is rejected and the default layout stays usable; a new custom checkpoint is saved automatically after arranging your panels.
 
 ### 4. Use it — two minutes
 

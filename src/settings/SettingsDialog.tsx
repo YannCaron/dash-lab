@@ -149,7 +149,7 @@ export function SettingsDialog({
         </form>
       ) : (
         <div>
-          <p>{t('Changes apply immediately. Save the layout to restore it on your next visit.')}</p>
+          <p>{t('Changes and the custom layout are saved automatically.')}</p>
           <fieldset>
             <legend>{t('Workspace')}</legend>
             <label className="dl-settings-check">
@@ -161,8 +161,8 @@ export function SettingsDialog({
               {t('Show footer')}
             </label>
             <div className="dl-settings-actions">
-              <button type="button" disabled={!layout.ready} onClick={() => layout.save()}>
-                {t('Save workspace layout')}
+              <button type="button" disabled={!layout.ready || !layout.hasSaved} onClick={layout.restore}>
+                {t('Restore custom layout')}
               </button>
               <button type="button" disabled={!layout.ready} onClick={() => layout.reset()}>
                 {t('Reset workspace layout')}

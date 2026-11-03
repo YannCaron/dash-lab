@@ -2,7 +2,7 @@
 
 ## Decision
 
-Plugins may register one synchronous `exportState`/`importState` pair during activation. The registry assigns its owning plugin ID. Plugin data joins explicit layout saves, restoration on startup, and JSON configuration import/export. Application stores remain plugin-owned; the framework does not serialize React components.
+Plugins may register one synchronous `exportState`/`importState` pair during activation. The registry assigns its owning plugin ID. Plugin data joins automatic custom-layout checkpoints, explicit layout saves, restoration on startup, and JSON configuration import/export. Application stores remain plugin-owned; the framework does not serialize React components.
 
 ## Compatibility and failure handling
 

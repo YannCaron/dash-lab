@@ -30,13 +30,15 @@ export function App() {
 | `plugins`                                      | Optional `PluginRegistry`, sealed on first mount.                                                      |
 | `onWorkspaceReady(api)`                        | Called after initial panels and compatible saved layout restoration. Receives the native Dockview API. |
 | `initialHeaderVisible`, `initialFooterVisible` | Initial visibility, both defaulting to true. Saved layout preferences take precedence.                 |
-| `layoutStorageKey`                             | Explicit-checkpoint storage key, or false for session-only checkpoints.                                |
+| `layoutStorageKey`                             | Automatic custom-layout storage key, or false for session-only checkpoints.                            |
 | `preferencesStorageKey`                        | Automatically persisted preferences key, or false for in-memory preferences.                           |
 | `children`                                     | Fallback content when no panels exist.                                                                 |
 
 Keep panel collections, plugin registries, and storage keys stable until unmount. Default keys are `dash-lab:${encodeURIComponent(title)}:layout:v1` and `dash-lab:${encodeURIComponent(title)}:preferences:v1`. Applications sharing a title should choose distinct keys when their configuration must be independent.
 
 `WorkbenchPanel` has `id`, `title`, `component`, optional `position: { referencePanel, direction }`, and optional positive `initialWidth`/`initialHeight`. Directions are left, right, above, below, and within. Reference panels must precede their dependants. IDs stay stable across languages and persisted layouts. Components render in independent scrolling containers and remain mounted when inactive or when chrome changes.
+
+The toolbar offers Application, Columns, Rows, and Custom layout. Manual docking, resizing, and active-tab changes automatically update the custom snapshot after 200 ms of inactivity. Presets, theme/language changes, host resizing and Focus keep it available; the Custom layout button restores it. Header/footer choices persist immediately without replacing its arrangement. Storage failures retain the snapshot in memory and produce a warning. Legacy Save/Restore/Reset command IDs and shortcuts remain supported.
 
 View hides/shows header and footer together. Settings and existing individual shortcuts still control each region. Focus suppresses all chrome; Escape restores previous visibility choices. Neither changes the mounted panel instances.
 
@@ -144,7 +146,7 @@ Register during activation with `api.registerState({ exportState, importState })
 
 `PluginStateHandler.importState(value: unknown): void` must synchronously validate its plugin-specific shape/version and update its observable application store. Components subscribe to that store normally; restoring does not remount panels. Both callbacks must be synchronous. Include a version in returned data when your format evolves. An importer must also accept its own exported snapshot so rollback can restore it. External side effects are outside this state contract.
 
-Save layout captures all registered handlers in the same local checkpoint as the layout. Restore and startup reload apply saved plugin data before restoring Dockview. Reset and presets only change layout/visibility. Legacy checkpoints without plugin data leave live plugin state untouched. A panel-less workbench can transfer plugin state through JSON import/export; local layout checkpoints require a docking workspace.
+Automatic custom-layout checkpoints and the retained Save layout command capture all registered handlers in the same local checkpoint as the layout. Plugin data changes alone do not schedule an automatic layout checkpoint; JSON export always reads current plugin data. Restore and startup reload apply saved plugin data before restoring Dockview. Reset and presets only change layout/visibility. Legacy checkpoints without plugin data leave live plugin state untouched. A panel-less workbench can transfer plugin state through JSON import/export; local layout checkpoints require a docking workspace.
 
 Only handlers whose IDs occur in the snapshot are imported. Missing entries leave current state intact; entries for unavailable/nonparticipating plugins are ignored and are not retained on subsequent export. Before importing, the framework captures the participants' previous states. If a handler or layout restoration fails, attempted handlers are restored in reverse order, including the failing handler. Rollback failures are reported explicitly; arbitrary plugin callbacks cannot be guaranteed recoverable.
 
@@ -160,7 +162,7 @@ Only handlers whose IDs occur in the snapshot are imported. Missing entries leav
 
 `decodeConfiguration(text, panels)` is a pure validator with a 1 MB UTF-8 byte limit, including plugin data. It checks format/version, preferences, workspace shape, panel compatibility, and plugin JSON structure before returning data. Registered-language availability and plugin-specific validation are checked by Workbench before applying a workspace. Legacy files without a locale select English; files without `plugins` leave live plugin data intact. Unregistered React panel state, notification history, and recent commands are excluded.
 
-Export captures current choices and opted-in plugin state without changing an existing checkpoint. Import applies a compatible configuration and updates the explicit layout/plugin checkpoint. Plugin import failure leaves layout and preferences unchanged and attempts plugin rollback. Writes to layout/preferences keys are independent; if either fails, session state remains usable and feedback reports incomplete persistence. Reset preserves the existing saved checkpoint. Popout browser windows are not restored.
+Export captures current choices and opted-in plugin state without changing an existing checkpoint. Import applies a compatible configuration and updates the custom layout/plugin checkpoint. Plugin import failure leaves layout and preferences unchanged and attempts plugin rollback. Writes to layout/preferences keys are independent; if either fails, session state remains usable and feedback reports incomplete persistence. Reset preserves the existing saved checkpoint. Popout browser windows are not restored.
 
 Theme families are Azure (the original blue), High Contrast (presentation), Emerald (green), and Umber (brown). Each has independent light/dark variants. Select a family in the hamburger menu's Theme submenu or Preferences; the existing light/dark switch keeps that family. High Contrast uses stronger text/borders, larger controls and typography. Application-owned panel content should consume the shared tokens for matching readability.
 

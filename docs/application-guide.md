@@ -273,7 +273,7 @@ Each panel scrolls when its content exceeds the tab height. An editor/canvas may
 
 ## Save and transfer configuration
 
-Use explicit Save layout, Settings, or Mod+Alt+S for a checkpoint. Unsaved rearrangements are not automatically persisted. Preferences persist independently, including theme, language, motion, popup visibility, and default popup duration.
+Rearranging, resizing, or selecting tabs automatically updates the custom layout after 200 ms of inactivity. The Custom layout button restores it after trying Application, Columns, or Rows; selecting those presets does not overwrite it. Header/footer settings save immediately and keep the custom arrangement. Focus, language/theme changes, and host-window resizing do not replace the custom layout. Preferences persist independently, including theme family, light/dark mode, language, motion, popup visibility, and default popup duration. The legacy Save/Restore/Reset commands and shortcuts remain available for compatibility; no manual save is required.
 
 Choose stable application-specific `layoutStorageKey` and `preferencesStorageKey` values, or false for session-only behavior. Default keys derive from the workbench title; keep the title/keys stable when language changes. JSON export captures current layout, preferences, and opted-in plugin data; import validates the whole file, version, panel identities, and registered language before applying it. History and unregistered React panel content are excluded. A storage failure retains usable session state and reports incomplete persistence.
 
@@ -300,7 +300,7 @@ Here `notesStore` is your application's observable store; components must subscr
 
 Both callbacks are synchronous. Export only plain JSON values; import receives untrusted data and must validate its shape and plugin-specific version before mutation. The framework copies snapshots. A handler must be able to import its own exported data for rollback. Do not use these callbacks for asynchronous requests or external side effects.
 
-Save layout now captures participating plugin data too; Restore layout and the next startup load that same checkpoint. Preferences continue to save independently, and Reset/presets leave current plugin data alone. JSON export uses a top-level `plugins` object, for example `"plugins": { "notes": { "version": 1, "text": "Draft" } }`, without duplicating it inside `workspace`. JSON import also updates the local checkpoint when there is a docking workspace. Without panels, JSON transfer applies plugin data for the current session.
+Layout snapshots capture participating plugin data too; Custom layout and the next startup load that same checkpoint. Plugin-only data changes do not trigger a layout event; use JSON export or the retained Save layout command to capture them immediately. Preferences continue to save independently, and Reset/presets leave current plugin data alone. JSON export uses a top-level `plugins` object, for example `"plugins": { "notes": { "version": 1, "text": "Draft" } }`, without duplicating it inside `workspace`. JSON import also updates the local checkpoint when there is a docking workspace. Without panels, JSON transfer applies plugin data for the current session.
 
 Old files without `plugins` leave plugin data untouched. Missing plugin entries do the same; unknown/nonparticipating plugin IDs are ignored and not retained on the next export. A failed importer triggers rollback of attempted plugins and prevents layout/preferences changes. A failed rollback is reported rather than treated as a successful import. The existing 1 MB file/checkpoint limits include plugin data.
 
@@ -312,20 +312,20 @@ Update public JSDoc and [API reference](api.md) when contracts change. Update [r
 
 ## Troubleshooting
 
-| Symptom                                  | Check                                                                                                                    |
-| ---------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
-| Blank or tiny docking area               | Import `@cyann/dash-lab/style.css` and give html/body/root and the workbench parent a height.                            |
-| Plugin absent                            | The entry must match `src/plugins/*/index.ts`, default-export a plugin, and be included in the application's eager glob. |
-| Registration closed                      | Finish registration before mounting; create a new registry and remount to change membership.                             |
-| Panel reference error                    | Register the referenced ID first; consider sorted plugin path order.                                                     |
-| Command unavailable                      | Inspect ID/shortcut conflicts, `isEnabled`, overlapping execution, and notification history.                             |
-| Shortcut does nothing in a textarea      | Application shortcuts protect editable controls unless `allowInEditable` is explicitly enabled.                          |
-| Translation displays its key             | Add that key to an application/plugin catalog for the active language or English fallback.                               |
-| Hook provider error                      | Call hooks from a component inside Workbench or the matching explicit provider, never during activation.                 |
-| Old saved layout rejected                | The current panel identity set differs, or data is corrupt; use the default layout and save a fresh checkpoint.          |
-| Preferences/layout do not survive reload | Check the configured storage keys and notification feedback; browser storage may be blocked/full.                        |
-| Port already used                        | Stop your existing server or choose another port for your separate application; framework defaults are strict.           |
-| PowerShell refuses npm                   | Use `npm.cmd`.                                                                                                           |
+| Symptom                                  | Check                                                                                                                                  |
+| ---------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+| Blank or tiny docking area               | Import `@cyann/dash-lab/style.css` and give html/body/root and the workbench parent a height.                                          |
+| Plugin absent                            | The entry must match `src/plugins/*/index.ts`, default-export a plugin, and be included in the application's eager glob.               |
+| Registration closed                      | Finish registration before mounting; create a new registry and remount to change membership.                                           |
+| Panel reference error                    | Register the referenced ID first; consider sorted plugin path order.                                                                   |
+| Command unavailable                      | Inspect ID/shortcut conflicts, `isEnabled`, overlapping execution, and notification history.                                           |
+| Shortcut does nothing in a textarea      | Application shortcuts protect editable controls unless `allowInEditable` is explicitly enabled.                                        |
+| Translation displays its key             | Add that key to an application/plugin catalog for the active language or English fallback.                                             |
+| Hook provider error                      | Call hooks from a component inside Workbench or the matching explicit provider, never during activation.                               |
+| Old saved layout rejected                | The current panel identity set differs, or data is corrupt; use the default layout and rearrange a panel to refresh the custom layout. |
+| Preferences/layout do not survive reload | Check the configured storage keys and notification feedback; browser storage may be blocked/full.                                      |
+| Port already used                        | Stop your existing server or choose another port for your separate application; framework defaults are strict.                         |
+| PowerShell refuses npm                   | Use `npm.cmd`.                                                                                                                         |
 
 Theme families are Azure (the original blue), High Contrast (presentation), Emerald (green), and Umber (brown). Each has independent light/dark variants. Select a family in the hamburger menu's Theme submenu or Preferences; the existing light/dark switch keeps that family. High Contrast uses stronger text/borders, larger controls and typography. Application-owned panel content should consume the shared tokens for matching readability.
 

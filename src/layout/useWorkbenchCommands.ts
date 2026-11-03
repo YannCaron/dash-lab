@@ -79,7 +79,7 @@ export function useWorkbenchCommands(
       },
       {
         id: 'workbench.layout.restore',
-        title: 'Restore saved layout',
+        title: 'Restore custom layout',
         shortcut: 'Mod+Alt+R',
         isEnabled: () => currentLayout.current.ready && currentLayout.current.hasSaved,
         execute: () => {

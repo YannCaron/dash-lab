@@ -50,7 +50,7 @@ export interface WorkbenchProps {
   initialHeaderVisible?: boolean;
   /** Whether the footer is shown on first mount. Defaults to true. */
   initialFooterVisible?: boolean;
-  /** Browser storage key for explicitly saved layouts. Defaults to a title-based key; false keeps saves in memory. Keep stable while mounted. */
+  /** Browser storage key for the automatically saved custom layout. Defaults to a title-based key; false keeps it in memory. Keep stable while mounted. */
   layoutStorageKey?: string | false;
   /** Storage key for automatically saved preferences. Defaults to a title-based key; false keeps preferences in memory. Keep stable while mounted. */
   preferencesStorageKey?: string | false;

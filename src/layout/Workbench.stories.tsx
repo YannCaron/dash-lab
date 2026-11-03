@@ -82,3 +82,7 @@ export const PresentationTheme: Story = {
     ),
   ],
 };
+
+export const AutomaticCustomLayout: Story = {
+  args: { ...DockedWorkspace.args, controlBar: 'Resize or move a panel to save your custom layout. Try Rows, then Custom layout to return.' },
+};
