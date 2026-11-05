@@ -26,6 +26,8 @@ Each workbench owns a separate Zustand visibility store. Focus mode suppresses c
 
 The same instance-local store owns compact density. A boolean context exposes `useCompactMode` to application/plugin components; scoped CSS hides opt-in optional details and reduces shell/tab dimensions. A stable Ant Design ConfigProvider changes control size without replacing panel renderers. Compact density is persisted in preferences rather than layout snapshots.
 
+Overlay styles use internal width, spacing and typography scale variables with normal-density fallbacks. Workbench supplies compact values to its dialogs. Notification roots select the same values from their surrounding theme's compact workbench because the provider renders them as siblings outside the workbench context. This is presentation-only: providers, stores, modal drafts, live notification state and motion remain unchanged.
+
 Panel definitions are validated before Dockview receives them. Application components are passed through stable renderers, and Dockview's `always` renderer retains inactive panel state. The demo uses only the MIT edition's docking features.
 
 Hidden panel IDs belong to the instance-local layout store and optional checkpoint metadata. Tabs are hidden with scoped CSS; native Dockview group visibility collapses groups with no visible panels. No panel is removed or remounted. Applying a checkpoint restores group/tab visibility before observing layout events, so programmatic restores do not replace the custom checkpoint. The layout menu and tab actions share the same visibility operation. All library and demo interface icons come from `@ant-design/icons`, kept external in the library bundle.

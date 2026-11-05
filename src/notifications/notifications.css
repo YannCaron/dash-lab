@@ -19,8 +19,8 @@
   bottom: 45px;
   display: flex;
   flex-direction: column;
-  gap: 9px;
-  width: 440px;
+  gap: calc(9px * var(--dl-overlay-spacing, 1));
+  width: calc(440px * var(--dl-overlay-width-scale, 1));
   max-width: calc(100vw - 48px);
   pointer-events: none;
   font-family: ui-sans-serif, system-ui, sans-serif;
@@ -30,7 +30,8 @@
   align-items: flex-start;
   justify-content: space-between;
   gap: 12px;
-  padding: 20px 16px 20px 20px;
+  padding: calc(20px * var(--dl-overlay-spacing, 1)) calc(16px * var(--dl-overlay-spacing, 1)) calc(20px * var(--dl-overlay-spacing, 1))
+    calc(20px * var(--dl-overlay-spacing, 1));
   border: 1px solid var(--dl-border, #dce3eb);
   border-left: 3px solid var(--dl-accent, #087f82);
   border-radius: 7px;
@@ -41,7 +42,7 @@
 }
 .dl-notification-toast strong {
   display: block;
-  font-size: 16px;
+  font-size: calc(16px * var(--dl-overlay-font-scale, 1));
   font-weight: 600;
   line-height: 1.6;
   overflow-wrap: anywhere;
@@ -49,7 +50,7 @@
 .dl-notification-toast p {
   margin: 6px 0 0;
   color: var(--dl-muted, #647287);
-  font-size: 14px;
+  font-size: calc(14px * var(--dl-overlay-font-scale, 1));
   line-height: 1.7;
   overflow-wrap: anywhere;
 }
@@ -71,7 +72,7 @@
   flex-direction: column;
   position: fixed;
   inset: 12px 12px 12px auto;
-  width: 480px;
+  width: calc(480px * var(--dl-overlay-width-scale, 1));
   max-width: calc(100vw - 24px);
   height: calc(100% - 24px);
   max-height: none;
@@ -94,24 +95,24 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 24px;
+  padding: calc(24px * var(--dl-overlay-spacing, 1));
   border-bottom: 1px solid var(--dl-border);
 }
 .dl-notification-heading h2 {
   margin: 0;
-  font-size: 24px;
+  font-size: calc(24px * var(--dl-overlay-font-scale, 1));
   font-weight: 600;
   letter-spacing: -0.5px;
 }
 .dl-notification-heading p {
   margin: 7px 0 0;
   color: var(--dl-muted);
-  font-size: 14px;
+  font-size: calc(14px * var(--dl-overlay-font-scale, 1));
 }
 .dl-notification-actions {
   display: flex;
   justify-content: space-between;
-  padding: 13px 24px;
+  padding: calc(13px * var(--dl-overlay-spacing, 1)) calc(24px * var(--dl-overlay-spacing, 1));
   border-bottom: 1px solid var(--dl-border);
 }
 .dl-notification-center button:not(.dl-icon-button) {
@@ -120,7 +121,7 @@
   background: transparent;
   color: var(--dl-accent);
   font: inherit;
-  font-size: 13px;
+  font-size: calc(13px * var(--dl-overlay-font-scale, 1));
   cursor: pointer;
 }
 .dl-notification-center button:disabled {
@@ -137,8 +138,8 @@
   min-height: 0;
 }
 .dl-notification-entry {
-  margin: 0 24px;
-  padding: 21px 0;
+  margin: 0 calc(24px * var(--dl-overlay-spacing, 1));
+  padding: calc(21px * var(--dl-overlay-spacing, 1)) 0;
   border-bottom: 1px solid var(--dl-border);
 }
 .dl-notification-entry[data-read='false'] h3::before {
@@ -173,7 +174,7 @@
 }
 .dl-notification-entry h3 {
   margin: 0;
-  font-size: 16px;
+  font-size: calc(16px * var(--dl-overlay-font-scale, 1));
   line-height: 1.6;
   font-weight: 600;
   overflow-wrap: anywhere;
@@ -181,21 +182,21 @@
 .dl-notification-entry p {
   margin: 6px 0 0;
   color: var(--dl-muted);
-  font-size: 14px;
+  font-size: calc(14px * var(--dl-overlay-font-scale, 1));
   line-height: 1.7;
   overflow-wrap: anywhere;
 }
 .dl-notification-entry-actions {
   display: flex;
-  gap: 17px;
-  margin-top: 12px;
+  gap: calc(17px * var(--dl-overlay-spacing, 1));
+  margin-top: calc(12px * var(--dl-overlay-spacing, 1));
 }
 .dl-notification-empty {
-  padding: 72px 32px;
+  padding: calc(72px * var(--dl-overlay-spacing, 1)) calc(32px * var(--dl-overlay-spacing, 1));
   text-align: center;
 }
 .dl-notification-empty h3 {
-  font-size: 15px;
+  font-size: calc(15px * var(--dl-overlay-font-scale, 1));
   font-weight: 500;
 }
 .dl-notification-empty p {

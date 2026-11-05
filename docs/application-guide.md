@@ -6,6 +6,8 @@ This guide is sufficient to assemble an application without reading implementati
 
 Use the toolbar's Compact mode toggle for denser controls and tabs. Mark optional application/plugin information with `className="dl-compact-optional"` to hide it in that mode while retaining its state. Components inside Workbench can also import `useCompactMode` from `@cyann/dash-lab` to adapt their content. The choice is saved with preferences, independently of Focus and layout presets.
 
+The same toggle also compacts Commands, Settings/Preferences, popup notifications and notification history. Descriptions and actions stay available. Keep an explicit NotificationProvider inside the workbench's ThemeProvider when composing shared providers so its sibling overlays receive the theme and compact presentation.
+
 Use a tab's close button to hide it and the Visible tabs toolbar menu to reopen it. Hidden components keep running and retain their state; hiding is not plugin disposal. All panels remain part of the saved layout. For application icons, import the relevant `@ant-design/icons` component to match the workbench and demo.
 
 Use the adjacent maximize button to give the selected panel the full application area. Restore it with the same button or Escape. Tabs sharing its group remain selectable. The underlying arrangement, content, and chrome preferences are retained; the maximized selection is restored on the next visit and included in JSON configuration.

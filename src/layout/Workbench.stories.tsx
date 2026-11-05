@@ -2,6 +2,27 @@ import type { Meta, StoryObj } from '@storybook/react-vite';
 import { Workbench } from './Workbench.js';
 import type { WorkbenchPanel } from './panels.js';
 import { ThemeProvider } from '../theme/ThemeProvider.js';
+import { useNotifications } from '../notifications/NotificationContext.js';
+
+function OverlayExample() {
+  const { notify } = useNotifications();
+
+  return (
+    <button
+      type="button"
+      className="dl-icon-button"
+      onClick={() =>
+        notify({
+          title: 'Compact notification preview',
+          description: 'Toggle Compact mode, then open Commands, Preferences or notification history to compare density.',
+          durationMs: 0,
+        })
+      }
+    >
+      Preview notification
+    </button>
+  );
+}
 
 const panels: readonly WorkbenchPanel[] = [
   {
@@ -92,6 +113,10 @@ export const CompactMode: Story = {
     ...DockedWorkspace.args,
     controlBar: <span className="dl-compact-optional">Toggle Compact mode to hide this optional hint and reduce controls.</span>,
   },
+};
+
+export const CompactOverlays: Story = {
+  args: { ...DockedWorkspace.args, controlBar: <OverlayExample /> },
 };
 
 export const VisibleTabs: Story = {

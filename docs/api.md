@@ -48,6 +48,8 @@ View hides/shows header and footer together. Settings and existing individual sh
 
 Compact mode is an independent toolbar toggle, persisted in optional `preferences.compact` and JSON transfers. Legacy files default to normal density. It reduces shell controls, Ant Design controls, tab height/text, and hides monitoring and secondary toolbar text. Application/plugin content can use `className="dl-compact-optional"` to hide optional details without unmounting them, or call exported `useCompactMode(): boolean` within Workbench to adapt rendering. Outside Workbench the hook returns false. Separate workbenches own their density independently.
 
+Compact density also narrows Commands, Settings/Preferences, notification popups and notification history, and reduces their spacing, typography and close controls. Notification descriptions and actions remain visible. Notification presentation follows the compact workbench in its surrounding theme scope, including when the center is rendered beside the workbench by an explicit NotificationProvider. Standalone centers retain normal density. Changing density does not reset modal drafts, notifications or animations.
+
 ## Providers and hooks
 
 Workbench reuses the nearest providers or supplies defaults. For explicit composition, use:

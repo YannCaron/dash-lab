@@ -2,9 +2,11 @@
 
 ## Unreleased
 
-The package currently declares version `0.1.0`. No publication or release tag is created by the implementation workflow.
+The package currently declares version `0.1.1`. No publication or release tag is created by the implementation workflow.
 
 ### Added
+
+- Compact mode also reduces Commands, Settings/Preferences, notification popups and notification history: narrower windows, denser spacing, smaller text and close controls, with full notification descriptions retained.
 
 - Per-tab maximize/restore controls with full application space, Escape recovery, retained panels, and persistent maximization independent of the saved arrangement (#4).
 

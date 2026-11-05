@@ -272,6 +272,59 @@ async function openPreferences() {
   );
 }
 
+async function measureOverlayDensity(compact = false) {
+  const sizes = {};
+  const metric = (selector, property) =>
+    evaluate(`Number.parseFloat(getComputedStyle(document.querySelector(${JSON.stringify(selector)}))[${JSON.stringify(property)}])`);
+  const close = async (label, selector) => {
+    await click(label);
+    await waitFor(() => evaluate(`getComputedStyle(document.querySelector(${JSON.stringify(selector)})).display === 'none'`), 'settled density dialog closure');
+  };
+
+  await click('Open command palette');
+  await waitFor(() => evaluate('document.querySelector(".dl-command-palette").open'), 'density palette');
+  sizes.paletteWidth = await metric('.dl-command-palette', 'width');
+  sizes.palettePadding = await metric('.dl-palette-search', 'paddingTop');
+  sizes.paletteText = await metric('.dl-palette-search input', 'fontSize');
+  sizes.paletteClose = await metric('.dl-command-palette .dl-dialog-close', 'width');
+  if (compact) await screenshot('demo-compact-commands');
+  await close('Close command palette', '.dl-command-palette');
+
+  await openPreferences();
+  sizes.settingsWidth = await metric('.dl-settings-dialog', 'width');
+  sizes.settingsPadding = await metric('.dl-settings-dialog > header', 'paddingTop');
+  sizes.settingsText = await metric('.dl-settings-dialog h2', 'fontSize');
+  sizes.settingsControl = await metric('.dl-settings-dialog select', 'height');
+  sizes.settingsClose = await metric('.dl-settings-dialog .dl-dialog-close', 'width');
+  if (compact) await screenshot('demo-compact-preferences');
+  await close('Close settings', '.dl-settings-dialog');
+
+  await evaluate(`[...document.querySelectorAll('.demo-playground button')].find(button => button.textContent.trim() === 'Send error').click()`);
+  await waitFor(() => evaluate('!!document.querySelector(".dl-notification-toast[role=alert]")'), 'density error notification');
+  sizes.toastWidth = await metric('.dl-notification-toasts', 'width');
+  sizes.toastPadding = await metric('.dl-notification-toast[role=alert]', 'paddingTop');
+  sizes.toastText = await metric('.dl-notification-toast[role=alert] strong', 'fontSize');
+  sizes.toastClose = await metric('.dl-notification-toast[role=alert] button', 'width');
+  await check(
+    `document.querySelector('.dl-notification-toast[role=alert] p').textContent.length > 0 && getComputedStyle(document.querySelector('.dl-notification-toast[role=alert] p')).display !== 'none'`,
+    'Notification density preserves the complete error description',
+  );
+  if (compact) await screenshot('demo-compact-toast');
+
+  await click('Open notifications');
+  await waitFor(() => evaluate('document.querySelector(".dl-notification-center").open'), 'density notification history');
+  sizes.historyWidth = await metric('.dl-notification-center', 'width');
+  sizes.historyPadding = await metric('.dl-notification-heading', 'paddingTop');
+  sizes.historyText = await metric('.dl-notification-entry h3', 'fontSize');
+  sizes.historyClose = await metric('.dl-notification-center .dl-dialog-close', 'width');
+  if (compact) await screenshot('demo-compact-history');
+  await clickText('.dl-notification-actions button', 'Clear history');
+  await close('Close notifications', '.dl-notification-center');
+  await waitFor(() => evaluate('!document.querySelector(".dl-notification-toast")'), 'density toast cleanup');
+
+  return sizes;
+}
+
 async function chooseSelect(index, value) {
   await evaluate(`document.querySelectorAll('.dl-settings-dialog select')[${index}].focus()`);
   await pressKey('Home', 'Home', 0, 36);
@@ -431,8 +484,23 @@ try {
   await click('Maximize tab: Hello World');
   await clickText('.dl-panel-tab-title', 'Getting started');
   await waitFor(() => evaluate(`!!document.querySelector('button[aria-label="Restore tab: Getting started"]')`), 'active tab inside maximized group');
+  await waitFor(() => evaluate(`document.querySelector('.hello-world').getBoundingClientRect().width > window.innerWidth - 10`), 'first maximization geometry');
   await click('Restore tab: Getting started');
+  await waitFor(
+    () =>
+      evaluate(
+        `!document.querySelector('.dl-workbench').dataset.maximizedPanel && document.querySelector('.hello-world').getBoundingClientRect().width < window.innerWidth - 10`,
+      ),
+    'restored shared group geometry',
+  );
   await click('Maximize tab: Hello World');
+  await waitFor(
+    () =>
+      evaluate(
+        `document.querySelector('.dl-workbench').dataset.maximizedPanel === 'hello' && document.querySelector('.hello-world').getBoundingClientRect().width > window.innerWidth - 10`,
+      ),
+    'second maximization geometry',
+  );
   await click('Hide tab: Getting started');
   await waitFor(
     () =>
@@ -1566,6 +1634,25 @@ try {
 
   await screenshot('demo-french');
   await pressKey('Escape', 'Escape', 0, 27);
+
+  await evaluate('localStorage.clear()');
+  await reload();
+  await waitFor(
+    () => evaluate(`document.querySelector('.dl-i18n').lang === 'en' && document.querySelector('.dl-workbench').dataset.compact === 'false'`),
+    'independent overlay density scenario',
+  );
+  const normalOverlayDensity = await measureOverlayDensity();
+  await click('Compact mode');
+  const compactOverlayDensity = await measureOverlayDensity(true);
+  for (const [name, size] of Object.entries(normalOverlayDensity)) {
+    assert.ok(compactOverlayDensity[name] < size, `${name} shrinks in compact mode: ${compactOverlayDensity[name]} < ${size}`);
+  }
+  console.log('PASS Compact mode reduces palette, preferences, toast and notification-history dimensions, spacing, typography and controls');
+  await click('Compact mode');
+  await check(
+    `Number.parseFloat(getComputedStyle(document.querySelector('.dl-settings-dialog')).width) === ${normalOverlayDensity.settingsWidth} && Number.parseFloat(getComputedStyle(document.querySelector('.dl-command-palette')).width) === ${normalOverlayDensity.paletteWidth} && Number.parseFloat(getComputedStyle(document.querySelector('.dl-notification-center')).width) === ${normalOverlayDensity.historyWidth} && Number.parseFloat(getComputedStyle(document.querySelector('.dl-notification-toasts')).width) === ${normalOverlayDensity.toastWidth}`,
+    'Leaving compact mode restores normal modal and notification sizes',
+  );
 
   assert.deepEqual(errors, [], 'No browser runtime errors');
 

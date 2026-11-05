@@ -1,6 +1,12 @@
 # Release notes
 
-## Unreleased — package version 0.1.0
+## Unreleased — package version 0.1.1
+
+### Compact dialogs and notifications
+
+Compact mode now applies to Commands, Settings/Preferences, popup notifications and notification history. Windows are 20% narrower, content spacing is reduced, and text/close controls follow the denser presentation. Notification descriptions, history and actions remain available. Notifications rendered beside Workbench inherit density from the surrounding theme scope; standalone notifications keep normal density. Turning Compact mode off restores the original sizes. Existing preferences/configuration formats and overlay motion remain unchanged.
+
+Verified locally with 84 unit tests, 125 Edge checks and 9 Firefox modal regressions on each compiled/development demo, strict types, lint/format, library/demo builds, Storybook and the offline packed consumer. Browser comparisons cover normal/compact/restored dimensions and retained notification descriptions. Docking checks wait for maximization geometry before hiding sibling tabs.
 
 ### Issue #2 — Compact mode
 

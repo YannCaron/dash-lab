@@ -377,3 +377,25 @@
   min-height: 24px;
   padding-inline: 12px;
 }
+
+.dl-workbench[data-compact='true'],
+.dl-theme:has(.dl-workbench[data-compact='true']) :is(.dl-notification-center, .dl-notification-toasts) {
+  --dl-overlay-width-scale: 0.8;
+  --dl-overlay-spacing: 0.65;
+  --dl-overlay-font-scale: 0.9;
+}
+.dl-workbench[data-compact='true'] .dl-icon-button.dl-dialog-close,
+.dl-theme:has(.dl-workbench[data-compact='true']) .dl-notification-center .dl-dialog-close {
+  width: 30px;
+  min-width: 30px;
+  height: 30px;
+  min-height: 30px;
+  font-size: 22px;
+}
+.dl-theme:has(.dl-workbench[data-compact='true']) .dl-notification-toast .dl-icon-button {
+  width: 26px;
+  min-width: 26px;
+  height: 26px;
+  min-height: 26px;
+  padding: 0;
+}
