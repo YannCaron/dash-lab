@@ -186,6 +186,12 @@
   color: var(--dl-muted);
   pointer-events: none;
 }
+.dl-workbench[data-maximized-panel] > :is(.dl-header, .dl-control-bar, .dl-monitoring-bar, .dl-footer, .dl-exit-focus) {
+  display: none;
+}
+.dl-workbench[data-maximized-panel] > .dl-workspace {
+  padding: 0;
+}
 .dl-panel-tab {
   display: flex;
   align-items: center;

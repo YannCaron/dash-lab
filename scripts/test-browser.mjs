@@ -409,6 +409,135 @@ try {
     `document.querySelectorAll('.dl-tab-action .anticon-close').length === 3 && document.querySelector('.dl-menu-trigger .anticon-menu') !== null`,
     'Tab and existing workbench controls use Ant Design Icons',
   );
+  const tabDrag = await evaluate(`(() => {
+    const source = [...document.querySelectorAll('.dl-panel-tab-title')].find(node => node.textContent === 'Getting started').getBoundingClientRect();
+    const target = [...document.querySelectorAll('.dl-panel-tab-title')].find(node => node.textContent === 'Hello World').getBoundingClientRect();
+
+    return {start:{x:source.x+source.width/2,y:source.y+source.height/2},end:{x:target.x+target.width/2,y:target.y+target.height/2}};
+  })()`);
+  await command('Input.dispatchMouseEvent', { type: 'mouseMoved', ...tabDrag.start });
+  await command('Input.dispatchMouseEvent', { type: 'mousePressed', button: 'left', buttons: 1, clickCount: 1, ...tabDrag.start });
+  for (let step = 1; step <= 10; step++) {
+    await command('Input.dispatchMouseEvent', {
+      type: 'mouseMoved',
+      button: 'left',
+      buttons: 1,
+      x: tabDrag.start.x + ((tabDrag.end.x - tabDrag.start.x) * step) / 10,
+      y: tabDrag.end.y,
+    });
+  }
+  await command('Input.dispatchMouseEvent', { type: 'mouseReleased', button: 'left', clickCount: 1, ...tabDrag.end });
+  await waitFor(() => evaluate(`document.querySelectorAll('.dv-groupview').length === 2`), 'docked tabs sharing one group');
+  await click('Maximize tab: Hello World');
+  await clickText('.dl-panel-tab-title', 'Getting started');
+  await waitFor(() => evaluate(`!!document.querySelector('button[aria-label="Restore tab: Getting started"]')`), 'active tab inside maximized group');
+  await click('Restore tab: Getting started');
+  await click('Maximize tab: Hello World');
+  await click('Hide tab: Getting started');
+  await waitFor(
+    () =>
+      evaluate(
+        `document.querySelector('.dl-workbench').dataset.maximizedPanel === 'hello' && document.querySelector('.hello-world').getBoundingClientRect().width > window.innerWidth - 10`,
+      ),
+    'hidden sibling in maximized group',
+  );
+  await check(`document.querySelectorAll('.dl-panel-tab[hidden]').length === 1`, 'Shared groups retain maximization when a sibling tab is hidden');
+  await click('Restore tab: Hello World');
+  await click('Visible tabs');
+  await waitFor(() => evaluate('!!document.querySelector("[role=menuitemcheckbox]")'), 'shared group recovery menu');
+  await clickText('[role=menuitemcheckbox]', 'Getting started');
+  await pressKey('Escape', 'Escape', 0, 27);
+  await click('Application layout');
+  await waitFor(() => evaluate(`document.querySelectorAll('.dv-groupview').length === 3`), 'application groups after docking');
+  await delay(300);
+  const savedArrangement = await evaluate(`JSON.stringify(JSON.parse(localStorage.getItem('dash-lab:dash.lab:layout:v1')).layout)`);
+  await evaluate(
+    `globalThis.maximizedProbe = document.querySelector('.hello-world'); globalThis.normalPanelBounds = document.querySelector('.hello-world').getBoundingClientRect().toJSON()`,
+  );
+  await click('Maximize tab: Hello World');
+  await waitFor(
+    () =>
+      evaluate(
+        `document.querySelector('.dl-workbench').dataset.maximizedPanel === 'hello' && document.querySelector('.hello-world').getBoundingClientRect().width > window.innerWidth - 10`,
+      ),
+    'maximized application panel',
+  );
+  await check(
+    `document.querySelector('.hello-world') === globalThis.maximizedProbe && getComputedStyle(document.querySelector('.dl-header')).display === 'none' && getComputedStyle(document.querySelector('.dl-control-bar')).display === 'none' && document.querySelector('.hello-world').getBoundingClientRect().height > window.innerHeight - 50`,
+    'Maximizing fills the application without remounting the selected panel',
+  );
+  await waitFor(() => evaluate(`JSON.parse(localStorage.getItem('dash-lab:dash.lab:layout:v1')).maximizedPanel === 'hello'`), 'persisted maximized selection');
+  await check(
+    `JSON.stringify(JSON.parse(localStorage.getItem('dash-lab:dash.lab:layout:v1')).layout) === ${JSON.stringify(savedArrangement)}`,
+    'Maximization persists its target without replacing the saved arrangement',
+  );
+  await screenshot('demo-maximized');
+  await click('Restore tab: Hello World');
+  await waitFor(
+    () =>
+      evaluate(
+        `!document.querySelector('.dl-workbench').dataset.maximizedPanel && Math.abs(document.querySelector('.hello-world').getBoundingClientRect().width - globalThis.normalPanelBounds.width) < 2`,
+      ),
+    'restored panel dimensions',
+  );
+  await check(
+    `document.querySelector('.hello-world') === globalThis.maximizedProbe && document.activeElement?.getAttribute('aria-label') === 'Maximize tab: Hello World' && getComputedStyle(document.querySelector('.dl-header')).display !== 'none'`,
+    'Restore returns to the previous geometry, content, chrome, and keyboard control',
+  );
+  await click('Maximize tab: Hello World');
+  await reload();
+  await waitFor(
+    () =>
+      evaluate(
+        `document.querySelector('.dl-workbench').dataset.maximizedPanel === 'hello' && !!document.querySelector('button[aria-label="Restore tab: Hello World"]')`,
+      ),
+    'maximized selection restored on reload',
+  );
+  await pressKey('Escape', 'Escape', 0, 27);
+  await waitFor(() => evaluate(`!document.querySelector('.dl-workbench').dataset.maximizedPanel`), 'Escape restores maximized panel');
+  await check(
+    `JSON.stringify(JSON.parse(localStorage.getItem('dash-lab:dash.lab:layout:v1')).layout) === ${JSON.stringify(savedArrangement)}`,
+    'Reload and Escape preserve the stored normal arrangement',
+  );
+  await click('Maximize tab: Hello World');
+  await click('Hide tab: Hello World');
+  await waitFor(
+    () => evaluate(`!document.querySelector('.dl-workbench').dataset.maximizedPanel && document.querySelector('.dl-panel-tab[hidden]') !== null`),
+    'hiding a maximized panel',
+  );
+  await click('Visible tabs');
+  await waitFor(() => evaluate('!!document.querySelector("[role=menuitemcheckbox]")'), 'reopen maximized panel menu');
+  await clickText('[role=menuitemcheckbox]', 'Hello World');
+  await pressKey('Escape', 'Escape', 0, 27);
+  await check(
+    `!document.querySelector('.dl-workbench').dataset.maximizedPanel && !document.querySelector('.dl-panel-tab[hidden]')`,
+    'Hiding a maximized tab restores a recoverable workspace',
+  );
+  await click('Enter focus mode');
+  await click('Maximize tab: Hello World');
+  await pressKey('Escape', 'Escape', 0, 27);
+  await waitFor(() => evaluate(`!document.querySelector('.dl-workbench').dataset.maximizedPanel`), 'restore within Focus mode');
+  await check(`document.querySelector('.dl-workbench').dataset.focusMode === 'true'`, 'Maximization retains the existing Focus choice');
+  await pressKey('Escape', 'Escape', 0, 27);
+  await waitFor(() => evaluate(`document.querySelector('.dl-workbench').dataset.focusMode === 'false'`), 'exit Focus after maximization');
+  await click('Maximize tab: Getting started');
+  await pressKey('3', 'Digit3', 3);
+  await waitFor(
+    () =>
+      evaluate(
+        `!document.querySelector('.dl-workbench').dataset.maximizedPanel && document.querySelector('.demo-guide').closest('.dl-panel-content').getBoundingClientRect().top > document.querySelector('.hello-world').closest('.dl-panel-content').getBoundingClientRect().bottom - 2`,
+      ),
+    'preset exits maximization',
+  );
+  await check(
+    `JSON.parse(localStorage.getItem('dash-lab:dash.lab:layout:v1')).maximizedPanel === null`,
+    'Selecting a preset clears saved maximization without replacing the custom layout',
+  );
+  await click('Application layout');
+  await waitFor(
+    () => evaluate('document.querySelector(".demo-guide").getBoundingClientRect().left > document.querySelector(".hello-world").getBoundingClientRect().left'),
+    'application arrangement after maximization',
+  );
   await evaluate('document.querySelector("#hello-name").focus(); document.querySelector("#hello-name").select()');
   await command('Input.insertText', { text: 'Ada' });
   await evaluate('document.querySelector(".hello-form button").click()');

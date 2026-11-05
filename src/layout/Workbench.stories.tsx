@@ -97,3 +97,7 @@ export const CompactMode: Story = {
 export const VisibleTabs: Story = {
   args: { ...DockedWorkspace.args, controlBar: 'Close tabs to hide them, then use Visible tabs to reopen them with their content intact.' },
 };
+
+export const MaximizedTabs: Story = {
+  args: { ...DockedWorkspace.args, controlBar: 'Maximize a tab to use the whole application. Restore it or press Escape to return to this layout.' },
+};

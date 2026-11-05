@@ -13,6 +13,15 @@ export interface LayoutFeedback {
   error: boolean;
 }
 
+function normalLayout(api: DockviewApi): SerializedDockview {
+  const layout = api.toJSON();
+
+  // Keep maximization in checkpoint metadata rather than Dockview's grid location.
+  delete (layout.grid as { maximizedNode?: unknown }).maximizedNode;
+
+  return layout;
+}
+
 export function useLayoutManagement(
   api: DockviewApi | null,
   panels: readonly WorkbenchPanel[],
@@ -28,6 +37,7 @@ export function useLayoutManagement(
   const observed = useRef('');
   const flushPending = useRef<(() => void) | null>(null);
   const applying = useRef(false);
+  const maximizedLayout = useRef<SerializedDockview | null>(null);
   const [hasSaved, setHasSaved] = useState(false);
   const [feedback, setFeedback] = useState<LayoutFeedback | null>(null);
 
@@ -44,29 +54,59 @@ export function useLayoutManagement(
       flushPending.current?.();
       validateLayout(snapshot.layout, panels);
 
-      const previous = api.toJSON();
+      const previous = structuredClone(maximizedLayout.current ?? normalLayout(api));
       const previousHidden = store.getState().hiddenPanels;
+      const previousMaximized = store.getState().maximizedPanel;
+      const previousSize = { width: api.width, height: api.height };
 
       restorePluginStates(stateHandlers, snapshot.plugins ?? {}, () => {
         applying.current = true;
 
         try {
+          api.exitMaximizedGroup();
+          maximizedLayout.current = null;
+
+          if (previousMaximized) api.layout(snapshot.layout.grid.width, snapshot.layout.grid.height);
+
           api.fromJSON(structuredClone(snapshot.layout), { reuseExistingPanels: true });
+          api.exitMaximizedGroup();
           store.getState().setHiddenPanels(snapshot.hiddenPanels ?? []);
           applyPanelVisibility(api, store.getState().hiddenPanels);
           store.getState().setVisibility(snapshot.headerVisible, snapshot.footerVisible);
+          const maximized = snapshot.maximizedPanel ?? null;
+
+          if (maximized) {
+            api.getPanel(maximized)?.api.setActive();
+            maximizedLayout.current = normalLayout(api);
+
+            api.getPanel(maximized)?.api.maximize();
+
+            if (previousMaximized) api.layout(previousSize.width, previousSize.height);
+          }
+
+          store.getState().setMaximizedPanel(maximized);
         } catch (error) {
+          api.layout(previous.grid.width, previous.grid.height);
           api.fromJSON(previous, { reuseExistingPanels: true });
+          api.exitMaximizedGroup();
           store.getState().setHiddenPanels(previousHidden);
           applyPanelVisibility(api, previousHidden);
-          observed.current = JSON.stringify(api.toJSON());
+
+          maximizedLayout.current = previousMaximized ? previous : null;
+
+          if (previousMaximized) api.getPanel(previousMaximized)?.api.maximize();
+
+          api.layout(previousSize.width, previousSize.height);
+
+          store.getState().setMaximizedPanel(previousMaximized);
+          observed.current = JSON.stringify(maximizedLayout.current ?? normalLayout(api));
 
           throw error;
         } finally {
           applying.current = false;
         }
 
-        observed.current = JSON.stringify(api.toJSON());
+        observed.current = JSON.stringify(maximizedLayout.current ?? normalLayout(api));
       });
 
       return true;
@@ -99,15 +139,17 @@ export function useLayoutManagement(
     }
 
     onReady?.(api);
-  }, [api, apply, onInitialize, onReady, panels, reportError, storageKey]);
+    store.getState().setMaximizedPanel(api.panels.find((panel) => panel.api.isMaximized() && panel.api.isActive)?.id ?? null);
+  }, [api, apply, onInitialize, onReady, panels, reportError, storageKey, store]);
 
   const capture = useCallback((): SavedLayout | null => {
     if (!api) return null;
 
-    const { headerVisible, footerVisible, hiddenPanels } = store.getState();
-    const snapshot: SavedLayout = { version: 1, layout: api.toJSON(), headerVisible, footerVisible };
+    const { headerVisible, footerVisible, hiddenPanels, maximizedPanel } = store.getState();
+    const snapshot: SavedLayout = { version: 1, layout: structuredClone(maximizedLayout.current ?? normalLayout(api)), headerVisible, footerVisible };
 
     if (hiddenPanels.length) snapshot.hiddenPanels = [...hiddenPanels];
+    if (maximizedPanel) snapshot.maximizedPanel = maximizedPanel;
     const plugins = capturePluginStates(stateHandlers);
 
     if (Object.keys(plugins).length) snapshot.plugins = plugins;
@@ -163,7 +205,7 @@ export function useLayoutManagement(
     let automaticError = '';
     let size = { width: api.width, height: api.height };
 
-    observed.current = JSON.stringify(api.toJSON());
+    observed.current = JSON.stringify(maximizedLayout.current ?? normalLayout(api));
 
     const persistAutomatically = (read: () => SavedLayout | null) => {
       try {
@@ -198,10 +240,13 @@ export function useLayoutManagement(
     }
 
     const layoutListener = api.onDidLayoutChange(({ reasons }) => {
-      const text = JSON.stringify(api.toJSON());
       const resized = size.width !== api.width || size.height !== api.height;
 
       size = { width: api.width, height: api.height };
+
+      if (applying.current || store.getState().maximizedPanel) return;
+
+      const text = JSON.stringify(normalLayout(api));
 
       if (text === observed.current) return;
 
@@ -216,10 +261,40 @@ export function useLayoutManagement(
     const visibilityListener = store.subscribe((state, previous) => {
       if (applying.current) return;
 
+      if (state.maximizedPanel !== previous.maximizedPanel) {
+        flush();
+        observed.current = JSON.stringify(maximizedLayout.current ?? normalLayout(api));
+        persistAutomatically(() => (saved.current ? { ...saved.current, maximizedPanel: state.maximizedPanel } : capture()));
+
+        return;
+      }
+
       if (state.hiddenPanels !== previous.hiddenPanels) {
         flush();
-        applyPanelVisibility(api, state.hiddenPanels);
-        observed.current = JSON.stringify(api.toJSON());
+
+        applying.current = true;
+
+        try {
+          const previousSize = { width: api.width, height: api.height };
+
+          if (maximizedLayout.current) {
+            api.layout(maximizedLayout.current.grid.width, maximizedLayout.current.grid.height);
+            api.exitMaximizedGroup();
+          }
+
+          applyPanelVisibility(api, state.hiddenPanels);
+
+          if (state.maximizedPanel) {
+            api.getPanel(state.maximizedPanel)?.api.setActive();
+            maximizedLayout.current = normalLayout(api);
+            api.getPanel(state.maximizedPanel)?.api.maximize();
+            api.layout(previousSize.width, previousSize.height);
+          }
+        } finally {
+          applying.current = false;
+        }
+
+        observed.current = JSON.stringify(maximizedLayout.current ?? normalLayout(api));
         persistAutomatically(capture);
 
         return;
@@ -234,6 +309,30 @@ export function useLayoutManagement(
         persistAutomatically(() => saved.current && { ...saved.current, headerVisible: state.headerVisible, footerVisible: state.footerVisible });
     });
 
+    const maximizedListener = api.onDidMaximizedGroupChange((event) => {
+      if (applying.current) return;
+
+      if (event.isMaximized) maximizedLayout.current ??= normalLayout(api);
+      else if (maximizedLayout.current) {
+        applying.current = true;
+
+        try {
+          api.layout(maximizedLayout.current.grid.width, maximizedLayout.current.grid.height);
+          api.fromJSON(structuredClone(maximizedLayout.current), { reuseExistingPanels: true });
+          applyPanelVisibility(api, store.getState().hiddenPanels);
+          maximizedLayout.current = null;
+        } finally {
+          applying.current = false;
+        }
+      }
+
+      store.getState().setMaximizedPanel(event.isMaximized ? (event.group.activePanel?.id ?? null) : null);
+      observed.current = JSON.stringify(maximizedLayout.current ?? normalLayout(api));
+    });
+    const activeListener = api.onDidActivePanelChange((event) => {
+      if (!applying.current && event.panel?.api.isMaximized()) store.getState().setMaximizedPanel(event.panel.id);
+    });
+
     const pageHidden = () => {
       if (document.visibilityState === 'hidden') flush();
     };
@@ -244,6 +343,8 @@ export function useLayoutManagement(
     return () => {
       layoutListener.dispose();
       visibilityListener();
+      maximizedListener.dispose();
+      activeListener.dispose();
       window.removeEventListener('pagehide', flush);
       document.removeEventListener('visibilitychange', pageHidden);
       flush();
@@ -275,6 +376,11 @@ export function useLayoutManagement(
         const { headerVisible, footerVisible, hiddenPanels } = store.getState();
 
         apply({ version: 1, layout: presetLayout(baseline.current, preset, panels), headerVisible, footerVisible, hiddenPanels });
+
+        if (saved.current?.maximizedPanel && !persistSnapshot({ ...saved.current, maximizedPanel: null }, true)) {
+          return reportError(new Error('Layout kept for this session. Browser storage is unavailable or full.'));
+        }
+
         setFeedback({ message: `${preset === 'default' ? 'Application' : preset === 'columns' ? 'Columns' : 'Rows'} layout selected.`, error: false });
 
         return true;
@@ -282,7 +388,7 @@ export function useLayoutManagement(
         return reportError(error);
       }
     },
-    [api, apply, panels, reportError, store],
+    [api, apply, panels, persistSnapshot, reportError, store],
   );
 
   const reset = useCallback(() => {
@@ -293,13 +399,63 @@ export function useLayoutManagement(
 
       if (!apply({ version: 1, layout: baseline.current, headerVisible, footerVisible })) return false;
 
+      if (saved.current?.maximizedPanel && !persistSnapshot({ ...saved.current, maximizedPanel: null }, true)) {
+        return reportError(new Error('Layout kept for this session. Browser storage is unavailable or full.'));
+      }
+
       setFeedback({ message: saved.current ? 'Application layout reset. Your saved layout is still available.' : 'Application layout reset.', error: false });
 
       return true;
     } catch (error) {
       return reportError(error);
     }
-  }, [apply, reportError, store]);
+  }, [apply, persistSnapshot, reportError, store]);
+
+  const toggleMaximized = useCallback(
+    (id: string) => {
+      const panel = api?.getPanel(id);
+
+      if (!api || !panel || store.getState().hiddenPanels.includes(id)) return;
+
+      flushPending.current?.();
+
+      const maximized = store.getState().maximizedPanel === id ? null : id;
+      const previousSize = { width: api.width, height: api.height };
+      const wasMaximized = maximizedLayout.current !== null;
+
+      applying.current = true;
+
+      try {
+        if (maximizedLayout.current) {
+          api.layout(maximizedLayout.current.grid.width, maximizedLayout.current.grid.height);
+        }
+
+        api.exitMaximizedGroup();
+        maximizedLayout.current = null;
+        panel.api.setActive();
+
+        if (maximized) {
+          maximizedLayout.current = normalLayout(api);
+
+          panel.api.maximize();
+
+          if (wasMaximized) api.layout(previousSize.width, previousSize.height);
+        }
+      } finally {
+        applying.current = false;
+      }
+
+      store.getState().setMaximizedPanel(maximized);
+      observed.current = JSON.stringify(maximizedLayout.current ?? normalLayout(api));
+    },
+    [api, store],
+  );
+
+  const restoreMaximized = useCallback(() => {
+    const id = store.getState().maximizedPanel;
+
+    if (id) toggleMaximized(id);
+  }, [store, toggleMaximized]);
 
   const setPanelVisible = useCallback(
     (id: string, visible: boolean) => {
@@ -309,12 +465,14 @@ export function useLayoutManagement(
 
       if (visible === !hidden.includes(id)) return;
 
+      if (!visible && store.getState().maximizedPanel === id) restoreMaximized();
+
       store.getState().setHiddenPanels(visible ? hidden.filter((panelId) => panelId !== id) : [...hidden, id]);
 
       if (visible) api.getPanel(id)?.api.setActive();
     },
-    [api, panels, store],
+    [api, panels, store, restoreMaximized],
   );
 
-  return { save, restore, reset, selectPreset, capture, apply, setPanelVisible, hasSaved, feedback, ready: api !== null };
+  return { save, restore, reset, selectPreset, capture, apply, setPanelVisible, toggleMaximized, restoreMaximized, hasSaved, feedback, ready: api !== null };
 }

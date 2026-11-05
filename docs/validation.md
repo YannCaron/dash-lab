@@ -1,4 +1,14 @@
-# Features 1–3 validation
+# Validation
+
+## Issues #2, #3 and #4 — 2026-11-05
+
+Eighty-four Vitest tests, strict TypeScript, ESLint, Prettier, library/demo builds, Storybook, and the packed-consumer check pass. All 121 Edge checks pass against each of the compiled and development demos. Coverage includes compact density and reload, actual Ant Design control sizing, hidden tabs and empty-workspace recovery, checked visibility menus, native tab dragging and shared groups, maximization with retained content, exact restoration dimensions, checkpoint preservation, reload, Escape, Focus, and preset/hidden-tab interactions. Firefox's existing modal regression suite passes on both servers after replacing the close/search/menu icons.
+
+Visual checks cover compact mode, the visible-tabs recovery menu and empty state, and a maximized panel. The existing Vite bundle-size and Storybook directive warnings remain. These are local checks; no push, publication, or hosted-CI execution is included.
+
+An existing modal-exit timing assertion failed during concurrent Edge runs; the compiled suite passed when rerun alone without changing that assertion or the modal implementation. Prefer sequential browser runs when evaluating the animation samples.
+
+## Features 1–3
 
 Verified locally on Windows with Node.js 24.20.0 on 2026-11-02:
 

@@ -19,6 +19,8 @@ export interface SavedLayout {
   footerVisible: boolean;
   /** Hidden panel IDs; panels remain registered and mounted. Absent in legacy checkpoints. */
   hiddenPanels?: readonly string[];
+  /** Maximized panel ID, independent of the normal arrangement; absent/null means restored. */
+  maximizedPanel?: string | null;
   /** Opted-in plugin state; absent in legacy layout checkpoints. */
   plugins?: PluginStateSnapshot;
 }
@@ -121,12 +123,23 @@ export function decodeLayout(text: string, panels: readonly WorkbenchPanel[]): S
     throw new Error('Saved layout contains invalid hidden panels.');
   }
 
+  if (
+    value.maximizedPanel !== undefined &&
+    value.maximizedPanel !== null &&
+    (typeof value.maximizedPanel !== 'string' ||
+      !panels.some((panel) => panel.id === value.maximizedPanel) ||
+      value.hiddenPanels?.includes(value.maximizedPanel))
+  ) {
+    throw new Error('Saved layout contains an invalid maximized panel.');
+  }
+
   return {
     version: 1,
     layout: value.layout,
     headerVisible: value.headerVisible,
     footerVisible: value.footerVisible,
     ...(value.hiddenPanels === undefined ? {} : { hiddenPanels: [...value.hiddenPanels] as string[] }),
+    ...(value.maximizedPanel === undefined ? {} : { maximizedPanel: value.maximizedPanel as string | null }),
     ...(value.plugins === undefined ? {} : { plugins: copyPluginStates(value.plugins) }),
   };
 }

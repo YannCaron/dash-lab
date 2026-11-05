@@ -20,6 +20,21 @@ const baseline: SerializedDockview = {
 const snapshot = () => ({ version: 1, layout: structuredClone(baseline), headerVisible: false, footerVisible: true });
 
 describe('saved layout compatibility', () => {
+  it('saves maximization independently of panel arrangement and rejects hidden or unknown targets', () => {
+    for (const maximizedPanel of [null, 'one', 'two']) {
+      const saved = { ...snapshot(), maximizedPanel };
+
+      expect(decodeLayout(JSON.stringify(saved), panels)).toEqual(saved);
+    }
+
+    expect(decodeLayout(JSON.stringify(snapshot()), panels)).not.toHaveProperty('maximizedPanel');
+
+    for (const maximizedPanel of ['', 'unknown', 1, {}, true]) {
+      expect(() => decodeLayout(JSON.stringify({ ...snapshot(), maximizedPanel }), panels)).toThrow('maximized panel');
+    }
+
+    expect(() => decodeLayout(JSON.stringify({ ...snapshot(), hiddenPanels: ['one'], maximizedPanel: 'one' }), panels)).toThrow('maximized panel');
+  });
   it('round-trips hidden tabs while rejecting unknown, duplicate, and invalid IDs', () => {
     for (const hiddenPanels of [[], ['one'], ['one', 'two']]) {
       const saved = { ...snapshot(), hiddenPanels };

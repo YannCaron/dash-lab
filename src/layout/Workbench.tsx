@@ -6,7 +6,7 @@ import type { DockviewApi } from 'dockview-react';
 import { useStore } from 'zustand';
 import { ConfigProvider } from 'antd';
 import { CompactContext } from './CompactContext.js';
-import { PanelVisibilityContext } from './PanelVisibilityContext.js';
+import { PanelControlsContext } from './PanelControlsContext.js';
 import { DockWorkspace } from './DockWorkspace.js';
 import { createLayoutStore } from './layoutStore.js';
 import type { WorkbenchPanel } from './panels.js';
@@ -166,6 +166,20 @@ function WorkbenchShell({
   const exitFocus = useRef<HTMLButtonElement>(null);
   const enterFocus = useRef<HTMLButtonElement>(null);
   const wasFocused = useRef(false);
+  const previousMaximized = useRef<string | null>(null);
+
+  useEffect(() => {
+    const id = state.maximizedPanel ?? previousMaximized.current;
+
+    if (id) {
+      const button = [...(root.current?.querySelectorAll<HTMLButtonElement>('[data-panel-maximize]') ?? [])].find((node) => node.dataset.panelMaximize === id);
+
+      if (button && !state.hiddenPanels.includes(id)) button.focus();
+      else root.current?.querySelector<HTMLButtonElement>('[data-visible-tabs-trigger]')?.focus();
+    }
+
+    previousMaximized.current = state.maximizedPanel;
+  }, [state.maximizedPanel, state.hiddenPanels]);
 
   useEffect(() => {
     if (document.activeElement === document.body) root.current?.focus({ preventScroll: true });
@@ -188,7 +202,14 @@ function WorkbenchShell({
   return (
     <PluginContext.Provider value={contributions}>
       <CompactContext.Provider value={state.compact}>
-        <PanelVisibilityContext.Provider value={{ hiddenPanels: state.hiddenPanels, setPanelVisible: layout.setPanelVisible }}>
+        <PanelControlsContext.Provider
+          value={{
+            hiddenPanels: state.hiddenPanels,
+            setPanelVisible: layout.setPanelVisible,
+            maximizedPanel: state.maximizedPanel,
+            toggleMaximized: layout.toggleMaximized,
+          }}
+        >
           <ConfigProvider componentSize={state.compact ? 'small' : 'middle'}>
             <section
               className="dl-workbench"
@@ -197,6 +218,7 @@ function WorkbenchShell({
               aria-label={t(title ?? '')}
               data-focus-mode={state.focusMode}
               data-compact={state.compact}
+              data-maximized-panel={state.maximizedPanel ?? undefined}
               onKeyDown={handleKeyDown}
             >
               {!state.focusMode && state.headerVisible && (
@@ -329,7 +351,7 @@ function WorkbenchShell({
               )}
             </section>
           </ConfigProvider>
-        </PanelVisibilityContext.Provider>
+        </PanelControlsContext.Provider>
       </CompactContext.Provider>
     </PluginContext.Provider>
   );

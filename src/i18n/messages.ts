@@ -36,6 +36,8 @@ export const french: MessageCatalog = {
   'Compact mode': 'Mode compact',
   'Visible tabs': 'Onglets visibles',
   'Hide tab: {title}': 'Masquer l’onglet : {title}',
+  'Maximize tab: {title}': 'Agrandir l’onglet : {title}',
+  'Restore tab: {title}': 'Restaurer l’onglet : {title}',
   'All tabs are hidden. Use Visible tabs to show a panel.': 'Tous les onglets sont masqués. Utilisez Onglets visibles pour afficher un panneau.',
   'Enter focus mode': 'Activer le mode focus',
   'Exit focus mode': 'Quitter le mode focus',

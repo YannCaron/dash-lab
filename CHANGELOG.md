@@ -6,6 +6,8 @@ The package currently declares version `0.1.0`. No publication or release tag is
 
 ### Added
 
+- Per-tab maximize/restore controls with full application space, Escape recovery, retained panels, and persistent maximization independent of the saved arrangement (#4).
+
 - Visible tabs menu and tab close buttons that hide/reopen panels without losing mounted state, with visibility included in layout checkpoints and JSON (#3). All interface icons use Ant Design Icons.
 
 - Compact mode toggle with smaller controls/tabs, optional-information hiding, persisted density, and the public `useCompactMode` hook (#2).

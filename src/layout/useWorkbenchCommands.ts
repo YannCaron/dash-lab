@@ -125,6 +125,13 @@ export function useWorkbenchCommands(
 
       if (!(target instanceof Element) || target.closest('dialog[open]')) return;
 
+      if (event.key === 'Escape' && !event.defaultPrevented && !event.nativeEvent.isComposing && store.getState().maximizedPanel) {
+        event.preventDefault();
+        currentLayout.current.restoreMaximized();
+
+        return;
+      }
+
       const editable = !!target.closest('input, textarea, select, [role="textbox"]') || (target instanceof HTMLElement && target.isContentEditable);
 
       try {
@@ -141,6 +148,6 @@ export function useWorkbenchCommands(
         notify({ title: t('Shortcut could not run'), description: t(error instanceof Error ? error.message : 'The action is unavailable.'), level: 'error' });
       }
     },
-    [registry, execute, notify, t],
+    [registry, execute, notify, t, store],
   );
 }

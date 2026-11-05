@@ -1,7 +1,7 @@
 import { useCallback, useContext, useEffect, useMemo, useRef, useSyncExternalStore } from 'react';
 import { DockviewReact, themeDark, themeLight } from 'dockview-react';
-import { CloseOutlined } from '@ant-design/icons';
-import { PanelVisibilityContext } from './PanelVisibilityContext.js';
+import { CloseOutlined, ExpandOutlined, ShrinkOutlined } from '@ant-design/icons';
+import { PanelControlsContext } from './PanelControlsContext.js';
 import type { DockviewApi, DockviewReadyEvent, IDockviewPanelHeaderProps } from 'dockview-react';
 import type { WorkbenchPanel } from './panels.js';
 import { validatePanels } from './panels.js';
@@ -10,7 +10,8 @@ import { useI18n } from '../i18n/I18nProvider.js';
 
 function PanelTab(props: IDockviewPanelHeaderProps) {
   const { t } = useI18n();
-  const visibility = useContext(PanelVisibilityContext);
+  const visibility = useContext(PanelControlsContext);
+  const maximized = visibility?.maximizedPanel === props.api.id;
   const title = useSyncExternalStore(
     useCallback(
       (changed) => {
@@ -27,11 +28,33 @@ function PanelTab(props: IDockviewPanelHeaderProps) {
     <div
       className="dl-panel-tab"
       hidden={visibility?.hiddenPanels.includes(props.api.id)}
+      onDoubleClick={(event) => {
+        event.stopPropagation();
+        if (!(event.target as HTMLElement).closest('button')) visibility?.toggleMaximized(props.api.id);
+      }}
       onPointerUp={(event) => {
         if (event.button === 1) visibility?.setPanelVisible(props.api.id, false);
       }}
     >
       <span className="dl-panel-tab-title">{title}</span>
+      <button
+        type="button"
+        className="dl-tab-action"
+        data-panel-maximize={props.api.id}
+        aria-label={t(maximized ? 'Restore tab: {title}' : 'Maximize tab: {title}', { title })}
+        title={t(maximized ? 'Restore tab: {title}' : 'Maximize tab: {title}', { title })}
+        aria-pressed={maximized}
+        onPointerDown={(event) => {
+          event.preventDefault();
+          event.stopPropagation();
+        }}
+        onClick={(event) => {
+          event.stopPropagation();
+          visibility?.toggleMaximized(props.api.id);
+        }}
+      >
+        {maximized ? <ShrinkOutlined /> : <ExpandOutlined />}
+      </button>
       <button
         type="button"
         className="dl-tab-action"
@@ -58,6 +81,7 @@ function PanelTab(props: IDockviewPanelHeaderProps) {
 export function DockWorkspace({ panels, onReady }: { panels: readonly WorkbenchPanel[]; onReady?: ((api: DockviewApi) => void) | undefined }) {
   const { t } = useI18n();
   const currentApi = useRef<DockviewApi | null>(null);
+  const controls = useContext(PanelControlsContext);
 
   useEffect(() => {
     for (const panel of panels) currentApi.current?.getPanel(panel.id)?.api.setTitle(t(panel.title));
@@ -104,6 +128,14 @@ export function DockWorkspace({ panels, onReady }: { panels: readonly WorkbenchP
   );
 
   return (
-    <DockviewReact className="dl-dock" components={components} defaultTabComponent={PanelTab} onReady={ready} theme={dockTheme} defaultRenderer="always" />
+    <DockviewReact
+      className="dl-dock"
+      components={components}
+      defaultTabComponent={PanelTab}
+      onReady={ready}
+      theme={dockTheme}
+      defaultRenderer="always"
+      disableDnd={!!controls?.maximizedPanel}
+    />
   );
 }
