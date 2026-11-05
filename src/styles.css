@@ -136,6 +136,12 @@
   background: var(--dl-raised);
   color: var(--dl-text);
 }
+.dl-icon-button > .anticon {
+  font-size: 16px;
+}
+.dl-icon-button.dl-dialog-close > .anticon {
+  font-size: inherit;
+}
 .dl-icon-button.dl-dialog-close {
   flex-shrink: 0;
   width: 38px;
@@ -165,9 +171,52 @@
   background: var(--dl-surface);
 }
 .dl-workspace {
+  position: relative;
   flex: 1;
   min-height: 0;
   padding: 14px;
+}
+
+.dl-hidden-workspace {
+  position: absolute;
+  z-index: 1;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  color: var(--dl-muted);
+  pointer-events: none;
+}
+.dl-panel-tab {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 100%;
+  padding-inline: 8px;
+}
+.dl-dock .dv-tab:has(.dl-panel-tab[hidden]) {
+  display: none;
+}
+.dl-panel-tab-title {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.dl-tab-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 22px;
+  height: 22px;
+  border: 0;
+  border-radius: 3px;
+  color: inherit;
+  background: transparent;
+  cursor: pointer;
+  font-size: 12px;
+}
+.dl-tab-action:hover {
+  background: var(--dl-raised);
 }
 .dl-dock {
   height: 100%;

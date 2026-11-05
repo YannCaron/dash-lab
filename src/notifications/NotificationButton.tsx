@@ -1,3 +1,4 @@
+import { BellOutlined } from '@ant-design/icons';
 import { useI18n } from '../i18n/I18nProvider.js';
 import { useNotifications } from './NotificationContext.js';
 
@@ -15,9 +16,7 @@ export function NotificationButton() {
       title={t('Notifications ({count} unread)', { count: unread })}
       onClick={() => setOpen(true)}
     >
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true">
-        <path d="M5 16h14l-2-3V9a5 5 0 0 0-10 0v4zM9 20h6" />
-      </svg>
+      <BellOutlined />
       {unread > 0 && (
         <span className="dl-notification-count" aria-label={t('{count} unread notifications', { count: unread })}>
           {unread > 99 ? '99+' : unread}

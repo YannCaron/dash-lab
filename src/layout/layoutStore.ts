@@ -5,6 +5,8 @@ interface LayoutState {
   footerVisible: boolean;
   focusMode: boolean;
   compact: boolean;
+  hiddenPanels: readonly string[];
+  setHiddenPanels: (ids: readonly string[]) => void;
   setCompact: (compact: boolean) => void;
   toggleCompact: () => void;
   toggleHeader: () => void;
@@ -20,6 +22,8 @@ export function createLayoutStore(headerVisible = true, footerVisible = true) {
     footerVisible,
     focusMode: false,
     compact: false,
+    hiddenPanels: [],
+    setHiddenPanels: (hiddenPanels) => set({ hiddenPanels }),
     setCompact: (compact) => set({ compact }),
     toggleCompact: () => set((state) => ({ compact: !state.compact })),
     toggleHeader: () => set((state) => ({ headerVisible: !state.headerVisible })),

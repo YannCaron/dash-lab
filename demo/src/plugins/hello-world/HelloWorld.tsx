@@ -1,3 +1,4 @@
+import { ArrowUpOutlined, CodeOutlined } from '@ant-design/icons';
 import { useI18n } from '@cyann/dash-lab';
 import { useStore } from 'zustand';
 import { Button, Input } from 'antd';
@@ -37,7 +38,7 @@ export function HelloWorld() {
           <Input id="hello-name" value={name} onChange={(event) => helloState.setState({ name: event.target.value })} placeholder={t('Your name')} />
           <Button type="primary" htmlType="submit">
             {t('Say hello')}
-            <span aria-hidden="true">↗</span>
+            <ArrowUpOutlined rotate={45} aria-hidden="true" />
           </Button>
         </div>
         <p className="hello-result" role="status">
@@ -51,7 +52,7 @@ export function HelloWorld() {
       </div>
       <div className="hello-local dl-compact-optional">
         <span className="hello-local-mark" aria-hidden="true">
-          ⌘
+          <CodeOutlined />
         </span>
         <div>
           <strong>{t('A local plugin. A real starting point.')}</strong>

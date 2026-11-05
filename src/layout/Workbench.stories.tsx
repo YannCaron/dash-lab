@@ -93,3 +93,7 @@ export const CompactMode: Story = {
     controlBar: <span className="dl-compact-optional">Toggle Compact mode to hide this optional hint and reduce controls.</span>,
   },
 };
+
+export const VisibleTabs: Story = {
+  args: { ...DockedWorkspace.args, controlBar: 'Close tabs to hide them, then use Visible tabs to reopen them with their content intact.' },
+};

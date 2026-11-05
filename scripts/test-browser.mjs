@@ -368,6 +368,47 @@ try {
   await check(`document.querySelector('button[aria-label="Compact mode"]').getAttribute('aria-pressed') === 'true'`, 'Compact density survives a full reload');
   await click('Compact mode');
   await waitFor(() => evaluate('getComputedStyle(document.querySelector(".hello-description")).display !== "none"'), 'normal density restored');
+  await evaluate('new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)))');
+  await evaluate(
+    'globalThis.hiddenPanelProbe = document.querySelector(".hello-world"); globalThis.visibleGuideWidth = document.querySelector(".demo-guide").getBoundingClientRect().width',
+  );
+  await click('Hide tab: Hello World');
+  await waitFor(() => evaluate('document.querySelector(".dl-panel-tab[hidden]") !== null'), 'hidden Hello World tab');
+  await waitFor(() => evaluate('document.querySelector(".demo-guide").getBoundingClientRect().width > globalThis.visibleGuideWidth'), 'collapsed hidden group');
+  await check(
+    `document.querySelector('.hello-world') === globalThis.hiddenPanelProbe && document.querySelector('.demo-guide').getBoundingClientRect().width > globalThis.visibleGuideWidth`,
+    'Hiding a tab preserves its mounted content and frees its group space',
+  );
+  await click('Visible tabs');
+  await waitFor(() => evaluate('!!document.querySelector("[role=menuitemcheckbox]")'), 'visible tabs menu');
+  await check(
+    `document.querySelectorAll('[role=menuitemcheckbox]').length === 3 && [...document.querySelectorAll('[role=menuitemcheckbox]')].find(item => item.textContent === 'Hello World').getAttribute('aria-checked') === 'false'`,
+    'The tab menu lists visible and hidden panels with their checked state',
+  );
+  await clickText('[role=menuitemcheckbox]', 'Hello World');
+  await check(
+    `document.querySelector('.hello-world') === globalThis.hiddenPanelProbe && !document.querySelector('.dl-panel-tab[hidden]')`,
+    'The menu restores the original tab and panel instance',
+  );
+  await pressKey('Escape', 'Escape', 0, 27);
+  for (const title of ['Hello World', 'Getting started', 'Playground']) await click('Hide tab: ' + title);
+  await waitFor(() => evaluate('!!document.querySelector(".dl-hidden-workspace")'), 'all tabs hidden');
+  await check(
+    `document.querySelectorAll('.dl-panel-tab[hidden]').length === 3 && !document.querySelector('button[aria-label="Visible tabs"]').disabled`,
+    'All tabs may be hidden while the recovery menu stays available',
+  );
+  await reload();
+  await waitFor(() => evaluate('document.querySelectorAll(".dl-panel-tab[hidden]").length === 3'), 'hidden tabs restored on reload');
+  await click('Visible tabs');
+  await waitFor(() => evaluate('!!document.querySelector("[role=menuitemcheckbox]")'), 'recovery tabs menu');
+  await screenshot('demo-visible-tabs');
+  for (const title of ['Hello World', 'Getting started', 'Playground']) await clickText('[role=menuitemcheckbox]', title);
+  await pressKey('Escape', 'Escape', 0, 27);
+  await waitFor(() => evaluate('!document.querySelector(".dl-panel-tab[hidden]") && !document.querySelector(".dl-hidden-workspace")'), 'all tabs reopened');
+  await check(
+    `document.querySelectorAll('.dl-tab-action .anticon-close').length === 3 && document.querySelector('.dl-menu-trigger .anticon-menu') !== null`,
+    'Tab and existing workbench controls use Ant Design Icons',
+  );
   await evaluate('document.querySelector("#hello-name").focus(); document.querySelector("#hello-name").select()');
   await command('Input.insertText', { text: 'Ada' });
   await evaluate('document.querySelector(".hello-form button").click()');

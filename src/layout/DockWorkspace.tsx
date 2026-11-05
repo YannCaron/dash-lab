@@ -1,5 +1,7 @@
-import { useCallback, useEffect, useMemo, useRef } from 'react';
-import { DockviewDefaultTab, DockviewReact, themeDark, themeLight } from 'dockview-react';
+import { useCallback, useContext, useEffect, useMemo, useRef, useSyncExternalStore } from 'react';
+import { DockviewReact, themeDark, themeLight } from 'dockview-react';
+import { CloseOutlined } from '@ant-design/icons';
+import { PanelVisibilityContext } from './PanelVisibilityContext.js';
 import type { DockviewApi, DockviewReadyEvent, IDockviewPanelHeaderProps } from 'dockview-react';
 import type { WorkbenchPanel } from './panels.js';
 import { validatePanels } from './panels.js';
@@ -7,7 +9,50 @@ import { useTheme } from '../theme/ThemeProvider.js';
 import { useI18n } from '../i18n/I18nProvider.js';
 
 function PanelTab(props: IDockviewPanelHeaderProps) {
-  return <DockviewDefaultTab {...props} hideClose />;
+  const { t } = useI18n();
+  const visibility = useContext(PanelVisibilityContext);
+  const title = useSyncExternalStore(
+    useCallback(
+      (changed) => {
+        const listener = props.api.onDidTitleChange(changed);
+
+        return () => listener.dispose();
+      },
+      [props.api],
+    ),
+    () => props.api.title ?? props.api.id,
+  );
+
+  return (
+    <div
+      className="dl-panel-tab"
+      hidden={visibility?.hiddenPanels.includes(props.api.id)}
+      onPointerUp={(event) => {
+        if (event.button === 1) visibility?.setPanelVisible(props.api.id, false);
+      }}
+    >
+      <span className="dl-panel-tab-title">{title}</span>
+      <button
+        type="button"
+        className="dl-tab-action"
+        aria-label={t('Hide tab: {title}', { title })}
+        title={t('Hide tab: {title}', { title })}
+        onPointerDown={(event) => {
+          event.preventDefault();
+          event.stopPropagation();
+        }}
+        onClick={(event) => {
+          event.stopPropagation();
+          const trigger = event.currentTarget.closest('.dl-workbench')?.querySelector<HTMLButtonElement>('[data-visible-tabs-trigger]');
+
+          visibility?.setPanelVisible(props.api.id, false);
+          trigger?.focus();
+        }}
+      >
+        <CloseOutlined />
+      </button>
+    </div>
+  );
 }
 
 export function DockWorkspace({ panels, onReady }: { panels: readonly WorkbenchPanel[]; onReady?: ((api: DockviewApi) => void) | undefined }) {

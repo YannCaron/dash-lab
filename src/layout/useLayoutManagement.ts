@@ -6,6 +6,7 @@ import { decodeLayout, presetLayout, validateLayout } from './layoutPersistence.
 import type { LayoutPreset, SavedLayout } from './layoutPersistence.js';
 import { capturePluginStates, restorePluginStates } from '../plugins/pluginState.js';
 import type { PluginStateHandler } from '../plugins/pluginState.js';
+import { applyPanelVisibility } from './panelVisibility.js';
 
 export interface LayoutFeedback {
   message: string;
@@ -26,6 +27,7 @@ export function useLayoutManagement(
   const saved = useRef<SavedLayout | null>(null);
   const observed = useRef('');
   const flushPending = useRef<(() => void) | null>(null);
+  const applying = useRef(false);
   const [hasSaved, setHasSaved] = useState(false);
   const [feedback, setFeedback] = useState<LayoutFeedback | null>(null);
 
@@ -43,19 +45,28 @@ export function useLayoutManagement(
       validateLayout(snapshot.layout, panels);
 
       const previous = api.toJSON();
+      const previousHidden = store.getState().hiddenPanels;
 
       restorePluginStates(stateHandlers, snapshot.plugins ?? {}, () => {
+        applying.current = true;
+
         try {
           api.fromJSON(structuredClone(snapshot.layout), { reuseExistingPanels: true });
+          store.getState().setHiddenPanels(snapshot.hiddenPanels ?? []);
+          applyPanelVisibility(api, store.getState().hiddenPanels);
+          store.getState().setVisibility(snapshot.headerVisible, snapshot.footerVisible);
         } catch (error) {
           api.fromJSON(previous, { reuseExistingPanels: true });
+          store.getState().setHiddenPanels(previousHidden);
+          applyPanelVisibility(api, previousHidden);
           observed.current = JSON.stringify(api.toJSON());
 
           throw error;
+        } finally {
+          applying.current = false;
         }
 
         observed.current = JSON.stringify(api.toJSON());
-        store.getState().setVisibility(snapshot.headerVisible, snapshot.footerVisible);
       });
 
       return true;
@@ -93,8 +104,10 @@ export function useLayoutManagement(
   const capture = useCallback((): SavedLayout | null => {
     if (!api) return null;
 
-    const { headerVisible, footerVisible } = store.getState();
+    const { headerVisible, footerVisible, hiddenPanels } = store.getState();
     const snapshot: SavedLayout = { version: 1, layout: api.toJSON(), headerVisible, footerVisible };
+
+    if (hiddenPanels.length) snapshot.hiddenPanels = [...hiddenPanels];
     const plugins = capturePluginStates(stateHandlers);
 
     if (Object.keys(plugins).length) snapshot.plugins = plugins;
@@ -201,6 +214,17 @@ export function useLayoutManagement(
     });
 
     const visibilityListener = store.subscribe((state, previous) => {
+      if (applying.current) return;
+
+      if (state.hiddenPanels !== previous.hiddenPanels) {
+        flush();
+        applyPanelVisibility(api, state.hiddenPanels);
+        observed.current = JSON.stringify(api.toJSON());
+        persistAutomatically(capture);
+
+        return;
+      }
+
       if (state.headerVisible === previous.headerVisible && state.footerVisible === previous.footerVisible) return;
 
       flush();
@@ -248,9 +272,9 @@ export function useLayoutManagement(
       if (!api || !baseline.current) return false;
 
       try {
-        const { headerVisible, footerVisible } = store.getState();
+        const { headerVisible, footerVisible, hiddenPanels } = store.getState();
 
-        apply({ version: 1, layout: presetLayout(baseline.current, preset, panels), headerVisible, footerVisible });
+        apply({ version: 1, layout: presetLayout(baseline.current, preset, panels), headerVisible, footerVisible, hiddenPanels });
         setFeedback({ message: `${preset === 'default' ? 'Application' : preset === 'columns' ? 'Columns' : 'Rows'} layout selected.`, error: false });
 
         return true;
@@ -277,5 +301,20 @@ export function useLayoutManagement(
     }
   }, [apply, reportError, store]);
 
-  return { save, restore, reset, selectPreset, capture, apply, hasSaved, feedback, ready: api !== null };
+  const setPanelVisible = useCallback(
+    (id: string, visible: boolean) => {
+      if (!api || !panels.some((panel) => panel.id === id)) return;
+
+      const hidden = store.getState().hiddenPanels;
+
+      if (visible === !hidden.includes(id)) return;
+
+      store.getState().setHiddenPanels(visible ? hidden.filter((panelId) => panelId !== id) : [...hidden, id]);
+
+      if (visible) api.getPanel(id)?.api.setActive();
+    },
+    [api, panels, store],
+  );
+
+  return { save, restore, reset, selectPreset, capture, apply, setPanelVisible, hasSaved, feedback, ready: api !== null };
 }

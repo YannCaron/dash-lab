@@ -1,11 +1,12 @@
 # Dependencies
 
-The stack follows the libraries explicitly selected in `prompt.md`. Versions are exact and the npm lockfile is committed. No additional UI framework, icon package, process manager, or test DOM is required.
+The stack follows the libraries explicitly selected in `prompt.md`. Versions are exact and the npm lockfile is committed. Ant Design Icons supplies all interface icons; no additional UI framework, process manager, or test DOM is required.
 
 | Role               | Packages                                    | License         |
 | ------------------ | ------------------------------------------- | --------------- |
 | UI peers           | React, React DOM                            | MIT             |
 | Workbench          | Ant Design, Dockview React, Zustand         | MIT             |
+| Interface icons    | @ant-design/icons 6.3.4                     | MIT             |
 | Demo routing       | React Router                                | MIT             |
 | Build              | Vite, its official React plugin             | MIT             |
 | Types              | TypeScript; Node/React declarations         | Apache-2.0; MIT |
@@ -25,6 +26,8 @@ On 2026-11-02, `npm audit --omit=dev` reports no runtime vulnerabilities. The fu
 The demo's bundled JavaScript is about 311 kB gzip with the current UI libraries. Vite reports its uncompressed chunk-size warning. Storybook also reports Ant Design's `use client` directive warnings while producing its browser-only preview; the build succeeds. Neither build is an assertion of React Server Component support.
 
 ## Git automation tools
+
+Issue #3 promotes the already installed `@ant-design/icons` 6.3.4 to a direct runtime dependency, approved by the owner on 2026-11-05. All shell/demo icons use this collection. Its installed `LICENSE` is MIT, copyright Ant UED; the normal notice-retention requirements apply when redistributing bundled icons. Its existing transitive graph and locked versions are unchanged. The library externalizes the package and the demo bundles the selected icons. No new security audit is implied by this promotion.
 
 Feature 13 explicitly requests Husky, lint-staged, and commitlint. Installed versions are Husky 9.1.7, lint-staged 16.4.0, and `@commitlint/cli`/`@commitlint/config-conventional` 21.2.4, all MIT. Their installed authoritative license files were inspected, alongside the [Husky license](https://github.com/typicode/husky/blob/main/LICENSE), [lint-staged license](https://github.com/lint-staged/lint-staged/blob/main/LICENSE), and [commitlint license](https://github.com/conventional-changelog/commitlint/blob/master/license.md). These are development tools and are not bundled into the framework runtime.
 

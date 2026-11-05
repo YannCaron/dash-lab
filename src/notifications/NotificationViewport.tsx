@@ -1,3 +1,4 @@
+import { CloseOutlined } from '@ant-design/icons';
 import { useI18n } from '../i18n/I18nProvider.js';
 import { useEffect, useId, useRef } from 'react';
 import { useNotifications } from './NotificationContext.js';
@@ -37,7 +38,7 @@ export function NotificationViewport() {
             aria-label={t('Close notifications')}
             onClick={() => setOpen(false)}
           >
-            ×
+            <CloseOutlined />
           </button>
         </header>
         <div className="dl-notification-actions">

@@ -17,6 +17,8 @@ export interface SavedLayout {
   headerVisible: boolean;
   /** Footer visibility outside Focus mode. */
   footerVisible: boolean;
+  /** Hidden panel IDs; panels remain registered and mounted. Absent in legacy checkpoints. */
+  hiddenPanels?: readonly string[];
   /** Opted-in plugin state; absent in legacy layout checkpoints. */
   plugins?: PluginStateSnapshot;
 }
@@ -110,11 +112,21 @@ export function decodeLayout(text: string, panels: readonly WorkbenchPanel[]): S
 
   validateLayout(value.layout, panels);
 
+  if (
+    value.hiddenPanels !== undefined &&
+    (!Array.isArray(value.hiddenPanels) ||
+      new Set(value.hiddenPanels).size !== value.hiddenPanels.length ||
+      value.hiddenPanels.some((id: unknown) => typeof id !== 'string' || !panels.some((panel) => panel.id === id)))
+  ) {
+    throw new Error('Saved layout contains invalid hidden panels.');
+  }
+
   return {
     version: 1,
     layout: value.layout,
     headerVisible: value.headerVisible,
     footerVisible: value.footerVisible,
+    ...(value.hiddenPanels === undefined ? {} : { hiddenPanels: [...value.hiddenPanels] as string[] }),
     ...(value.plugins === undefined ? {} : { plugins: copyPluginStates(value.plugins) }),
   };
 }

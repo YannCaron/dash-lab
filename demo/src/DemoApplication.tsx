@@ -1,3 +1,4 @@
+import { AppstoreOutlined } from '@ant-design/icons';
 import { useI18n } from '@cyann/dash-lab';
 import { Button, Input, Tag } from 'antd';
 import { Workbench, useNotifications } from '@cyann/dash-lab';
@@ -122,7 +123,7 @@ export function DemoApplication() {
       controlBar={
         <>
           <span className="demo-workspace-icon" aria-hidden="true">
-            ▦
+            <AppstoreOutlined />
           </span>
           <strong className="demo-workspace-name">{t('Hello World')}</strong>
           <span className="demo-breadcrumb">/</span>

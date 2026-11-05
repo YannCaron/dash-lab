@@ -1,3 +1,4 @@
+import { CloseOutlined, RightOutlined } from '@ant-design/icons';
 import { useI18n } from '../i18n/I18nProvider.js';
 import { useEffect, useId, useMemo, useRef, useState } from 'react';
 import { useCommands } from './CommandContext.js';
@@ -82,7 +83,7 @@ export function CommandPalette({ open, onClose }: CommandPaletteProps) {
   return (
     <dialog {...dismissal} ref={dialog} className="dl-command-palette dl-modal" aria-label={t('Command palette')}>
       <div className="dl-palette-search">
-        <span aria-hidden="true">&gt;</span>
+        <RightOutlined aria-hidden="true" />
         <input
           ref={input}
           role="combobox"
@@ -117,7 +118,7 @@ export function CommandPalette({ open, onClose }: CommandPaletteProps) {
           }}
         />
         <button type="button" className="dl-icon-button dl-dialog-close" aria-label={t('Close command palette')} onClick={onClose}>
-          ×
+          <CloseOutlined />
         </button>
       </div>
       <div id={listId} className="dl-palette-results" role="listbox" aria-label={t('Commands')}>

@@ -1,3 +1,4 @@
+import { CloseOutlined } from '@ant-design/icons';
 import { themeFamilies } from '../theme/themeStore.js';
 import { useI18n } from '../i18n/I18nProvider.js';
 import { useEffect, useId, useRef, useState } from 'react';
@@ -67,7 +68,7 @@ export function SettingsDialog({
       <header>
         <h2 id={titleId}>{t(visiblePage === 'preferences' ? 'Preferences' : 'Settings')}</h2>
         <button ref={close} type="button" className="dl-icon-button dl-dialog-close" aria-label={t('Close settings')} onClick={onClose}>
-          ×
+          <CloseOutlined />
         </button>
       </header>
       {visiblePage === 'preferences' ? (

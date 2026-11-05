@@ -20,6 +20,19 @@ const baseline: SerializedDockview = {
 const snapshot = () => ({ version: 1, layout: structuredClone(baseline), headerVisible: false, footerVisible: true });
 
 describe('saved layout compatibility', () => {
+  it('round-trips hidden tabs while rejecting unknown, duplicate, and invalid IDs', () => {
+    for (const hiddenPanels of [[], ['one'], ['one', 'two']]) {
+      const saved = { ...snapshot(), hiddenPanels };
+
+      expect(decodeLayout(JSON.stringify(saved), panels)).toEqual(saved);
+    }
+
+    expect(decodeLayout(JSON.stringify(snapshot()), panels)).not.toHaveProperty('hiddenPanels');
+
+    for (const hiddenPanels of [null, 'one', ['unknown'], ['one', 'one'], [1]]) {
+      expect(() => decodeLayout(JSON.stringify({ ...snapshot(), hiddenPanels }), panels)).toThrow('hidden panels');
+    }
+  });
   it('retains optional plugin state and validates it before a checkpoint can be applied', () => {
     const saved = { ...snapshot(), plugins: { notes: { version: 1, text: 'checkpoint' } } };
 

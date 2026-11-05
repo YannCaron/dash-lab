@@ -6,6 +6,8 @@ The package currently declares version `0.1.0`. No publication or release tag is
 
 ### Added
 
+- Visible tabs menu and tab close buttons that hide/reopen panels without losing mounted state, with visibility included in layout checkpoints and JSON (#3). All interface icons use Ant Design Icons.
+
 - Compact mode toggle with smaller controls/tabs, optional-information hiding, persisted density, and the public `useCompactMode` hook (#2).
 
 - Slower 500 ms light/dark color transitions; dialog and notification motion retain their 270 ms duration and reduced-motion support.

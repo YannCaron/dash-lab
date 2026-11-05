@@ -1,3 +1,4 @@
+import { CloseOutlined } from '@ant-design/icons';
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { useI18n } from '../i18n/I18nProvider.js';
 import { useNotifications } from './NotificationContext.js';
@@ -57,7 +58,7 @@ function Toast({ item, exiting, onExited }: { item: NotificationItem; exiting: b
         {item.description && <p>{item.description}</p>}
       </div>
       <button type="button" className="dl-icon-button" aria-label={t('Dismiss notification: {title}', { title: item.title })} onClick={() => dismiss(item.id)}>
-        ×
+        <CloseOutlined />
       </button>
     </article>
   );

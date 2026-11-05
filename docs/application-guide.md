@@ -6,6 +6,8 @@ This guide is sufficient to assemble an application without reading implementati
 
 Use the toolbar's Compact mode toggle for denser controls and tabs. Mark optional application/plugin information with `className="dl-compact-optional"` to hide it in that mode while retaining its state. Components inside Workbench can also import `useCompactMode` from `@cyann/dash-lab` to adapt their content. The choice is saved with preferences, independently of Focus and layout presets.
 
+Use a tab's close button to hide it and the Visible tabs toolbar menu to reopen it. Hidden components keep running and retain their state; hiding is not plugin disposal. All panels remain part of the saved layout. For application icons, import the relevant `@ant-design/icons` component to match the workbench and demo.
+
 `dash-lab` is a reusable library; `demo/` is a consuming application. Put domain-specific views, commands, and plugin directories in the application. The library owns chrome, docking, theme, language, notifications, commands, configuration, and contribution contracts. A router, backend, editor, or data model remains the application's responsibility.
 
 Use Node.js 24 LTS. The framework package also declares Node 22.13+ in the 22.x line. React and React DOM 19 are peers. Existing framework dependency versions are locked; new dependencies require the owner's approval unless explicitly requested.

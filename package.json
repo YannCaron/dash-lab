@@ -70,6 +70,7 @@
     "react-dom": "^19.0.0"
   },
   "dependencies": {
+    "@ant-design/icons": "6.3.4",
     "antd": "6.6.8",
     "dockview-react": "8.8.3",
     "zustand": "5.0.16"

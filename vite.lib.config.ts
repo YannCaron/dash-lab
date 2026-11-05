@@ -12,6 +12,6 @@ export default defineConfig({
       fileName: 'index',
       cssFileName: 'dash-lab',
     },
-    rolldownOptions: { external: /^(react|react-dom|antd|dockview-react|zustand)(\/|$)/ },
+    rolldownOptions: { external: /^(react|react-dom|@ant-design\/icons|antd|dockview-react|zustand)(\/|$)/ },
   },
 });
