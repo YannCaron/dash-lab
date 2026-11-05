@@ -8,17 +8,21 @@ import type { WorkbenchConfiguration, WorkbenchPreferences } from './configurati
 import { useI18n } from '../i18n/I18nProvider.js';
 import { capturePluginStates, restorePluginStates } from '../plugins/pluginState.js';
 import type { PluginStateHandler } from '../plugins/pluginState.js';
+import { useStore } from 'zustand';
+import type { createLayoutStore } from '../layout/layoutStore.js';
 
 export function useWorkbenchConfiguration(
   layout: ReturnType<typeof useLayoutManagement>,
   panels: readonly WorkbenchPanel[],
   storageKey: string | false,
   stateHandlers: Readonly<Record<string, PluginStateHandler>>,
+  store: ReturnType<typeof createLayoutStore>,
 ) {
+  const compact = useStore(store, (state) => state.compact);
   const { locale, setLocale, assertLocale, t } = useI18n();
   const { mode, family, motionPreference, setMode, setFamily, setMotionPreference } = useTheme();
   const { preferences: notifications, setPreferences: setNotifications, notify } = useNotifications();
-  const preferences: WorkbenchPreferences = { locale, theme: mode, themeFamily: family, motion: motionPreference, notifications };
+  const preferences: WorkbenchPreferences = { locale, theme: mode, themeFamily: family, compact, motion: motionPreference, notifications };
   const serialized = JSON.stringify(preferences);
   const previous = useRef(serialized);
   const initialized = useRef(false);
@@ -39,10 +43,11 @@ export function useWorkbenchConfiguration(
       setFamily(next.themeFamily ?? 'azure');
       setMotionPreference(next.motion);
       setNotifications(next.notifications);
+      store.getState().setCompact(next.compact ?? false);
 
       return next;
     },
-    [setMode, setFamily, setMotionPreference, setNotifications, setLocale, assertLocale],
+    [setMode, setFamily, setMotionPreference, setNotifications, setLocale, assertLocale, store],
   );
 
   const persist = useCallback(

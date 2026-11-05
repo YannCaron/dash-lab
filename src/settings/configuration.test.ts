@@ -28,6 +28,21 @@ const fixture = (): WorkbenchConfiguration => ({
 });
 
 describe('configuration files', () => {
+  it('round-trips compact mode and accepts legacy normal-density preferences', () => {
+    expect(decodeConfiguration(JSON.stringify(fixture()), panels).preferences.compact).toBeUndefined();
+
+    for (const compact of [true, false]) {
+      const input = fixture();
+
+      input.preferences.compact = compact;
+
+      expect(decodeConfiguration(JSON.stringify(input), panels).preferences.compact).toBe(compact);
+    }
+
+    for (const compact of [null, 1, 'true']) {
+      expect(() => decodeConfiguration(JSON.stringify({ ...fixture(), preferences: { ...fixture().preferences, compact } }), panels)).toThrow('compact');
+    }
+  });
   it('round-trips palette choices, preserves legacy files, and rejects unknown families', () => {
     expect(decodeConfiguration(JSON.stringify(fixture()), panels).preferences.themeFamily).toBeUndefined();
 

@@ -16,7 +16,7 @@ export function HelloWorld() {
         {t('Hello World')}
         <span>.</span>
       </h1>
-      <p className="hello-description">
+      <p className="hello-description dl-compact-optional">
         {t('A small beginning.')}
         <br />
         {t('A workbench for everything you build next.')}
@@ -44,12 +44,12 @@ export function HelloWorld() {
           {greeting ?? t('Your first interaction is one hello away.')}
         </p>
       </form>
-      <div className="hello-capabilities">
+      <div className="hello-capabilities dl-compact-optional">
         <span>{t('REACT + TYPESCRIPT')}</span>
         <span>{t('DOCKABLE PANELS')}</span>
         <span>{t('MIT LICENSED')}</span>
       </div>
-      <div className="hello-local">
+      <div className="hello-local dl-compact-optional">
         <span className="hello-local-mark" aria-hidden="true">
           ⌘
         </span>

@@ -86,3 +86,10 @@ export const PresentationTheme: Story = {
 export const AutomaticCustomLayout: Story = {
   args: { ...DockedWorkspace.args, controlBar: 'Resize or move a panel to save your custom layout. Try Rows, then Custom layout to return.' },
 };
+
+export const CompactMode: Story = {
+  args: {
+    ...DockedWorkspace.args,
+    controlBar: <span className="dl-compact-optional">Toggle Compact mode to hide this optional hint and reduce controls.</span>,
+  },
+};

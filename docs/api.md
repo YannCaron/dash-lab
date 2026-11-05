@@ -42,6 +42,8 @@ The toolbar offers Application, Columns, Rows, and Custom layout. Manual docking
 
 View hides/shows header and footer together. Settings and existing individual shortcuts still control each region. Focus suppresses all chrome; Escape restores previous visibility choices. Neither changes the mounted panel instances.
 
+Compact mode is an independent toolbar toggle, persisted in optional `preferences.compact` and JSON transfers. Legacy files default to normal density. It reduces shell controls, Ant Design controls, tab height/text, and hides monitoring and secondary toolbar text. Application/plugin content can use `className="dl-compact-optional"` to hide optional details without unmounting them, or call exported `useCompactMode(): boolean` within Workbench to adapt rendering. Outside Workbench the hook returns false. Separate workbenches own their density independently.
+
 ## Providers and hooks
 
 Workbench reuses the nearest providers or supplies defaults. For explicit composition, use:

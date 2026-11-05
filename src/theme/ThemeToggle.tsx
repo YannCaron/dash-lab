@@ -19,7 +19,7 @@ export function ThemeToggle() {
           <path d="M20.5 13A9 9 0 0 1 11 3.5 8.8 8.8 0 1 0 20.5 13Z" />
         )}
       </svg>
-      <span>{t(mode === 'light' ? 'Light' : 'Dark')}</span>
+      <span className="dl-control-label">{t(mode === 'light' ? 'Light' : 'Dark')}</span>
     </button>
   );
 }

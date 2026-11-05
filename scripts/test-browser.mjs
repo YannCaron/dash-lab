@@ -349,6 +349,25 @@ try {
   await waitFor(() => evaluate('document.querySelectorAll(".dv-tab").length === 3 && !!document.querySelector("#hello-name")'), 'Hello World panels');
   await waitFor(() => evaluate('document.querySelector(".dl-dock").getBoundingClientRect().height > 400'), 'workspace after viewport resize');
   await check('document.querySelector(".dl-dock").getBoundingClientRect().height > 400', 'Dockview has usable workspace dimensions');
+  await evaluate(
+    `globalThis.densityPanel = document.querySelector('.hello-world'); globalThis.normalTabHeight = document.querySelector('.dv-tabs-and-actions-container').getBoundingClientRect().height; globalThis.normalInputHeight = document.querySelector('#hello-name').getBoundingClientRect().height`,
+  );
+  await click('Compact mode');
+  await waitFor(() => evaluate('document.querySelector(".dl-workbench").dataset.compact === "true"'), 'compact density');
+  await check(
+    `document.querySelector('.hello-world') === globalThis.densityPanel && document.querySelector('.dv-tabs-and-actions-container').getBoundingClientRect().height < globalThis.normalTabHeight && document.querySelector('#hello-name').getBoundingClientRect().height < globalThis.normalInputHeight && getComputedStyle(document.querySelector('.hello-description')).display === 'none' && getComputedStyle(document.querySelector('.dl-monitoring-bar')).display === 'none'`,
+    'Compact mode reduces real tabs and controls and hides optional content without remounting panels',
+  );
+  await screenshot('demo-compact');
+  await waitFor(
+    () => evaluate(`JSON.parse(localStorage.getItem('dash-lab:dash.lab:preferences:v1')).preferences.compact === true`),
+    'saved compact preference',
+  );
+  await reload();
+  await waitFor(() => evaluate('document.querySelector(".dl-workbench").dataset.compact === "true"'), 'restored compact density');
+  await check(`document.querySelector('button[aria-label="Compact mode"]').getAttribute('aria-pressed') === 'true'`, 'Compact density survives a full reload');
+  await click('Compact mode');
+  await waitFor(() => evaluate('getComputedStyle(document.querySelector(".hello-description")).display !== "none"'), 'normal density restored');
   await evaluate('document.querySelector("#hello-name").focus(); document.querySelector("#hello-name").select()');
   await command('Input.insertText', { text: 'Ada' });
   await evaluate('document.querySelector(".hello-form button").click()');

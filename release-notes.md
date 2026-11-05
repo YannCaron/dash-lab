@@ -2,6 +2,10 @@
 
 ## Unreleased — package version 0.1.0
 
+### Issue #2 — Compact mode
+
+The layout command strip now offers a persistent Compact mode switch. It reduces shell and Ant Design controls, tab height and text size, and hides monitoring/secondary labels. Applications and plugins opt optional content into `dl-compact-optional` or read `useCompactMode()`. Existing panels remain mounted; Focus and presets keep their own behavior. Version-1 preferences without `compact` use normal density. Verification covers strict types, Vitest, lint/format, builds, packed consumer, Storybook, and compiled/development browser interactions.
+
 Implementation completed locally on 2026-11-03. No release tag, npm publication, push, or deployment has been performed. [CHANGELOG.md](CHANGELOG.md) is the concise summary; this file records the feature-level handover.
 
 | Feature                            | Delivered behavior                                                                                                                                                                         |

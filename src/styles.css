@@ -284,3 +284,41 @@
   color: var(--dl-muted);
   font-size: 10px;
 }
+
+.dl-workbench[data-compact='true'] :is(.dl-compact-optional, .dl-subtitle, .dl-toolbar-label, .dl-control-label) {
+  display: none;
+}
+.dl-workbench[data-compact='true'] .dl-header {
+  min-height: 48px;
+  padding-inline: 12px;
+}
+.dl-workbench[data-compact='true'] .dl-control-bar {
+  min-height: 36px;
+  padding: 4px 12px;
+}
+.dl-workbench[data-compact='true'] :is(.dl-view-controls, .dl-application-controls) {
+  gap: 3px;
+}
+.dl-workbench[data-compact='true'] .dl-icon-button {
+  height: 26px;
+  min-height: 26px;
+  min-width: 26px;
+  padding-inline: 5px;
+}
+.dl-workbench[data-compact='true'] .dl-theme-toggle {
+  min-width: 26px;
+}
+.dl-workbench[data-compact='true'] .dl-divider {
+  margin-inline: 3px;
+}
+.dl-workbench[data-compact='true'] .dl-workspace {
+  padding: 6px;
+}
+.dl-workbench[data-compact='true'] .dl-dock {
+  --dv-tabs-and-actions-container-height: 26px;
+  --dv-tabs-and-actions-container-font-size: 10px;
+}
+.dl-workbench[data-compact='true'] .dl-footer {
+  min-height: 24px;
+  padding-inline: 12px;
+}

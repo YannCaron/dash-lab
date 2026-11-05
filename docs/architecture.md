@@ -24,6 +24,8 @@ Storybook and Vitest run independently of the demo. Distribution includes only l
 
 Each workbench owns a separate Zustand visibility store. Focus mode suppresses chrome without changing header/footer preferences or unmounting Dockview. Focus returns to the trigger when leaving focus mode. Keyboard dispatch, including Escape, is scoped to the focused workbench.
 
+The same instance-local store owns compact density. A boolean context exposes `useCompactMode` to application/plugin components; scoped CSS hides opt-in optional details and reduces shell/tab dimensions. A stable Ant Design ConfigProvider changes control size without replacing panel renderers. Compact density is persisted in preferences rather than layout snapshots.
+
 Panel definitions are validated before Dockview receives them. Application components are passed through stable renderers, and Dockview's `always` renderer retains inactive panel state. The demo uses only the MIT edition's docking features.
 
 Each stable panel renderer includes its own full-height scroll container. Overflow scrolls within that panel, and tab changes retain its scroll position. View toggles header and footer together; individual visibility preferences and existing commands remain available.

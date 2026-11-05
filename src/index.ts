@@ -1,5 +1,6 @@
 export { Workbench } from './layout/Workbench.js';
 export type { WorkbenchProps } from './layout/Workbench.js';
+export { useCompactMode } from './layout/CompactContext.js';
 export type { WorkbenchPanel } from './layout/panels.js';
 export type { LayoutPreset } from './layout/layoutPersistence.js';
 export { ThemeProvider, useTheme } from './theme/ThemeProvider.js';

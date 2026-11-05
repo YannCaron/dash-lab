@@ -16,6 +16,8 @@ export interface WorkbenchPreferences {
   theme: ThemeMode;
   /** Palette; absent in older version-1 files, which use azure. */
   themeFamily?: ThemeFamily;
+  /** Compact controls and optional information; absent in legacy files, which use normal density. */
+  compact?: boolean;
   /** Animation preference. */
   motion: MotionPreference;
   /** Popup visibility and default duration. */
@@ -50,12 +52,15 @@ export function validatePreferences(value: unknown): WorkbenchPreferences {
 
   validateNotificationPreferences(preferences.notifications);
 
+  if (preferences.compact !== undefined && typeof preferences.compact !== 'boolean') throw new Error('Preferences have an invalid compact mode.');
+
   if (preferences.locale !== undefined && (typeof preferences.locale !== 'string' || !/^[a-z]{2,8}(-[a-z0-9]{1,8})*$/i.test(preferences.locale)))
     throw new Error('Preferences have an invalid language identifier.');
 
   return {
     ...(preferences.locale === undefined ? {} : { locale: preferences.locale }),
     theme: preferences.theme!,
+    ...(preferences.compact === undefined ? {} : { compact: preferences.compact }),
     ...(preferences.themeFamily === undefined ? {} : { themeFamily: preferences.themeFamily }),
     motion: preferences.motion!,
     notifications: { toastsEnabled: preferences.notifications.toastsEnabled, toastDurationMs: preferences.notifications.toastDurationMs },

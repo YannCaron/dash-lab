@@ -33,6 +33,7 @@ export const french: MessageCatalog = {
   Monitoring: 'Monitoring',
   View: 'Vue',
   Focus: 'Focus',
+  'Compact mode': 'Mode compact',
   'Enter focus mode': 'Activer le mode focus',
   'Exit focus mode': 'Quitter le mode focus',
   'Focus workspace': 'Concentrer l’espace de travail',
