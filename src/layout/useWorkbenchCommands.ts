@@ -7,6 +7,7 @@ import { useTheme } from '../theme/ThemeProvider.js';
 import { useNotifications } from '../notifications/NotificationContext.js';
 import type { createLayoutStore } from './layoutStore.js';
 import type { useLayoutManagement } from './useLayoutManagement.js';
+import { toggleFullscreen } from './fullscreen.js';
 
 interface ConfigurationActions {
   openSettings: () => void;
@@ -39,6 +40,11 @@ export function useWorkbenchCommands(
   currentConfiguration.current = configuration;
 
   useEffect(() => {
+    const toggleFocusMode = () => {
+      toggleFullscreen();
+      store.getState().toggleFocus();
+    };
+
     const commands: CommandDefinition[] = [
       { id: 'workbench.commands.open', title: 'Open command palette', shortcut: 'Mod+Shift+P', execute: openPalette },
       { id: 'workbench.settings.open', title: 'Open settings', execute: () => currentConfiguration.current.openSettings() },
@@ -57,13 +63,17 @@ export function useWorkbenchCommands(
       },
       { id: 'workbench.theme.toggle', title: 'Toggle theme', shortcut: 'Mod+Alt+T', execute: toggleTheme },
       { id: 'workbench.view.toggle', title: 'Toggle header and footer', shortcut: 'Mod+Alt+V', execute: () => store.getState().toggleView() },
-      { id: 'workbench.focus.toggle', title: 'Toggle focus mode', shortcut: 'Mod+Alt+F', execute: () => store.getState().toggleFocus() },
+      { id: 'workbench.focus.toggle', title: 'Toggle focus mode', shortcut: 'F11', execute: toggleFocusMode },
+      { id: 'workbench.focus.toggle-alt', title: 'Toggle focus mode (Alt+F)', shortcut: 'Alt+F', execute: toggleFocusMode },
       {
         id: 'workbench.focus.exit',
         title: 'Exit focus mode',
         shortcut: 'Escape',
-        isEnabled: () => store.getState().focusMode,
-        execute: () => store.getState().toggleFocus(),
+        isEnabled: () => store.getState().focusMode && (typeof document === 'undefined' || !document.fullscreenElement),
+        execute: () => {
+          toggleFullscreen();
+          store.getState().setFocusMode(false);
+        },
       },
       { id: 'workbench.header.toggle', title: 'Toggle header', shortcut: 'Mod+Alt+H', execute: () => store.getState().toggleHeader() },
       { id: 'workbench.footer.toggle', title: 'Toggle footer', shortcut: 'Mod+Alt+B', execute: () => store.getState().toggleFooter() },

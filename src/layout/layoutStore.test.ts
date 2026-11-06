@@ -33,6 +33,20 @@ describe('workbench visibility', () => {
     expect(store.getState()).toMatchObject({ focusMode: false, headerVisible: false, footerVisible: false });
   });
 
+  it('allows explicitly setting focus mode on or off', () => {
+    const store = createLayoutStore();
+
+    store.getState().setFocusMode(true);
+    expect(store.getState().focusMode).toBe(true);
+
+    store.getState().setFocusMode(false);
+    expect(store.getState().focusMode).toBe(false);
+
+    // Calling setFocusMode with same value is idempotent
+    store.getState().setFocusMode(false);
+    expect(store.getState().focusMode).toBe(false);
+  });
+
   it('keeps separate application instances independent', () => {
     const first = createLayoutStore();
     const second = createLayoutStore();

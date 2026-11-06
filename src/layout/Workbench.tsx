@@ -9,6 +9,7 @@ import { CompactContext } from './CompactContext.js';
 import { PanelControlsContext } from './PanelControlsContext.js';
 import { DockWorkspace } from './DockWorkspace.js';
 import { createLayoutStore } from './layoutStore.js';
+import { setFullscreen } from './fullscreen.js';
 import type { WorkbenchPanel } from './panels.js';
 import { ThemeContext, ThemeProvider } from '../theme/ThemeProvider.js';
 import { ThemeToggle } from '../theme/ThemeToggle.js';
@@ -199,6 +200,26 @@ function WorkbenchShell({
     wasFocused.current = state.focusMode;
   }, [state.focusMode]);
 
+  useEffect(() => {
+    if (typeof document === 'undefined') return;
+
+    const handleFullscreenChange = () => {
+      if (!document.fullscreenElement && store.getState().focusMode) {
+        store.getState().setFocusMode(false);
+      }
+    };
+
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+
+    return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
+  }, [store]);
+
+  const handleToggleFocus = useCallback(() => {
+    const nextFocusMode = !store.getState().focusMode;
+    setFullscreen(nextFocusMode);
+    store.getState().toggleFocus();
+  }, [store]);
+
   return (
     <PluginContext.Provider value={contributions}>
       <CompactContext.Provider value={state.compact}>
@@ -286,7 +307,7 @@ function WorkbenchShell({
                       className="dl-icon-button dl-focus-button"
                       aria-label={t('Enter focus mode')}
                       title={t('Focus workspace')}
-                      onClick={state.toggleFocus}
+                      onClick={handleToggleFocus}
                     >
                       <ExpandOutlined />
                       <span className="dl-control-label">{t('Focus')}</span>
@@ -344,7 +365,7 @@ function WorkbenchShell({
                 }}
               />
               {state.focusMode && (
-                <button ref={exitFocus} type="button" className="dl-exit-focus" onClick={state.toggleFocus}>
+                <button ref={exitFocus} type="button" className="dl-exit-focus" onClick={handleToggleFocus}>
                   {t('Exit focus mode')}
                   <kbd>{t('Esc')}</kbd>
                 </button>
