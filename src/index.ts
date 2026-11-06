@@ -1,5 +1,6 @@
 export { Workbench } from './layout/Workbench.js';
 export type { WorkbenchProps } from './layout/Workbench.js';
+export type { DockviewApi } from 'dockview-react';
 export { setFullscreen, toggleFullscreen, exitFullscreen } from './layout/fullscreen.js';
 export { useCompactMode } from './layout/CompactContext.js';
 export type { WorkbenchPanel } from './layout/panels.js';
