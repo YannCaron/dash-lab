@@ -41,6 +41,21 @@ export function ApplicationMenu() {
     };
   };
 
+  type MenuItem = NonNullable<NonNullable<Parameters<typeof Dropdown>[0]['menu']>['items']>[number];
+
+  const createMenuItemsWithDividers = (items: readonly PluginMenu[]): MenuItem[] => {
+    const result: MenuItem[] = [];
+
+    for (const menu of items) {
+      result.push(createMenuItem(menu));
+      if (menu.dividerAfter) {
+        result.push({ type: 'divider' });
+      }
+    }
+
+    return result;
+  };
+
   return (
     <Dropdown
       open={open}
@@ -54,14 +69,14 @@ export function ApplicationMenu() {
         selectable: true,
         selectedKeys: [`theme:${family}`],
         items: [
-          ...topMenus.map(createMenuItem),
-          ...(topMenus.length ? [{ type: 'divider' as const }] : []),
+          ...createMenuItemsWithDividers(topMenus),
+          ...(topMenus.length && !topMenus[topMenus.length - 1]?.dividerAfter ? [{ type: 'divider' as const }] : []),
           {
             key: 'file',
             label: t('File'),
             children: [
-              ...fileMenus.map(createMenuItem),
-              ...(fileMenus.length ? [{ type: 'divider' as const }] : []),
+              ...createMenuItemsWithDividers(fileMenus),
+              ...(fileMenus.length && !fileMenus[fileMenus.length - 1]?.dividerAfter ? [{ type: 'divider' as const }] : []),
               { key: 'workbench.settings.open', label: t('Settings') },
               { key: 'workbench.preferences.open', label: t('Preferences') },
               { type: 'divider' as const },
@@ -79,7 +94,7 @@ export function ApplicationMenu() {
                 {
                   key: 'plugins',
                   label: t('Plugins'),
-                  children: pluginMenus.map(createMenuItem),
+                  children: createMenuItemsWithDividers(pluginMenus),
                 },
               ]
             : []),

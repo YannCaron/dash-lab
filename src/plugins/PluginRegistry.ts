@@ -34,6 +34,8 @@ export interface PluginMenu {
   section?: 'file' | 'top' | 'plugins';
   /** Optional keyboard shortcut hint to display in the menu. */
   shortcut?: string;
+  /** Render a separator divider below this item. */
+  dividerAfter?: boolean;
 }
 
 /** A React component rendered in the footer or monitoring bar. */
