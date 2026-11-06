@@ -7,13 +7,14 @@ import { themeFamilies } from '../theme/themeStore.js';
 import type { ThemeFamily } from '../theme/themeStore.js';
 import { useCommands } from '../commands/CommandContext.js';
 import { PluginContext } from '../plugins/PluginContext.js';
+import type { PluginMenu } from '../plugins/PluginRegistry.js';
 
 export function ApplicationMenu() {
   const { t } = useI18n();
   const { family, setFamily } = useTheme();
   const [open, setOpen] = useState(false);
   const trigger = useRef<HTMLButtonElement>(null);
-  const { execute, canExecute } = useCommands();
+  const { execute, canExecute, commands } = useCommands();
   const { menus } = useContext(PluginContext);
 
   const available = (id: string) => {
@@ -22,6 +23,22 @@ export function ApplicationMenu() {
     } catch {
       return false;
     }
+  };
+
+  const topMenus = menus.filter((menu) => menu.section === 'top');
+  const fileMenus = menus.filter((menu) => menu.section === 'file');
+  const pluginMenus = menus.filter((menu) => !menu.section || menu.section === 'plugins');
+
+  const createMenuItem = (menu: PluginMenu) => {
+    const command = commands.find((item) => item.id === menu.commandId);
+    const shortcut = menu.shortcut ?? command?.shortcut;
+
+    return {
+      key: `plugin-menu:${menu.id}`,
+      label: t(menu.title),
+      extra: shortcut,
+      disabled: !available(menu.commandId),
+    };
   };
 
   return (
@@ -37,13 +54,17 @@ export function ApplicationMenu() {
         selectable: true,
         selectedKeys: [`theme:${family}`],
         items: [
+          ...topMenus.map(createMenuItem),
+          ...(topMenus.length ? [{ type: 'divider' as const }] : []),
           {
             key: 'file',
             label: t('File'),
             children: [
+              ...fileMenus.map(createMenuItem),
+              ...(fileMenus.length ? [{ type: 'divider' as const }] : []),
               { key: 'workbench.settings.open', label: t('Settings') },
               { key: 'workbench.preferences.open', label: t('Preferences') },
-              { type: 'divider' },
+              { type: 'divider' as const },
               { key: 'workbench.configuration.import', label: t('Import configuration…'), disabled: !canExecute('workbench.configuration.import') },
               { key: 'workbench.configuration.export', label: t('Export configuration…'), disabled: !canExecute('workbench.configuration.export') },
             ],
@@ -53,12 +74,12 @@ export function ApplicationMenu() {
             label: t('Theme'),
             children: Object.entries(themeFamilies).map(([id, label]) => ({ key: `theme:${id}`, label: t(label) })),
           },
-          ...(menus.length
+          ...(pluginMenus.length
             ? [
                 {
                   key: 'plugins',
                   label: t('Plugins'),
-                  children: menus.map((menu) => ({ key: `plugin-menu:${menu.id}`, label: t(menu.title), disabled: !available(menu.commandId) })),
+                  children: pluginMenus.map(createMenuItem),
                 },
               ]
             : []),

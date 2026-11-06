@@ -22,7 +22,7 @@ export interface PluginCommand extends Omit<CommandDefinition, 'execute'> {
   execute: (context: PluginCommandContext) => void | Promise<void>;
 }
 
-/** An action displayed under the application's Plugins menu. */
+/** An action displayed under the application's menu. */
 export interface PluginMenu {
   /** Unique menu contribution ID. */
   id: string;
@@ -30,6 +30,10 @@ export interface PluginMenu {
   title: string;
   /** Command invoked when selected; may reference a built-in command. */
   commandId: string;
+  /** Section in the application menu ('file', 'top', or 'plugins'). Defaults to 'plugins'. */
+  section?: 'file' | 'top' | 'plugins';
+  /** Optional keyboard shortcut hint to display in the menu. */
+  shortcut?: string;
 }
 
 /** A React component rendered in the footer or monitoring bar. */

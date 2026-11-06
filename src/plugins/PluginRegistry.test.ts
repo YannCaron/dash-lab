@@ -87,6 +87,7 @@ describe('local plugin registration', () => {
         api.registerPanel(panel);
         api.registerCommand({ id: 'example.run', title: 'Run', execute() {} });
         api.registerMenu({ id: 'menu', title: 'Run', commandId: 'example.run' });
+        api.registerMenu({ id: 'save', title: 'Save', commandId: 'example.save', section: 'file', shortcut: 'Mod+S' });
         api.registerStatusItem({ id: 'status', component });
         api.registerMonitoringItem({ id: 'monitor', component });
       },
@@ -99,7 +100,9 @@ describe('local plugin registration', () => {
     expect(result.pluginIds).toEqual(['example']);
     expect(result.panels[0]?.title).toBe('Original');
     expect(result.commands).toHaveLength(1);
-    expect(result.menus).toHaveLength(1);
+    expect(result.menus).toHaveLength(2);
+    expect(result.menus[1]?.section).toBe('file');
+    expect(result.menus[1]?.shortcut).toBe('Mod+S');
     expect(result.statusItems).toHaveLength(1);
     expect(result.monitoringItems).toHaveLength(1);
     expect(Object.isFrozen(result.panels)).toBe(true);
