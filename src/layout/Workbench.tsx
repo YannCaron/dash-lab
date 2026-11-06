@@ -164,7 +164,6 @@ function WorkbenchShell({
   const { notify } = useNotifications();
   const reportedFeedback = useRef(layout.feedback);
   const state = useStore(store);
-  const exitFocus = useRef<HTMLButtonElement>(null);
   const enterFocus = useRef<HTMLButtonElement>(null);
   const wasFocused = useRef(false);
   const previousMaximized = useRef<string | null>(null);
@@ -194,8 +193,9 @@ function WorkbenchShell({
   }, [layout.feedback, notify, t]);
 
   useEffect(() => {
-    if (state.focusMode) exitFocus.current?.focus();
-    else if (wasFocused.current) enterFocus.current?.focus();
+    if (wasFocused.current !== state.focusMode) {
+      enterFocus.current?.focus();
+    }
 
     wasFocused.current = state.focusMode;
   }, [state.focusMode]);
@@ -204,8 +204,9 @@ function WorkbenchShell({
     if (typeof document === 'undefined') return;
 
     const handleFullscreenChange = () => {
-      if (!document.fullscreenElement && store.getState().focusMode) {
-        store.getState().setFocusMode(false);
+      const isFullscreen = Boolean(document.fullscreenElement);
+      if (store.getState().focusMode !== isFullscreen) {
+        store.getState().setFocusMode(isFullscreen);
       }
     };
 
@@ -242,7 +243,7 @@ function WorkbenchShell({
               data-maximized-panel={state.maximizedPanel ?? undefined}
               onKeyDown={handleKeyDown}
             >
-              {!state.focusMode && state.headerVisible && (
+              {state.headerVisible && (
                 <header className="dl-header">
                   <div className="dl-identity">
                     {logo}
@@ -253,70 +254,69 @@ function WorkbenchShell({
                 </header>
               )}
 
-              {!state.focusMode && (
-                <div className="dl-control-bar" role="toolbar" aria-label={t('Workbench controls')}>
-                  <div className="dl-application-controls">
-                    <ApplicationMenu />
-                    {controlBar}
-                  </div>
-                  <div className="dl-view-controls">
-                    <button
-                      type="button"
-                      className="dl-icon-button dl-palette-trigger"
-                      aria-label={t('Open command palette')}
-                      aria-haspopup="dialog"
-                      aria-expanded={paletteOpen}
-                      title={t('Commands (Ctrl/\u2318+Shift+P)')}
-                      onClick={openPalette}
-                    >
-                      <SearchOutlined />
-                      <span className="dl-control-label">{t('Commands')}</span>
-                    </button>
-                    <span className="dl-divider" />
-                    <NotificationButton />
-                    <span className="dl-divider" />
-                    <LayoutControls layout={layout} panels={panels} hiddenPanels={state.hiddenPanels} />
-                    <button
-                      type="button"
-                      className="dl-icon-button"
-                      aria-label={t('Compact mode')}
-                      title={t('Compact mode')}
-                      aria-pressed={state.compact}
-                      onClick={state.toggleCompact}
-                    >
-                      <CompressOutlined />
-                    </button>
-                    <span className="dl-divider" />
-                    <ThemeToggle />
-                    <span className="dl-divider" />
-                    <button
-                      type="button"
-                      className="dl-icon-button"
-                      aria-label={t(state.headerVisible || state.footerVisible ? 'Hide header and footer' : 'Show header and footer')}
-                      title={t('Toggle header and footer (Ctrl/\u2318+Alt+V)')}
-                      aria-pressed={state.headerVisible !== state.footerVisible ? 'mixed' : state.headerVisible}
-                      onClick={state.toggleView}
-                    >
-                      <BorderHorizontalOutlined />
-                      <span className="dl-control-label">{t('View')}</span>
-                    </button>
-                    <span className="dl-divider" />
-                    <button
-                      type="button"
-                      ref={enterFocus}
-                      className="dl-icon-button dl-focus-button"
-                      aria-label={t('Enter focus mode')}
-                      title={t('Focus workspace')}
-                      onClick={handleToggleFocus}
-                    >
-                      <ExpandOutlined />
-                      <span className="dl-control-label">{t('Focus')}</span>
-                    </button>
-                  </div>
+              <div className="dl-control-bar" role="toolbar" aria-label={t('Workbench controls')}>
+                <div className="dl-application-controls">
+                  <ApplicationMenu />
+                  {controlBar}
                 </div>
-              )}
+                <div className="dl-view-controls">
+                  <button
+                    type="button"
+                    className="dl-icon-button dl-palette-trigger"
+                    aria-label={t('Open command palette')}
+                    aria-haspopup="dialog"
+                    aria-expanded={paletteOpen}
+                    title={t('Commands (Ctrl/\u2318+Shift+P)')}
+                    onClick={openPalette}
+                  >
+                    <SearchOutlined />
+                    <span className="dl-control-label">{t('Commands')}</span>
+                  </button>
+                  <span className="dl-divider" />
+                  <NotificationButton />
+                  <span className="dl-divider" />
+                  <LayoutControls layout={layout} panels={panels} hiddenPanels={state.hiddenPanels} />
+                  <button
+                    type="button"
+                    className="dl-icon-button"
+                    aria-label={t('Compact mode')}
+                    title={t('Compact mode')}
+                    aria-pressed={state.compact}
+                    onClick={state.toggleCompact}
+                  >
+                    <CompressOutlined />
+                  </button>
+                  <span className="dl-divider" />
+                  <ThemeToggle />
+                  <span className="dl-divider" />
+                  <button
+                    type="button"
+                    className="dl-icon-button"
+                    aria-label={t(state.headerVisible || state.footerVisible ? 'Hide header and footer' : 'Show header and footer')}
+                    title={t('Toggle header and footer (Ctrl/\u2318+Alt+V)')}
+                    aria-pressed={state.headerVisible !== state.footerVisible ? 'mixed' : state.headerVisible}
+                    onClick={state.toggleView}
+                  >
+                    <BorderHorizontalOutlined />
+                    <span className="dl-control-label">{t('View')}</span>
+                  </button>
+                  <span className="dl-divider" />
+                  <button
+                    type="button"
+                    ref={enterFocus}
+                    className="dl-icon-button dl-fullscreen-button dl-focus-button"
+                    aria-label={t(state.focusMode ? 'Exit fullscreen' : 'Toggle fullscreen')}
+                    title={t(state.focusMode ? 'Exit fullscreen (F11)' : 'Toggle fullscreen (F11)')}
+                    aria-pressed={state.focusMode}
+                    onClick={handleToggleFocus}
+                  >
+                    {state.focusMode ? <CompressOutlined /> : <ExpandOutlined />}
+                    <span className="dl-control-label">{t('Fullscreen')}</span>
+                  </button>
+                </div>
+              </div>
 
-              {!state.focusMode && (monitoringBar || contributions.monitoringItems.length > 0) && (
+              {(monitoringBar || contributions.monitoringItems.length > 0) && (
                 <aside className="dl-monitoring-bar dl-compact-optional" aria-label={t('Monitoring')}>
                   {monitoringBar}
                   {contributions.monitoringItems.map(({ id, component: Component }) => (
@@ -338,7 +338,7 @@ function WorkbenchShell({
                   <div className="dl-empty-workspace">{children ?? t('No panels have been added to this workspace.')}</div>
                 )}
               </main>
-              {!state.focusMode && state.footerVisible && (footer || contributions.statusItems.length > 0) && (
+              {state.footerVisible && (footer || contributions.statusItems.length > 0) && (
                 <footer className="dl-footer">
                   {footer}
                   {contributions.statusItems.map(({ id, component: Component }) => (
@@ -364,12 +364,6 @@ function WorkbenchShell({
                   if (file) void configuration.importFile(file);
                 }}
               />
-              {state.focusMode && (
-                <button ref={exitFocus} type="button" className="dl-exit-focus" onClick={handleToggleFocus}>
-                  {t('Exit focus mode')}
-                  <kbd>{t('Esc')}</kbd>
-                </button>
-              )}
             </section>
           </ConfigProvider>
         </PanelControlsContext.Provider>

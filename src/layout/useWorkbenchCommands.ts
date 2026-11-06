@@ -63,11 +63,11 @@ export function useWorkbenchCommands(
       },
       { id: 'workbench.theme.toggle', title: 'Toggle theme', shortcut: 'Mod+Alt+T', execute: toggleTheme },
       { id: 'workbench.view.toggle', title: 'Toggle header and footer', shortcut: 'Mod+Alt+V', execute: () => store.getState().toggleView() },
-      { id: 'workbench.focus.toggle', title: 'Toggle focus mode', shortcut: 'F11', execute: toggleFocusMode },
-      { id: 'workbench.focus.toggle-alt', title: 'Toggle focus mode (Alt+F)', shortcut: 'Alt+F', execute: toggleFocusMode },
+      { id: 'workbench.focus.toggle', title: 'Toggle fullscreen', shortcut: 'F11', execute: toggleFocusMode },
+      { id: 'workbench.focus.toggle-alt', title: 'Toggle fullscreen (Alt+F)', shortcut: 'Alt+F', execute: toggleFocusMode },
       {
         id: 'workbench.focus.exit',
-        title: 'Exit focus mode',
+        title: 'Exit fullscreen',
         shortcut: 'Escape',
         isEnabled: () => store.getState().focusMode && (typeof document === 'undefined' || !document.fullscreenElement),
         execute: () => {
