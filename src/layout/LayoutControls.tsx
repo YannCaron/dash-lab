@@ -41,14 +41,16 @@ export function LayoutControls({
         }}
         trigger={['click']}
         menu={{
-          items: panels.map((panel) => ({
-            key: panel.id,
-            label: t(panel.title),
-            role: 'menuitemcheckbox',
-            'aria-checked': !hiddenPanels.includes(panel.id),
-            icon: hiddenPanels.includes(panel.id) ? <EyeInvisibleOutlined /> : <CheckOutlined />,
-            onClick: () => layout.setPanelVisible(panel.id, hiddenPanels.includes(panel.id)),
-          })),
+          items: panels
+            .filter((panel) => !panel.closeable)
+            .map((panel) => ({
+              key: panel.id,
+              label: t(panel.title),
+              role: 'menuitemcheckbox',
+              'aria-checked': !hiddenPanels.includes(panel.id),
+              icon: hiddenPanels.includes(panel.id) ? <EyeInvisibleOutlined /> : <CheckOutlined />,
+              onClick: () => layout.setPanelVisible(panel.id, hiddenPanels.includes(panel.id)),
+            })),
         }}
       >
         <button

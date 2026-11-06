@@ -33,13 +33,14 @@ export function validateLayout(value: unknown, panels: readonly WorkbenchPanel[]
   if (!record(value) || !record(value.grid) || !record(value.panels)) throw new Error('Saved layout has an invalid structure.');
 
   const expected = new Set(panels.map((panel) => panel.id));
+  const staticPanels = panels.filter((panel) => !panel.closeable);
   const definitions = value.panels;
 
-  if (Object.keys(definitions).length !== expected.size || Object.keys(definitions).some((id) => !expected.has(id))) {
+  if (Object.keys(definitions).some((id) => !expected.has(id)) || staticPanels.some((panel) => !definitions[panel.id])) {
     throw new Error('Saved layout is incompatible with the current panels.');
   }
 
-  for (const id of expected) {
+  for (const id of Object.keys(definitions)) {
     const panel = definitions[id];
 
     if (!record(panel) || panel.id !== id || panel.contentComponent !== id) throw new Error('Saved layout references an unknown panel component.');
@@ -99,7 +100,9 @@ export function validateLayout(value: unknown, panels: readonly WorkbenchPanel[]
     throw new Error('Layouts with separate browser windows are not supported.');
   }
 
-  if (seen.size !== expected.size) throw new Error('Saved layout has missing panels.');
+  if (seen.size !== Object.keys(definitions).length || staticPanels.some((panel) => !seen.has(panel.id))) {
+    throw new Error('Saved layout has missing panels.');
+  }
   if (value.activeGroup !== undefined && !groups.has(value.activeGroup as string)) throw new Error('Saved layout has an invalid active group.');
 }
 
@@ -147,6 +150,8 @@ export function decodeLayout(text: string, panels: readonly WorkbenchPanel[]): S
 export function presetLayout(baseline: SerializedDockview, preset: LayoutPreset, panels: readonly WorkbenchPanel[]): SerializedDockview {
   if (preset === 'default') return structuredClone(baseline);
 
+  const staticPanels = panels.filter((panel) => !panel.closeable);
+  const activePanels = staticPanels.length ? staticPanels : panels;
   const orientation = preset === 'columns' ? Orientation.HORIZONTAL : Orientation.VERTICAL;
   const size = orientation === Orientation.HORIZONTAL ? baseline.grid.width : baseline.grid.height;
 
@@ -156,14 +161,14 @@ export function presetLayout(baseline: SerializedDockview, preset: LayoutPreset,
       orientation,
       root: {
         type: 'branch',
-        data: panels.map(({ id }) => ({
+        data: activePanels.map(({ id }) => ({
           type: 'leaf',
-          size: size / panels.length,
+          size: size / activePanels.length,
           data: { id: `dash-lab-${id}`, views: [id], activeView: id },
         })),
       },
     },
     panels: structuredClone(baseline.panels),
-    ...(panels[0] ? { activeGroup: `dash-lab-${panels[0].id}` } : {}),
+    ...(activePanels[0] ? { activeGroup: `dash-lab-${activePanels[0].id}` } : {}),
   };
 }

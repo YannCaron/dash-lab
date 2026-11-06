@@ -117,6 +117,7 @@ export const french: MessageCatalog = {
   'Rows layout selected.': 'Disposition en lignes sélectionnée.',
   'Application layout reset.': 'Disposition de l’application réinitialisée.',
   'Application layout reset. Your saved layout is still available.': 'Disposition réinitialisée. Votre disposition enregistrée reste disponible.',
+  'Close tab: {title}': 'Fermer l’onglet : {title}',
   Notifications: 'Notifications',
   'Open notifications': 'Ouvrir les notifications',
   'Close notifications': 'Fermer les notifications',

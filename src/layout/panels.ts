@@ -14,6 +14,10 @@ export interface WorkbenchPanel {
   initialWidth?: number;
   /** Preferred initial panel height in pixels. */
   initialHeight?: number;
+  /** Whether the panel can be closed directly from the tab close button. */
+  closeable?: boolean;
+  /** Optional callback invoked when the panel's tab close button is clicked. */
+  onClose?: () => void;
 }
 
 export function validatePanels(panels: readonly WorkbenchPanel[]) {
